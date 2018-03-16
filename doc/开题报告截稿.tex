@@ -64,39 +64,39 @@
 而后在错误处理上, 有些 可以借助控制设备自动进行处理,
 而有些则需要向管理员预警, 手动进行处理. 以下为各个方案的一些特点 介绍.
 
-Planck: \ref{rasley2014planck} SDN的出现使得自己调节的网络得以实现, 这样
+Planck: \upcite{rasley2014planck} SDN的出现使得自己调节的网络得以实现, 这样
 的网络可以实时监控, 并能立即对重要的事件例如拥塞做出迅速反应.
 但是目前的监控机制 需要数百毫秒来重新探测全局网络, 对于实时的错误,
 这样的延迟是很致命的, 这篇2014年 的论文提出了新颖的网络测量架构,
 使用端口镜像的机制来提取网络信息. 但是可以在相当
 短的时间内对网络信息进行获取. 而且不会对网络造成太大的影响.
 
-LossRadar: \ref{li2016lossradar} 属于有针对性的工具,
+LossRadar: \upcite{li2016lossradar} 属于有针对性的工具,
 着重介绍有关丢包的抓取 问题. 虽然只是检测丢包,
 但是这也足够成为一个检测系统了, 这个工具可以在较快的时间
 内抓取单独的丢包以及他们的详细信息. 他需要在交换机上部署,
 但是并不需要很多的流量 和带宽. 也基于它开发了一些应用程序.
 
-Cherrypick: \ref{tammana2015cherrypick} 一个可扩展的简单的轨迹追踪技术
+Cherrypick: \upcite{tammana2015cherrypick} 一个可扩展的简单的轨迹追踪技术
 目前的数据轨迹追踪需要负担大量数据积累的开销,
 或是在数据平面大量资源的消耗, 交换机规则或是数据包头部的探查.
 核心思想是挑选链接, 这些链接是表示数据包端到端 路径的关键,
 并在到达目的地的路上将其嵌入数据包头部. 通过使用最新的头部标示技术,
 它只需要很少的交换机规则即可,
 
-SDN traceroute: \ref{agarwal2014sdn} 使用具有了SDN功能的设备, 不过只要
+SDN traceroute: \upcite{agarwal2014sdn} 使用具有了SDN功能的设备, 不过只要
 支持OpenFlow1.0的设备即可.
 他可以通过SDN支持的网络中的任意数据包来确定路径,
 这个路径使用SDN支持的转发机制, 而且并不需要修改转发规则.
 可以探测任意的以太网 数据包的转发行为,
 以及交换机和控制器逻辑中的调试问题.
 
-PathDump: \ref{tammana2016simplifying}使用了较为不同的方法,
+PathDump: \upcite{tammana2016simplifying}使用了较为不同的方法,
 仔细划分了边缘 设备与网络元素之间的调试任务.
 利用边缘设备的资源进行网络调试的简约工具. 并且可以 支持大量网路调试问题.
 需要的资源较少, 而且在较细的时间粒度调试.
 
-Pingmesh: \ref{guo2015pingmesh}
+Pingmesh: \upcite{guo2015pingmesh}
 这个系统已经在微软的数据中心部署了超过4年, 他的理念很简单,
 就是想要在任意时刻获取任意两台服务器的延迟信息. 因此, 他的目标就是
 去定义一个网络延迟检测和分析系统, 他也需要为所有的服务器产生延迟信息,
@@ -108,7 +108,7 @@ Pingmesh: \ref{guo2015pingmesh}
 他借助了微软自己开发了存储系统, 也实现了 数据处理流水线.
 相比于之后提出的Everflow, 他更像是微软的第一代产品, 稳定而强大.
 
-NetSight: \ref{handigol2014know}, 这是一个完全记录网络历史的工具.
+NetSight: \upcite{handigol2014know}, 这是一个完全记录网络历史的工具.
 在文章中, 介绍了如何使用packet
 histories(每个包的整条记录)来简化网络的调试.
 为了展示\texttt{packet\ histories}的作用, 以及实现上的可行性,
@@ -124,7 +124,7 @@ histories(每个包的整条记录)来简化网络的调试.
 Everflow中对其一个 重要的改进就是增加了匹配模式, 对特定的历史包生成记录,
 能有效减少网络负载, 以及处理 难度.
 
-Netography: \ref{zhao2016netography} 这也是一种基于软件定义网络(SDN)的
+Netography: \upcite{zhao2016netography} 这也是一种基于软件定义网络(SDN)的
 一个工具, 之前的工作关注于静态检查, 被动监控, 以及活动探针,
 这些依赖于控制设备以及网络 设备的抓取规则. 他定义了一个数据包行为的概念,
 用以描述数据包的真实变化, 并强调对故障排除的重要性. 基于通过
@@ -132,7 +132,7 @@ Netography: \ref{zhao2016netography} 这也是一种基于软件定义网络(SDN
 提出了Netography系统, 并说明了 关于转发错误时的排除任务过程,
 以及由非租户争用造成的性能下降问题.
 
-Dissecting RTT(round trip time): \ref{marchetta2014dissecting} 与其说他
+Dissecting RTT(round trip time): \upcite{marchetta2014dissecting} 与其说他
 是工具, 不如认为这一种技术, 利用单个数据包探测延迟的技术. 研究人员
 与操作者经常会在监控, 故障排除, 或是其他方式访问网络路径时 测量往返时间,
 因为它结合 了所有跳的过程以及转发和反向路径, 很难去衡量特定网络元素的
@@ -141,7 +141,7 @@ Dissecting RTT(round trip time): \ref{marchetta2014dissecting} 与其说他
 Timestamp选项, 它可以提供慢速路径部分的往返时间 估计.
 这个技术在Everflow中也被用到了, 用于探针方法测量时延.
 
-Everflow: \ref{greenberg2016packet} 这也是微软推出的工具,
+Everflow: \upcite{greenberg2016packet} 这也是微软推出的工具,
 属于数据包层面的 调试器, 该技术有两个优点, 仅需要具有``Match and
 Mirror''商用交换机即可, 而且可以 自定义的发送探针来进行测试.
 也在微软的数据中心部署了超过6个月. 基于数据包层面的分析
@@ -149,7 +149,7 @@ Mirror''商用交换机即可, 而且可以 自定义的发送探针来进行测
 并且对于一些厂商 定制的协议, 例如RDMA流量的分析上,
 也能具有很强大的分析功能.
 
-Passive Realtime Datacenter: \ref{roy2017passive} 这是在Facebook的数据
+Passive Realtime Datacenter: \upcite{roy2017passive} 这是在Facebook的数据
 中心上进行测试的一种方案, 他不去简单的观察异常现象,
 而是考虑异常对整个系统的性能 所造成的影响. 虽然是基于这么一种简单的设想.
 但其实现需要深深结合数据中心的架构. 他们开发了轻量级的包标记技术,
@@ -158,7 +158,7 @@ Passive Realtime Datacenter: \ref{roy2017passive} 这是在Facebook的数据
 
 \section{方案论证}
 
-本次毕业设计基于微软推出的设计方案Everflow\ref{greenberg2016packet},
+本次毕业设计基于微软推出的设计方案Everflow\upcite{greenberg2016packet},
 通过 解析数据包层面的信息 进行网络分析.
 本次的系统可行性将由以下几个方面进行说明. 但请知悉, 本次毕业设计的
 重点部分为分析器以及提供交互功能的控制器,
@@ -287,6 +287,40 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 Track 数据
 
 \begin{center}
+    \captionof{table}{tbl\_traffic\_data}   % \caption{} 改为 \captionof{table}{}
+    \begin{tabular}{llll}   \hline
+    Field          & Type          & Comment                   \\ \hline
+    id             & int(11)       &                           \\
+    s\_ip          & int(11)       & 源IP                       \\
+    d\_ip          & int(11)       & 目的IP                      \\
+    protocal       & int(11)       & 协议类型                      \\
+    generate\_time & timestamp     & 产生时间                      \\
+    trace\_data    & varchar(1024) & trace数据信息, 保存为二进制字符串    \\
+    fdate          & int(11)       & 存入日期, 如果数据量过大则使用索引 \\
+    is\_loop       & int(11)       & 是否有环                      \\
+    is\_drop       & int(11)       & 是否丢包                      \\
+    is\_probe      & int(11)       & 是否为探针                    \\ \hline
+    \end{tabular}
+    \label{tbl_traffic_data}
+\end{center}
+
+
+\begin{center}
+    \captionof{table}{tbl\_counter}
+    \label{tbl_counter}
+    \begin{tabular}{lll} \hline
+    Field          & Type          & Comment \\ \hline
+    id             & int(11)       &         \\
+    counter\_name  & varchar(1024) & 计数器名称   \\
+    generate\_time & timestamp     & 数据产生时间  \\
+    analyer\_id    & int(11)       & 分析器ID   \\
+    cnt            & int(11)       & 计数值     \\
+    fdate          & int(11)       & 数据产生日期  \\ \hline
+    \end{tabular}
+\end{center}
+
+
+\begin{center}
 \includegraphics[width=0.6\textwidth]{../img/format_gre.png}
     \captionof{figure}{GRE packet}
 \label{gre_packet}
@@ -370,8 +404,25 @@ struct trace {
 暂时将其放在一台服务器上. 但这并不说明程序应该这样,
 由于使用socket进行通讯, 所有的组件均可分开部署.
 
-\end{mdframed}
 
 \section{进度安排}
 
 
+\begin{centering}
+\centering
+    \captionof{table}{schedule}
+    \label{schedule}
+    \begin{tabular}{|l|p{0.2\textwidth}<{\centering}|p{0.5\textwidth}<{\centering}|} \hline
+    起止日期          & 工作内容                    & 备  注                                                          \\ \hline
+    2018.1—2018.3 & 查阅文献, 了解需求, 撰写开题报告      & 除报告撰写, 论文翻译外, 老师提供了一组trace数据包, 初步进行了trace数据的解析, 为之后的分析器设计奠定基础 \\   \hline
+    2018.3—2018.4 & 设计实现面向DCN网络的流量分析与故障检测方案 & 实现整个系统: 包括分析器, 存储器, 控制器及上层软件的设计                               \\    \hline
+    2018.4—2018.5 & 进行测试与完善, 着手撰写毕业论文       &                                                               \\  \hline
+        2018.5—2018.6 & 提交毕业论文, 完成论文答辩          &                                                             \\ \hline
+    \end{tabular}
+\end{centering}
+
+
+\section{主要参考文献}
+\printbib
+
+\end{mdframed}
