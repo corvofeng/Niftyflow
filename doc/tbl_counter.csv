@@ -1,0 +1,7 @@
+Field,Type,Comment
+id,int(11),
+counter_name,varchar(1024),计数器名称
+generate_time,timestamp,数据产生时间
+analyer)id,int(11),分析器ID
+cnt,int(11),计数值
+fdate,int(11),数据产生日期

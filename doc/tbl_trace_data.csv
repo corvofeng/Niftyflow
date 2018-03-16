@@ -1,0 +1,11 @@
+Field,Type,Comment
+id,int(11),
+s_ip,int(11),源IP
+d_ip,int(11),目的IP
+protocal,int(11),协议类型
+generate_time,timestamp,产生时间
+trace_data,varchar(1024),"trace数据信息, 保存为二进制字符串"
+fdate,int(11),"存入日期, 如果数据量过大则使用索引"
+is_loop,int(11),是否有环
+is_drop,int(11),是否丢包
+is_probe,int(11),是否为探针
