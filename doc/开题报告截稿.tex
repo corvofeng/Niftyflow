@@ -1,3 +1,4 @@
+% vim: foldmethod=marker foldcolumn=3
 
 \vspace{-4pt}
 {
@@ -13,7 +14,7 @@
 
 \begin{mdframed}[everyline=true]
 
-
+% {{{ 选题
 \section{选题依据及意义}
 
 数据中心被目前的企业中所广泛采用, 大型的数据中心甚至承载着公司的服务系统. 其中
@@ -39,12 +40,17 @@
 机制, 将特定的数据包进行镜像. 分析镜像后的数据包, 以达到对网络中存在问题的检测.
 
 本次设计中, 将会基于通用的处理器平台, 关注于DCN中环路的检测, 结果保存, 预警,
-数据展示, 探针构造几个方面. 初步实现Everflow功能的基础上, 进行了简单的改进:
-1. 加入了对快慢路径两种不同的分析方案;
-2. 在分析探针时, 
+数据展示, 探针构造几个方面. 初步实现Everflow功能的基础上, 进行了简单的改进完善:
 
+\begin{itemize}
+    \setlength\itemsep{0.1em}
+    \item 加入了对快慢路径两种不同的分析方案;
+    \item 在分析时, 多处使用hash数据结构来加快查找, 以加快处理速度;
+    \item 采用B/S架构, 管理员通过浏览器即可进行操作.
+\end{itemize}
+% }}}
 
-
+% {{{  文献综述
 \section{文献综述: 国内外研究现状,发展动态}
 
 不论是学校还是企业, 许多都设立了自己的数据中心,
@@ -156,6 +162,10 @@ Passive Realtime Datacenter: \upcite{roy2017passive} 这是在Facebook的数据
 仅仅使用转发规则(交换机支持). 作为路径中唯一标示. 文章中对于数据包头部,
 现有IPv6头部还很难寻求一份区域用于调试.
 
+% }}}
+
+% {{{ 方案论证
+
 \section{方案论证}
 
 本次毕业设计基于微软推出的设计方案Everflow\upcite{greenberg2016packet},
@@ -168,25 +178,51 @@ Passive Realtime Datacenter: \upcite{roy2017passive} 这是在Facebook的数据
 而且, 本方案中只讨论了在5跳之内的数据中心结构, 假定没有NAT协议,
 也就是说源
 
+% {{{ 任务书内容
 \subsection{任务书内容}
 
-任务包括: 1. 对实时采集到的数据包进行分析,
-实现丢包检测,环路分析或时延异常等故障检测; 2.
-按需保存Trace数据并在必要时生成主动探测包,
-以进一步确定故障位置和故障原因; 3.
-针对上述故障检测需求进行应用界面的开发, 具备统计分析, 异常报警等功能.
+\textbf{任务包括:}
+\begin{itemize}
+    \setlength\itemsep{0.1em}
+    \item 对实时采集到的数据包进行分析, 实现丢包检测,环路分析或时延异常等故障检测;
+    \item 按需保存Trace数据并在必要时生成主动探测包, 以进一步确定故障位置和故障原因;
+    \item 针对上述故障检测需求进行应用界面的开发, 具备统计分析, 异常报警等功能.
+\end{itemize}
 
-原始条件及数据: 1. 提供用于实验开发的软硬件环境和相关设施; 2.
-提供相关的技术资料和可离线使用的流量数据; 3.
-安排相关研究生给予一定的指导和协助.
+原始条件及数据:
+\begin{itemize}
+    \setlength\itemsep{0.1em}
+    \item 提供用于实验开发的软硬件环境和相关设施;
+    \item 提供相关的技术资料和可离线使用的流量数据;
+    \item 安排相关研究生给予一定的指导和协助.
+\end{itemize}
 
-工作要求: 1. 开题之前拟定详细的工作计划; 每周以书面形式报告进展情况;
-遵从实验室内部工作安排; 2. 严格按进度安排完成各阶段工作,
-遇到问题及时反馈, 在解决问题的过程中提高应变能力.
+工作要求:
+\begin{itemize}
+    \setlength\itemsep{0.1em}
+    \item 开题之前拟定详细的工作计划;
+    \item 每周以书面形式报告进展情况;
+    \item 遵从实验室内部工作安排;
+    \item 严格按进度安排完成各阶段工作;
+    \item 遇到问题及时反馈, 在解决问题的过程中提高应变能力.
+\end{itemize}
+% }}}
 
+% {{{ 设计架构
 \subsection{设计架构}
 
-对于整个的Everflow系统, 它的输入应该是由交换机镜像后的数据包.
+  下图\ref{user_flow}为程序设计图, 本次设计将参考下图进行实现. 之后进行分条
+叙述.
+
+\begin{center}
+    \includegraphics[width=0.7\textwidth]{../img/user_flow.png}
+    \captionof{figure}{程序设计图}
+    \label{user_flow}
+\end{center}
+
+\subsubsection{交换机}
+
+  对于整个的Everflow系统, 它的输入应该是由交换机镜像后的数据包.
 在\textbf{match and mirror}方面,
 使用了商用交换机的SPAN(Switch port analyzer)技术,
 将数据镜像并封装为GRE数据包, 关于交换机的过滤规则: 对于像BGP,
@@ -220,13 +256,22 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 
 图\ref{arch}中介绍了整个系统的结构,
 
-分析器读入产生的数据包后. 进行初步的处理, 而后存入存储器中供控制器使用.
+\subsubsection{分析器}
+
+  分析器读入产生的数据包后. 进行初步的处理, 而后存入存储器中供控制器使用.
 在分析器中, 我们可以获得整条的数据包路径, 通过路径,
 我们可以得知是否有环, 或是 有丢包现象. 以及对于特定的模式进行统计,
 对于探针来说也可以粗略的衡量延迟.
 
+  以上是对分析器的简单说明
+
+
+\subsubsection{存储器}
+
 分析结束后, 并不是所有的结果都要存入存储器, 只有异常行为数据流,
 有debug标志的 数据流, 重要协议(BGP, PFC等)会被记录到存储器中.
+
+\subsubsection{控制器}
 
 控制器最重要的功能就是向外提供API接口. 除此之外, 控制器可以对分析器配置,
 向交换机 中发送探针, 而后根据分析器的结果, 目前我们能够提供 的API包括
@@ -236,16 +281,32 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 本次设计中要求的使用图形界面 展示结果, 以及添加异常报警功能,
 在拥有了以上的API后, 这样的功能实现起来并不困难.
 
+% }}}
+
+% {{{ 技术选型
 \subsection{技术选型}
 
-此次系统设计, 技术选型主要包括分析器, 存储器, 以及控制器,
-上层应用程序的设计.
+此次系统设计, 技术选型主要包括分析器, 存储器, 以及控制器, 上层应用程序的设计.
 
-对于本次的系统设计, 主要通过Python实现,
-期间某些静态库的编写使用C/C++完成. 存储器可能选择MySQL作为存储,
-控制器的API接口采用HTTP协议交互, 最终的展示页面,
-功能配置也将在网页上进行操作, 其中, 图表展示打算使用开源的echarts.
 
+根据对性能的不同要求, 结合开发进度做以下讨论. 在分析器中, 需要考虑大量的流量
+涌来, 必须充分利用系统资源进行数据的接受和处理, 使用偏向底层的C/C++语言, 在控制器中,
+只涉及简单的数据库查找与用户交互, 对性能要求不高, 故使用Python, 以实现迅速而
+敏捷的开发.
+
+对于本次的系统设计, 分工如下:
+\begin{itemize}
+    \setlength\itemsep{0.1em}
+    \item 分析器采用C/C++完成
+    \item 存储器可能选择MySQL作为存储
+    \item 控制器主要通过Python实现, 期间某些静态库的编写使用C/C++完成.
+            控制器的API接口采用HTTP协议交互, 最终的展示页面,
+            功能配置也将在网页上进行操作, 其中, 图表展示打算使用开源的echarts.
+\end{itemize}
+
+% }}}
+
+% {{{ 主要算法说明
 \subsection{主要算法说明}
 
 \textbf{检测环路算法}: 检测环路应该是几个算法中最为简单的一个,
@@ -272,7 +333,7 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 对于端到端的延迟, 例如我们想要知道\(S_{1}\)到\(S_{2}\)的往返延迟,
 需要对原始数据包进行封装: 第一层, 以\(S_{1}\)的IP为目的IP, 第二层,
 以\(S_{2}\)的IP为目的IP, 第三层, 再次将\(S_{1}\) 的IP作为目的IP.
-数据包就会按照\(S_{1} -> S_{2} -> S_{1}\)的方式进行传递. 我们
+数据包就会按照\(S_{1} => S_{2} => S_{1}\)的方式进行传递. 我们
 可以通过此种方法得到粗略的往返延迟.
 
 为什么说粗略呢, 这里,
@@ -280,45 +341,10 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 我们只能得到到达分析器的时间, 因为认为\(S_{1}\)到分析器来回路径是一致的,
 因此可以 简单的使用分析器获得的两个时间相减得到粗略的往返延迟.
 
+%}}}
+
+% {{{ 主要数据结构说明
 \subsection{主要数据结构说明}
-
-这里的数据结构包括
-
-Track 数据
-
-\begin{center}
-    \captionof{table}{tbl\_traffic\_data}   % \caption{} 改为 \captionof{table}{}
-    \begin{tabular}{llll}   \hline
-    Field          & Type          & Comment                   \\ \hline
-    id             & int(11)       &                           \\
-    s\_ip          & int(11)       & 源IP                       \\
-    d\_ip          & int(11)       & 目的IP                      \\
-    protocal       & int(11)       & 协议类型                      \\
-    generate\_time & timestamp     & 产生时间                      \\
-    trace\_data    & varchar(1024) & trace数据信息, 保存为二进制字符串    \\
-    fdate          & int(11)       & 存入日期, 如果数据量过大则使用索引 \\
-    is\_loop       & int(11)       & 是否有环                      \\
-    is\_drop       & int(11)       & 是否丢包                      \\
-    is\_probe      & int(11)       & 是否为探针                    \\ \hline
-    \end{tabular}
-    \label{tbl_traffic_data}
-\end{center}
-
-
-\begin{center}
-    \captionof{table}{tbl\_counter}
-    \label{tbl_counter}
-    \begin{tabular}{lll} \hline
-    Field          & Type          & Comment \\ \hline
-    id             & int(11)       &         \\
-    counter\_name  & varchar(1024) & 计数器名称   \\
-    generate\_time & timestamp     & 数据产生时间  \\
-    analyer\_id    & int(11)       & 分析器ID   \\
-    cnt            & int(11)       & 计数值     \\
-    fdate          & int(11)       & 数据产生日期  \\ \hline
-    \end{tabular}
-\end{center}
-
 
 \begin{center}
 \includegraphics[width=0.6\textwidth]{../img/format_gre.png}
@@ -333,10 +359,9 @@ Track 数据
 传入任意的分析器中的是一个个单独的数据包, 分析器中, 需要还原整条路径,
 但是一条路径上数据包信息是相同的, 所以保存一份即可.
 这里是还原后采用的trace路径表示形式.
+另外对于每一条trace数据, 还具有一些元数据, 用以表示本trace数据的各种信息.
 
-另外对于每一条trace数据, 还具有一些元数据,
-用以表示本trace数据的各种信息.
-
+% {{{ traces数据
 \begin{lstlisting}
 typedef struct{
     uint32_t src_ip;    //源 IP 地址,32bits
@@ -377,20 +402,62 @@ struct trace {
   void* metadata; // 是否设置debug位, 是否错误, 错误为丢包或是其他
 };
 \end{lstlisting}
+% }}}
 
 除此之外, 分析器中还有计数器, 记录每个规则下的trace数据个数.
 
-存储器结构
+\subsubsection{存储器结构}
 
-存储器中的结构: 使用关系型数据库进行存储, 存储路径的数据表分为三大部分.
+存储器中的结构: 使用关系型数据库进行存储.
 
-第一部分是数据包原始信息, 包括数据包头部以及负载信息.
+存储路径的数据表分为三大部分:
 
-第二部分是每一跳的信息, 比如时间戳, 源MAC地址. 每个trace数据跳数不同,
-所以保存 时, 将所有跳的信息结合在一起存储.
+\begin{itemize}
+    \setlength\itemsep{0.1em}
+    \item 第一部分是数据包原始信息, 包括数据包头部以及负载信息.
+    \item 第二部分是每一跳的信息, 比如时间戳, 源MAC地址. 每个trace数据跳数不同,
+            所以保存 时, 将所有跳的信息结合在一起存储.
+    \item 第三部分是元数据信息, 表示这个trace信息是否有环, 是否丢包,
+            是否为探针数据.
+\end{itemize}
 
-第三部分是元数据信息, 表示这个trace信息是否有环, 是否丢包,
-是否为探针数据.
+
+\begin{center}
+    \captionof{table}{tbl\_traffic\_data}   % \caption{} 改为 \captionof{table}{}
+    \begin{tabular}{llll}   \hline
+    Field          & Type          & Comment                   \\ \hline
+    id             & int(11)       &                           \\
+    s\_ip          & int(11)       & 源IP                       \\
+    d\_ip          & int(11)       & 目的IP                      \\
+    protocal       & int(11)       & 协议类型                      \\
+    generate\_time & timestamp     & 产生时间                      \\
+    trace\_data    & varchar(1024) & trace数据信息, 保存为二进制字符串    \\
+    fdate          & int(11)       & 存入日期, 如果数据量过大则使用索引 \\
+    is\_loop       & int(11)       & 是否有环                      \\
+    is\_drop       & int(11)       & 是否丢包                      \\
+    is\_probe      & int(11)       & 是否为探针                    \\ \hline
+    \end{tabular}
+    \label{tbl_traffic_data}
+\end{center}
+
+存储计数器的数据表相对简单, 主要记录分析器ID, 计数值以及产生时间.
+
+\begin{center}
+    \captionof{table}{tbl\_counter}
+    \label{tbl_counter}
+    \begin{tabular}{lll} \hline
+    Field          & Type          & Comment \\ \hline
+    id             & int(11)       &         \\
+    counter\_name  & varchar(1024) & 计数器名称   \\
+    generate\_time & timestamp     & 数据产生时间  \\
+    analyer\_id    & int(11)       & 分析器ID   \\
+    cnt            & int(11)       & 计数值     \\
+    fdate          & int(11)       & 数据产生日期  \\ \hline
+    \end{tabular}
+\end{center}
+
+
+% }}}
 
 \subsection{未来可进行的优化}
 
@@ -405,8 +472,11 @@ struct trace {
 由于使用socket进行通讯, 所有的组件均可分开部署.
 
 
-\section{进度安排}
+% }}}
 
+
+% {{{ 结尾部分
+\section{进度安排}
 
 \begin{centering}
 \centering
@@ -425,4 +495,5 @@ struct trace {
 \section{主要参考文献}
 \printbib
 
+% }}}
 \end{mdframed}
