@@ -175,8 +175,9 @@ Passive Realtime Datacenter: \upcite{roy2017passive} 这是在Facebook的数据
 并依照控制器提供的API进行上层软件开发,
 交换机的配置以及存储器的仅作简要说明, 并不影响整体设计.
 
-而且, 本方案中只讨论了在5跳之内的数据中心结构, 假定没有NAT协议,
-也就是说源
+而且, 本方案中只讨论了在5跳之内的数据中心结构, 假定没有NAT协议, 一条路径上的
+源IP与目的IP一直保持相同, 可以根据
+
 
 % {{{ 任务书内容
 \subsection{任务书内容}
@@ -208,8 +209,8 @@ Passive Realtime Datacenter: \upcite{roy2017passive} 这是在Facebook的数据
 \end{itemize}
 % }}}
 
-% {{{ 设计架构
-\subsection{设计架构}
+% {{{ 设计思路
+\subsection{设计思路}
 
   下图\ref{user_flow}为程序设计图, 本次设计将参考下图进行实现. 之后进行分条
 叙述.
@@ -249,7 +250,7 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 可以保证一整条数据流中的所有数据包均被传递至相同的 分析器.
 
 \begin{center}
-    \includegraphics[width=0.6\textwidth]{../img/everflow_arch.png}
+    \includegraphics[width=0.8\textwidth]{../img/everflow_arch.png}
     \captionof{figure}{architecture}
     \label{arch}
 \end{center}
@@ -259,12 +260,21 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 \subsubsection{分析器}
 
   分析器读入产生的数据包后. 进行初步的处理, 而后存入存储器中供控制器使用.
-在分析器中, 我们可以获得整条的数据包路径, 通过路径,
-我们可以得知是否有环, 或是 有丢包现象. 以及对于特定的模式进行统计,
-对于探针来说也可以粗略的衡量延迟.
+在分析器中, 我们可以获得整条的数据包路径, 通过路径, 我们可以得知是否有环,
+或是有丢包现象. 以及对于特定的模式进行统计, 对于探针来说也可以粗略的衡量延迟.
 
-  以上是对分析器的简单说明
+  以上是对分析器的简单说明, 下图\ref{analyzer_process}是具体处理过程. 首先进行
+对GRE数据包的解封操作, 解封后, 使用多线程并发分析. 解封后, 具有相同标示的数据包
+需要进入相同的线程中.
 
+   分析中, 如果某一跳交换机在1s内, 没有收到接下来的报文, 即认为此次数据包已经结束,
+因此, 我们需要增加定时功能. 相关算法请查看\ref{主要算法说明}中定时器的实现.
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../img/analyze_process.png}
+    \captionof{figure}{Analyezr process}
+    \label{analyzer_process}
+\end{center}
 
 \subsubsection{存储器}
 
@@ -281,13 +291,32 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 本次设计中要求的使用图形界面 展示结果, 以及添加异常报警功能,
 在拥有了以上的API后, 这样的功能实现起来并不困难.
 
+具体的API将会在程序完成后随说明文档提供.
+
+
+\subsubsection{有关展示界面}
+
+下图\ref{traffic_data_show}, \ref{counter_data_show}分别展示了数据流量的显示以及
+计数器结果的显示, 目前主要列出信息模块, 搜索功能会接着完善
+
+\begin{center}
+    \includegraphics[width=0.9\textwidth]{../img/traffic_data_show.png}
+    \captionof{figure}{Traffic data}
+    \label{traffic_data_show}
+\end{center}
+
+\begin{center}
+    \includegraphics[width=0.9\textwidth]{../img/counter_data_show.png}
+    \captionof{figure}{Counter data}
+    \label{counter_data_show}
+\end{center}
+
 % }}}
 
 % {{{ 技术选型
 \subsection{技术选型}
 
 此次系统设计, 技术选型主要包括分析器, 存储器, 以及控制器, 上层应用程序的设计.
-
 
 根据对性能的不同要求, 结合开发进度做以下讨论. 在分析器中, 需要考虑大量的流量
 涌来, 必须充分利用系统资源进行数据的接受和处理, 使用偏向底层的C/C++语言, 在控制器中,
@@ -307,7 +336,7 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 % }}}
 
 % {{{ 主要算法说明
-\subsection{主要算法说明}
+\subsection{主要算法说明}\label{主要算法说明}
 
 \textbf{检测环路算法}: 检测环路应该是几个算法中最为简单的一个,
 只需要遍历数据流的所有节点, 如果不存在相同的节点,
@@ -341,6 +370,19 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 我们只能得到到达分析器的时间, 因为认为\(S_{1}\)到分析器来回路径是一致的,
 因此可以 简单的使用分析器获得的两个时间相减得到粗略的往返延迟.
 
+\textbf{定时器功能的实现}:
+
+图\ref{hash_backet}介绍了定时功能的实现, 每经过1s三个数据桶进行一次状态转移,
+以0s到1s的时间为例. 在此时间段内达到的数据包首先检查桶H0, 判断他的trace数据是否
+属于H0, 如果属于, 则加入到桶H0中, 否则放置在桶H1中. 待1s结束, 到达1s到2s的时间段中,
+我们将桶的状态进行转移, H0中的数据就可以作为慢路径进行处理,
+因为桶中的每条trace数据已经包含了整整1s的数据包.
+
+\begin{center}
+    \includegraphics[width=0.8\textwidth]{../img/hash_backet.png}
+    \captionof{figure}{hash backet}
+    \label{hash_backet}
+\end{center}
 %}}}
 
 % {{{ 主要数据结构说明
@@ -362,7 +404,12 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 另外对于每一条trace数据, 还具有一些元数据, 用以表示本trace数据的各种信息.
 
 % {{{ traces数据
+
 \begin{lstlisting}
+/**
+ * @brief  trace数据还有待讨论, 尤其是某些字段的长度
+ *       以及是否为环, 是否丢包, 是否为探针数据
+ */
 typedef struct{
     uint32_t src_ip;    //源 IP 地址,32bits
     uint32_t dst_ip;    //目的 IP 地址,32bits
@@ -370,20 +417,20 @@ typedef struct{
     uint8_t protocol;   //协议字段,8 bits
 }IP_PKT_KEY_T;
 
-typedef hop_info {
-    uint16_t switch_id;
-    uint16_t rcvd;
-} HOP_INFO_T;
-
 typedef struct{
     IP_PKT_KEY_T key;
+    uint16_t pkt_size;   // 数据包大小
 
-    uint32_t hop1_timestamp;    // 时间戳
+    uint32_t hop1_timestamp; // 收到第一个报文的时间戳:
+                               // Timestamp记录收到报文的时间,
+                               // 如果对于某一跳交换机超过1秒还没收到其报文,
+                               // 则视为丢包
+
     uint16_t switch_id[5];      // 只保留交换机id
     uint16_t hop1_rcvd : 2;     // 交换机收到的报文数
 
-
-    uint16_t used : 1;
+    uint16_t used : 1;          // 以hash表进行存储,
+                                // 记录hash表中的当前元素是否被占用.
     uint16_t rcvd : 5;
     uint16_t hop2_rcvd : 2;
     uint16_t hop3_rcvd : 2;
@@ -394,17 +441,13 @@ typedef struct{
     uint16_t hop4_timestamp : 10;
     uint16_t hop5_timestamp : 10;
 } PKT_TRACE_T;
-
-
-struct trace {
-  void* packet_content; // 数据包信息
-  list* hop_info; // 每一条信息, 包括每一跳的时间戳, TTL, MAC等的头部信息
-  void* metadata; // 是否设置debug位, 是否错误, 错误为丢包或是其他
-};
 \end{lstlisting}
 % }}}
 
 除此之外, 分析器中还有计数器, 记录每个规则下的trace数据个数.
+
+在程序中, 需要经过快路径, 慢路径两个处理过程, 由快路径处理结束后, 进入
+
 
 \subsubsection{存储器结构}
 
@@ -464,36 +507,42 @@ struct trace {
 分析器中接受数据包时, 可以使用RSS(Receiver Size Scaling).
 允许使用多个CPU 核来接受数据包.
 
+使用专用的交换机与分析服务器, 充分利用硬件资源加速运算
+
 \subsection{程序部署相关}
 
 从理论上来说, 分析器, 存储器, 控制器以及最终展示的应用程序,
 几个组件应该放置在 不同的服务器上, 为了开发方便,
 暂时将其放在一台服务器上. 但这并不说明程序应该这样,
 由于使用socket进行通讯, 所有的组件均可分开部署.
-
-
 % }}}
 
 
 % {{{ 结尾部分
 \section{进度安排}
 
+ 下表\ref{schedule}为进度安排表.
+
 \begin{centering}
 \centering
     \captionof{table}{schedule}
     \label{schedule}
-    \begin{tabular}{|l|p{0.2\textwidth}<{\centering}|p{0.5\textwidth}<{\centering}|} \hline
-    起止日期          & 工作内容                    & 备  注                                                          \\ \hline
-    2018.1—2018.3 & 查阅文献, 了解需求, 撰写开题报告      & 除报告撰写, 论文翻译外, 老师提供了一组trace数据包, 初步进行了trace数据的解析, 为之后的分析器设计奠定基础 \\   \hline
-    2018.3—2018.4 & 设计实现面向DCN网络的流量分析与故障检测方案 & 实现整个系统: 包括分析器, 存储器, 控制器及上层软件的设计                               \\    \hline
-    2018.4—2018.5 & 进行测试与完善, 着手撰写毕业论文       &                                                               \\  \hline
-        2018.5—2018.6 & 提交毕业论文, 完成论文答辩          &                                                             \\ \hline
+
+    \begin{tabular}{|l|p{0.17\textwidth}<{\centering}|p{0.48\textwidth}<{\centering}|} \hline
+    起止日期              & 工作内容                                    & 备  注                                                          \\ \hline
+    2018.1—2018.3         & 查阅文献, 了解需求, 撰写开题报告            & 除报告撰写, 论文翻译外, 老师提供了一组trace数据包, 初步进行了trace数据的解析, 为之后的分析器设计奠定基础 \\   \hline
+    2018.3.10 ~ 2018.3.20 & 开题报告, 论文翻译完成                      & 程序架构的设计, 数据库设计, 主要数据结构的设计 \\ \hline
+    2018.3.20 ~ 2018.3.31 & 编码实现                                    & 实现分析程序, 以及控制器的构建, 制作展示界面                        \\ \hline
+    2018.4.1  ~ 2018.4.20 & 设计实现面向DCN网络的流量分析与故障检测方案 & 联调整个系统: 包括分析器, 存储器, 控制器及上层软件的设计                               \\    \hline
+    2018.4.21 ~ 2018.4.30 & 进行测试与完善, 着手撰写毕业论文            & \\  \hline
+    2018.5—2018.6         & 提交毕业论文, 完成论文答辩                  & \\ \hline
+
     \end{tabular}
 \end{centering}
 
 
 \section{主要参考文献}
 \printbib
-
 % }}}
+
 \end{mdframed}
