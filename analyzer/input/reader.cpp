@@ -7,11 +7,16 @@
  * Step 1 - Add includes
  */
 #include <string>
-#include <iostream>
-#include <pcap.h>
 #include "reader.h"
 
 using namespace std;
+
+void gre_decap(u_char* data, int cap_len) {
+    u_char* p_h = data;
+
+
+}
+
 
 int pcap_read()
 {
@@ -87,5 +92,9 @@ int pcap_read()
 
         // Add two lines between packets
         printf("\n\n");
+        break;
     }
 }
+
+
+

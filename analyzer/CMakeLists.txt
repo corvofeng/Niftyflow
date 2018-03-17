@@ -11,6 +11,9 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror -DDEBUG")
 
 # 需要pcap库支持
 include(FindPCAP.cmake)
+include(FindMySQL.cmake)
+include(FindRedis.cmake)
 
 add_subdirectory(input)
+add_subdirectory(output)
 add_subdirectory(test)
