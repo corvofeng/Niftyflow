@@ -1,4 +1,6 @@
 var $ = require("jquery");
+var bootstrap = require('bootstrap');
+
 
 if (process.env.NODE_ENV !== 'production') {
   require('./index.html')

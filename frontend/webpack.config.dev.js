@@ -29,7 +29,11 @@ module.exports = {
     }]
   },
   devServer: {
-    contentBase: './dist',
+    contentBase:  [
+      path.resolve(__dirname, "dist"),
+      path.resolve(__dirname, "node_modules")
+    ],
+
     hot: true
   }
 }
