@@ -13,8 +13,10 @@ import tornado.ioloop
 import tornado.web
 import tornado.log
 import logging as SLOG
+import tornadoredis
 from tornado.options import define, options
 from handlers.test_handler import TeshHandler
+from q_listen import q_listen
 
 define('port', default=9999, help='run on the given port', type=int)
 define('debug', default=False, help="debug or relase", type=bool)
@@ -36,6 +38,8 @@ class Application(tornado.web.Application):
 def main():
     app = Application()
     app.listen(options.port)
+
+    q_listen()
 
     SLOG.info("App is listening: %d" % options.port)
 
