@@ -20,11 +20,12 @@ public:
     explicit Lock(pthread_mutex_t *mx) : mutex(mx)
     {
         int err = pthread_mutex_lock(mutex);
+//        printf("[L]: get lock %d\n", err);
     }
     ~Lock()
     {
+//        printf("[L]: release lock\n");
         int err = pthread_mutex_unlock(mutex);
-        // printf("[LOCKER]: unlock %d\n", err);
         mutex = nullptr;
     }
 

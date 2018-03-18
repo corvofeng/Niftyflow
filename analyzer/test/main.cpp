@@ -15,11 +15,11 @@ int main(int argc, char *argv[])
 
     Processer p;
     p.run();
-    p.join();
 
     LOG_D("debug log\n");
     LOG_W("warning log\n");
 
+    p.join();
     pcap_read();
     trans_test();
     return 0;

@@ -11,7 +11,6 @@
 #ifndef LOG_H_EVNJHQW5
 #define LOG_H_EVNJHQW5
 
-#define _GNU_SOURCE         /* See feature_test_macros(7) */
 #include <string.h>
 #include "lock.h"
 #include <pthread.h>
@@ -34,13 +33,13 @@ class Logger
     std::ostream *m_out; // use pointer so you can change it at any point
     bool          m_owner;
     Level         lvl;
-    pthread_mutex_t mtx;
 public:
     static Logger* instance() {
         static Logger l;
         return &l;
     }
 
+    pthread_mutex_t mtx;
     void init(std::ostream* stream, Level lvl) {
         this->setStream(stream, false);
         this->setLevel(lvl);
@@ -69,8 +68,8 @@ public:
     virtual ~Logger()
     {
         setStream(0, false);
+        pthread_mutex_destroy(&mtx);
     }
-
     void setLevel(Level lvl){
         this->lvl = lvl;
     }
@@ -103,10 +102,7 @@ public:
     {
         if(!m_out)
             throw std::runtime_error("No stream set for Logger class");
-        {
-            Lock l(&mtx);
-            (*m_out) << object;
-        }
+        (*m_out) << object;
         return *this;
     }
 
@@ -128,12 +124,14 @@ public:
     }while(0)
 
 #define LOG_L(lvl, msg) do{   \
-    if(Logger::instance()->isLvlValid(lvl)) \
+    if(Logger::instance()->isLvlValid(lvl)) {\
+        Lock l(&(Logger::instance()->mtx));   \
         ((*Logger::instance())\
             << Logger::lName(lvl) \
             << "[" <<  __FILENAME__  << ":" <<__LINE__ << "] " << syscall(SYS_gettid) << " "  \
             <<  msg);\
-    } while(0)
+    }\
+} while(0)
 
 #define LOG_D(msg) LOG_L(Level::DEBUG, msg)
 #define LOG_W(msg) LOG_L(Level::WARNING, msg)
