@@ -13,6 +13,7 @@
 
 #include <pthread.h>
 #include <stdio.h>
+#include "log.h"
 
 /**
  * @brief 每个线程持有一个对象

@@ -11,16 +11,20 @@
 #ifndef LOG_H_EVNJHQW5
 #define LOG_H_EVNJHQW5
 
+#define _GNU_SOURCE         /* See feature_test_macros(7) */
 #include <string.h>
 #include "lock.h"
+#include <pthread.h>
+#include <iostream>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/syscall.h>   /* For SYS_xxx definitions */
+
+
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#include <pthread.h>
-#include <iostream>
-
 enum Level { ERROR, INFO, WARNING, DEBUG };
-
 
 /**
  * https://stackoverflow.com/questions/3165563/flexible-logger-class-using-standard-streams-in-c
@@ -118,14 +122,17 @@ public:
  * logger << "This will be appended to myfile.log" << std::endl;
  */
 
-
+// 请尽量不要使用单独的LOG函数, 会令人很困扰
 #define LOG(msg) do{ \
         ((*Logger::instance()) << "[" <<  __FILENAME__  << ":" <<__LINE__ << "] "<<  msg);\
     }while(0)
 
 #define LOG_L(lvl, msg) do{   \
     if(Logger::instance()->isLvlValid(lvl)) \
-        ((*Logger::instance()) << Logger::lName(lvl) << "[" <<  __FILENAME__  << ":" <<__LINE__ << "] "<<  msg);\
+        ((*Logger::instance())\
+            << Logger::lName(lvl) \
+            << "[" <<  __FILENAME__  << ":" <<__LINE__ << "] " << syscall(SYS_gettid) << " "  \
+            <<  msg);\
     } while(0)
 
 #define LOG_D(msg) LOG_L(Level::DEBUG, msg)

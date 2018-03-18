@@ -10,9 +10,9 @@ Processer::~Processer() {
 }
 
 void Processer::_inner_slow_path() {
-    printf("Inner slow path\n");
+    LOG_D("Inner slow path\n");
 }
 
 void Processer::_inner_fast_path() {
-    printf("Inner fast path\n");
+    LOG_D("Inner fast path\n");
 }
