@@ -1,6 +1,5 @@
 #include "trans.h"
 
-
 void trans_test() {
     mysql_test();
     redis_test();
@@ -48,8 +47,6 @@ void mysql_test() {
     mysql_free_result(res);
     // clean up the database link 
     mysql_close(conn);
-
-
 }
 
 MYSQL* mysql_connection_setup(struct connection_details mysql_details)

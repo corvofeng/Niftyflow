@@ -1,5 +1,18 @@
-#ifndef TRANS_H
-#define TRANS_H
+/*
+ *=======================================================================
+ *    Filename:trans.h
+ *
+ *     Version: 1.0
+ *  Created on: March 18, 2018
+ *
+ *      Author: corvo
+ *=======================================================================
+ */
+
+#ifndef TRANS_H_9TSB0WUC
+#define TRANS_H_9TSB0WUC
+
+
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,4 +35,4 @@ void redis_test();
 MYSQL_RES* mysql_perform_query(MYSQL *connection, char *sql_query);
 MYSQL* mysql_connection_setup(struct connection_details mysql_details);
 
-#endif
+#endif /* end of include guard: TRANS_H_9TSB0WUC */

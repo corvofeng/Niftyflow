@@ -1,6 +1,6 @@
 /*
  *=======================================================================
- *    Filename:reader.h
+ *    Filename:conf.h
  *
  *     Version: 1.0
  *  Created on: March 18, 2018
@@ -8,17 +8,11 @@
  *      Author: corvo
  *=======================================================================
  */
+#ifndef CONF_H_DIL08GJQ
+#define CONF_H_DIL08GJQ
 
-#ifndef READER_H_AKS58L6J
-#define READER_H_AKS58L6J
 
-#include <pcap.h>
 
-int pcap_read();
 
-/**
- * @brief GRE 解除封装
- */
-void gre_decap(u_char* data);
+#endif /* end of include guard: CONF_H_DIL08GJQ */
 
-#endif /* end of include guard: READER_H_AKS58L6J */
