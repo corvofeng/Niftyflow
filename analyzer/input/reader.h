@@ -12,6 +12,7 @@
 #ifndef READER_H_AKS58L6J
 #define READER_H_AKS58L6J
 
+#include "log.h"
 #include <pcap.h>
 
 int pcap_read();

@@ -21,7 +21,6 @@ class Processer{
 private:
     Processer(Processer&); // 禁止拷贝
 
-    void get_packets();
 
     int proc_id;
     pthread_t t_fast;
@@ -29,6 +28,8 @@ private:
 
     bool is_slow_over;
     pthread_mutex_t is_over_mtx;
+
+    void get_packets();
     void _inner_slow_path();
     void _inner_fast_path();
 

@@ -6,8 +6,8 @@ set(CMAKE_CXX_COMPILER "g++")
 set(CMAKE_C_COMPILER "gcc")
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 -DDEBUG")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror -DDEBUG")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 ")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror ")
 
 
 include(FindPCAP.cmake)     # 需要pcap库解析pcap文件
@@ -19,3 +19,5 @@ add_subdirectory(process)
 add_subdirectory(output)
 add_subdirectory(common)
 add_subdirectory(test)
+
+

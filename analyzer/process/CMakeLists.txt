@@ -1,4 +1,5 @@
 
+INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/common)
 # 设置源码文件
 set(SOURCE_FILES ./on_process.cpp ./on_process.h)
 

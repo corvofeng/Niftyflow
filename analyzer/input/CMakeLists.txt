@@ -1,4 +1,6 @@
 
+include_directories(${PROJECT_SOURCE_DIR}/common)
+
 # 设置源码文件
 set(SOURCE_FILES ./reader.cpp ./reader.h)
 

@@ -13,13 +13,12 @@ using namespace std;
 
 void gre_decap(u_char* data, int cap_len) {
     u_char* p_h = data;
-
-
 }
 
 
 int pcap_read()
 {
+    LOG_L(Level::INFO, "pcap read\n");
     /*
      * Step 2 - Get a file name
      */
