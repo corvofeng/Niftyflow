@@ -26,7 +26,8 @@ module.exports = {
     }, {
       test: /\.html$/,
       loader: "raw-loader" // loaders: ['raw-loader'] is also perfectly acceptable.
-    }]
+    }
+    ]
   },
   devServer: {
     contentBase:  [

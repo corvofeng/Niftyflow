@@ -1,14 +1,12 @@
 var $ = require("jquery");
-var bootstrap = require('bootstrap');
-
+require('bootstrap/dist/js/bootstrap.bundle.js')    // for bootstrap
 
 if (process.env.NODE_ENV !== 'production') {
-  require('./index.html')
+  require('./index.html');
 }
 
 console.log('hello world');
-$("#button").on('click', function(event){
+
+$("#btn").on("click", function(){
+    console.log("ok");
 });
-
-
-
