@@ -40,23 +40,27 @@
 机制, 将特定的数据包进行镜像. 分析镜像后的数据包, 以达到对网络中存在问题的检测.
 
 本次设计中, 将会基于通用的处理器平台, 关注于DCN中环路的检测, 结果保存, 预警,
-数据展示, 探针构造几个方面. 初步实现Everflow功能的基础上, 进行了简单的改进完善:
+数据展示, 探针构造几个方面. 初步实现Everflow功能的基础上, 进行了简单的改进完善,
+以下列出了程序的主要功能:
 
 \begin{itemize}
     \setlength\itemsep{0.1em}
+    \item 对实时采集到的数据包进行分析, 实现丢包检测,环路分析或时延异常等故障检测;
     \item 加入了对快慢路径两种不同的分析方案;
     \item 在分析时, 多处使用hash数据结构来加快查找, 以加快处理速度;
-    \item 采用B/S架构, 管理员通过浏览器即可进行操作.
+    \item 按需保存Trace数据并在必要时生成主动探测包, 以进一步确定故障位置和故障原因;
+    \item 采用B/S架构, 管理员通过浏览器即可进行操作
 \end{itemize}
+
 % }}}
+
 
 % {{{  文献综述
 \section{文献综述: 国内外研究现状,发展动态}
 
 不论是学校还是企业, 许多都设立了自己的数据中心,
-有关数据中心的网络故障检测, 都提出了自己的 见解与考量.
-对于更为大型的数据中心网络, 更是有人提出了集学校公司之力, 共同开发系统,
-不断的部署 与完善.
+有关数据中心的网络故障检测, 都提出了自己的 见解与考量. 对于更为大型的数据中心网络,
+更是有人提出了集学校公司之力, 共同开发系统, 不断的部署与完善.
 
 经过对国内外近期文献的查阅, 我发现,
 这些系统或是工具可以按照不同角度进行分类. 在主动性方面,
@@ -178,37 +182,6 @@ Passive Realtime Datacenter: \upcite{roy2017passive} 这是在Facebook的数据
 而且, 本方案中只讨论了在5跳之内的数据中心结构, 假定没有NAT协议, 一条路径上的
 源IP与目的IP一直保持相同, 可以根据
 
-
-% {{{ 任务书内容
-\subsection{任务书内容}
-
-\textbf{任务包括:}
-\begin{itemize}
-    \setlength\itemsep{0.1em}
-    \item 对实时采集到的数据包进行分析, 实现丢包检测,环路分析或时延异常等故障检测;
-    \item 按需保存Trace数据并在必要时生成主动探测包, 以进一步确定故障位置和故障原因;
-    \item 针对上述故障检测需求进行应用界面的开发, 具备统计分析, 异常报警等功能.
-\end{itemize}
-
-原始条件及数据:
-\begin{itemize}
-    \setlength\itemsep{0.1em}
-    \item 提供用于实验开发的软硬件环境和相关设施;
-    \item 提供相关的技术资料和可离线使用的流量数据;
-    \item 安排相关研究生给予一定的指导和协助.
-\end{itemize}
-
-工作要求:
-\begin{itemize}
-    \setlength\itemsep{0.1em}
-    \item 开题之前拟定详细的工作计划;
-    \item 每周以书面形式报告进展情况;
-    \item 遵从实验室内部工作安排;
-    \item 严格按进度安排完成各阶段工作;
-    \item 遇到问题及时反馈, 在解决问题的过程中提高应变能力.
-\end{itemize}
-% }}}
-
 % {{{ 设计思路
 \subsection{设计思路}
 
@@ -224,12 +197,10 @@ Passive Realtime Datacenter: \upcite{roy2017passive} 这是在Facebook的数据
 \subsubsection{交换机}
 
   对于整个的Everflow系统, 它的输入应该是由交换机镜像后的数据包.
-在\textbf{match and mirror}方面,
-使用了商用交换机的SPAN(Switch port analyzer)技术,
-将数据镜像并封装为GRE数据包, 关于交换机的过滤规则: 对于像BGP,
-PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
-而对于TCP连接这种: 只镜像包含SYN, FIN, 和 RST的数据包,
-这样既达到了探测效果, 又大大的减少分析器的开销.
+在\textbf{match and mirror}方面, 使用了商用交换机的SPAN(Switch port analyzer)技术,
+将数据镜像并封装为GRE数据包, 关于交换机的过滤规则: 对于像BGP, PFC以及RDMA这样的
+特殊且重要的协议, 采取全部镜像的策略, 而对于TCP连接这种: 只镜像包含SYN, FIN, 和
+RST的数据包, 这样既达到了探测效果, 又大大的减少分析器的开销.
 
 \begin{center}
     \includegraphics[width=0.7\textwidth]{../img/handle_packet_encapsulation.png}
@@ -239,15 +210,8 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
 
 经过封装之后的数据包p将会传入至分析器中, 见图\ref{mux}. 但为了负载均衡,
 在传入分析器之前, 还要经过一层由交换机改装好的复用器(图中MUX),
-之后会再经过 洗牌器发往不同的分析器中进行分析. 这一过程虽然经过多个设备,
+之后会再经过Reshuffler发往不同的分析器中进行分析. 这一过程虽然经过多个设备,
 但这些设备均是交换机, 具有较快的处理数据包的速度.
-
-虽然我们是在数据包层面分析问题,
-但是我们想要得到的还是整个数据流传输时的情况, 这里
-洗牌器这个设备承担了比较重要的工作, 具有同样5元组信息(源IP, 目的IP,
-源端口, 目的端口 和协议类型)的数据包将产生同样的hash值,
-通过hash值确定要传递到的分析器,
-可以保证一整条数据流中的所有数据包均被传递至相同的 分析器.
 
 \begin{center}
     \includegraphics[width=0.8\textwidth]{../img/everflow_arch.png}
@@ -383,6 +347,65 @@ PFC以及RDMA这样的 特殊且重要的协议, 采取全部镜像的策略,
     \captionof{figure}{hash backet}
     \label{hash_backet}
 \end{center}
+
+
+  根据上图\ref{hash_backet}中的状态转换方式, 设计如下两个线程, 分别进行快慢路径的
+处理. 将定时器放在了快路径线程中, 通过定时器的触发来推动状态转换. 如果慢路径的
+处理时间过久, 将会被\textbf{while(!is\_slow\_over)\{\}}所阻塞, 这不是我们想要看到
+的结果, 之后可能会增加统计功能, 用以确定和解决程序的瓶颈.
+
+
+\begin{lstlisting}[caption=数据结构,frame=tlrb]{Name}
+hash_backet* H0, H1, H2;    // 三个hash数据桶
+bool is_slow_over = true;   // 标示慢路径是否完成处理
+Mutex lock;                 // 互斥锁, 防止快慢路径同时对数据进行修改
+\end{lstlisting}
+
+\noindent\begin{minipage}{.55\textwidth}
+\begin{lstlisting}[caption=快路径线程,frame=tlrb]{Name}
+
+clock_t start = clock();
+while(!stop) {
+  p = GetPacket();
+  if(H0 found trace) {
+    将p添加至H0中;
+  } else {
+    将p添加至H1中;
+  }
+
+  // 超过1s
+  while(clock() - start > 1000)
+  {
+    // spinlock 检查慢路劲处理是否结束
+    while(!is_slow_over){}
+    TMP = H0;
+    H0 = H2;
+    H2 = H1;
+    H1 = TMP;
+    {
+        MutexLock;
+        is_slow_over = false;
+    }
+    // 更新clock
+    start = clock();
+  }
+}
+\end{lstlisting}
+\end{minipage}\hfill
+\begin{minipage}{.39\textwidth}
+\begin{lstlisting}[caption=慢路径线程,frame=tlrb]{Name}
+while(!stop) {
+  while(is_slow_over){}
+  // 处理慢路径
+
+  {
+    MutexLock;
+    is_slow_over = true;
+  }
+}
+\end{lstlisting}
+\end{minipage}
+
 %}}}
 
 % {{{ 主要数据结构说明
@@ -516,7 +539,6 @@ typedef struct{
 暂时将其放在一台服务器上. 但这并不说明程序应该这样,
 由于使用socket进行通讯, 所有的组件均可分开部署.
 % }}}
-
 
 % {{{ 结尾部分
 \section{进度安排}
