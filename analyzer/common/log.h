@@ -20,7 +20,6 @@
 #include <sys/syscall.h>   /* For SYS_xxx definitions */
 
 
-
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 enum Level { ERROR, INFO, WARNING, DEBUG };
@@ -118,25 +117,21 @@ public:
  * logger << "This will be appended to myfile.log" << std::endl;
  */
 
-// 请尽量不要使用单独的LOG函数, 会令人很困扰
-#define LOG(msg) do{ \
-        ((*Logger::instance()) << "[" <<  __FILENAME__  << ":" <<__LINE__ << "] "<<  msg);\
-    }while(0)
+// 线程首先获取锁, 之后调用单例对象进行. 
+#define LOG_L(lvl, msg) do{                                                                  \
+    if(Logger::instance()->isLvlValid(lvl)) {                                                \
+        Lock l(&(Logger::instance()->mtx));                                                  \
+        ((*Logger::instance())                                                               \
+            << Logger::lName(lvl)                                                            \
+            << "[" <<  __FILENAME__  << ":" <<__LINE__ << "] " << syscall(SYS_gettid) << " " \
+            <<  msg);                                                                        \
+    }                                                                                        \
+  } while(0)
 
-#define LOG_L(lvl, msg) do{   \
-    if(Logger::instance()->isLvlValid(lvl)) {\
-        Lock l(&(Logger::instance()->mtx));   \
-        ((*Logger::instance())\
-            << Logger::lName(lvl) \
-            << "[" <<  __FILENAME__  << ":" <<__LINE__ << "] " << syscall(SYS_gettid) << " "  \
-            <<  msg);\
-    }\
-} while(0)
-
-#define LOG_D(msg) LOG_L(Level::DEBUG, msg)
-#define LOG_W(msg) LOG_L(Level::WARNING, msg)
-#define LOG_I(msg) LOG_L(Level::INFO, msg)
-#define LOG_E(msg) LOG_L(Level::ERROR, msg)
+#define LOG_D(msg) LOG_L(Level::DEBUG   , msg)
+#define LOG_W(msg) LOG_L(Level::WARNING , msg)
+#define LOG_I(msg) LOG_L(Level::INFO    , msg)
+#define LOG_E(msg) LOG_L(Level::ERROR   , msg)
 
 //((*Logger::instance()) << "[" <<  __FILENAME__  << ":" <<__LINE__ << "] "<<  msg);\
 // For quick access you could define a macro
