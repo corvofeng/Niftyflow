@@ -13,7 +13,6 @@ import tornado.ioloop
 import tornado.web
 import tornado.log
 import logging as SLOG
-import tornadoredis
 from tornado.options import define, options
 from handlers.test_handler import TeshHandler
 from q_listen import q_listen
@@ -39,6 +38,7 @@ def main():
     app = Application()
     app.listen(options.port)
 
+    # 监听redis队列中的预警
     q_listen()
 
     SLOG.info("App is listening: %d" % options.port)

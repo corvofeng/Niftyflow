@@ -12,7 +12,6 @@ import tornadoredis
 import tornado.gen
 
 
-
 # redis客户端 LPUSH q aaa  即可
 @tornado.gen.engine
 def q_listen():
