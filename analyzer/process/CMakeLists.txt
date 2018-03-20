@@ -1,9 +1,12 @@
 
-INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/common)
+INCLUDE_DIRECTORIES(
+        ${PROJECT_SOURCE_DIR}/common
+        ${PROJECT_SOURCE_DIR}/input)
+
 # 设置源码文件
 set(SOURCE_FILES ./on_process.cpp ./on_process.h
             ./ever_main.h ./ever_main.cpp)
 
 add_library(process ${SOURCE_FILES})
 
-TARGET_LINK_LIBRARIES(process pthread)
+TARGET_LINK_LIBRARIES(process pthread reader)

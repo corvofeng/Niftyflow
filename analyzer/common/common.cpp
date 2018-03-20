@@ -2,6 +2,10 @@
 #include <assert.h>
 #include "packet.h"
 
+void PARSE_PKT_print(PARSE_PKT* p) {
+
+
+}
 
 /*
  * dissect/print packet
@@ -32,7 +36,7 @@ got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 
     /* define/compute ip header offset */
     ip = (struct sniff_ip*)(packet + SIZE_ETHERNET);
-    size_ip = IP_HL(ip)*4;
+    size_ip = IP_HL(ip) * 4;
     if (size_ip < 20) {
         LOG_D(FMT("   * Invalid IP header length: %u bytes\n", size_ip));
         return;
@@ -96,4 +100,5 @@ got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 
     return;
 }
+
 

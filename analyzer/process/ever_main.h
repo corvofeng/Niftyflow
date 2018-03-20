@@ -19,6 +19,7 @@
 #include "con_queue.h"
 #include "on_process.h"
 #include "packet.h"
+#include "reader.h"
 
 using std::vector;
 using std::shared_ptr;
@@ -35,7 +36,8 @@ private:
     int processer_cnt;    /**< 记录同时处理的processor个数 */
     int reader_cnt;       /**< 记录同时处理的reader个数 */
 
-    vector<pthread_t> reader_vec;
+    vector<pcap_t*> pcap_vec;
+    vector<shared_ptr<Reader>> reader_vec;
 
     vector<shared_ptr<Processer>> processer_vec; /**< 多个分析器进行 */
     vector<shared_ptr<PKT_QUEUE>> queue_vec; /**< 每个分析器绑定一个队列 */

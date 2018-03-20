@@ -21,13 +21,28 @@ void Reader::_inner_read_and_push() {
     // u_char is defined here:
     // typedef unsigned char   u_char;
     const u_char *data;
+    LOG_D("_inner_read_and_push\n");
 
     u_int packetCount = 0;
     while (int returnValue = pcap_next_ex(this->_pcap, &header, &data) >= 0) {
+        for (u_int i=0; (i < header->caplen ) ; i++)
+        {
+            // Start printing on the next after every 16 octets
+            if ( (i % 16) == 0) printf("\n");
+
+            // Print each octet as hex (x), make sure there is always two characters (.2).
+            printf("%.2x ", data[i]);
+        }
+
+        // Add two lines between packets
+        printf("\n\n");
+
         _push_to_queue(_pkt_generater(header, data));
+        break;
     }
 }
 
+static void pkt_init(shared_ptr<PARSE_PKT> p);
 shared_ptr<PARSE_PKT> Reader::_pkt_generater(
             const struct pcap_pkthdr* header,
             const u_char *packet) {
@@ -37,7 +52,7 @@ shared_ptr<PARSE_PKT> Reader::_pkt_generater(
     pkt->header = *header;   // copy ts and len, they are nums, = is alright.
     pkt->_data = (u_char*)malloc(sizeof(u_char) * pkt->header.len);
     memcpy(pkt->_data, packet, pkt->header.len);
-
+    pkt_init(pkt);
 
     return pkt;
 }
@@ -49,10 +64,8 @@ void Reader::_push_to_queue(shared_ptr<PARSE_PKT> pkt) {
 
 /**
  * @brief 根据p->_data构建完整的数据包p
- *
- * @param p
  */
-static void pkt_init(PARSE_PKT *p) {
+static void pkt_init(shared_ptr<PARSE_PKT> p) {
     p->eth_outer = (struct sniff_ethernet*)(p->_data);
     p->ip_outer = (struct sniff_ip*)(p->_data + SIZE_ETHERNET);
 
@@ -60,7 +73,7 @@ static void pkt_init(PARSE_PKT *p) {
     int size_gre = 0;
     int size_ip_inner = 0;
 
-    size_ip_outer = IP_HL(p->ip_outer)*4;
+    size_ip_outer = (p->ip_outer->ip_hl)*4;
 
     switch(p->ip_outer->ip_p) {
         case IPPROTO_GRE:
@@ -71,13 +84,48 @@ static void pkt_init(PARSE_PKT *p) {
             return;
     }
     p->gre = (struct sniff_std_gre*)(p->_data + SIZE_ETHERNET + size_ip_outer);
-    size_gre = 4 * 4;
-    if(p->gre->gre_type != ETH_P_ERSPAN) {
-            LOG_E("   Protocol: unknown\n");
+    size_gre = 1 * 4;
+
+    if(GRE_TYPE(p->gre) != ETH_P_ERSPAN) {  /** 如果GRE数据包中不是ERSPAN格式, 则退出 */
+        LOG_E(FMT("   Protocol: %X\n", GRE_TYPE(p->gre)));
+        LOG_E    ("   Protocol: unknown\n");
+        return ;
     }
-    // TODO: 添加GRE长度的判断
+
+    if(GRE_C(p->gre))   // 如果有C位, Checksum 和 Reserved1 都存在
+        size_gre += 1 * 4;
+
+    if(GRE_K(p->gre))
+        size_gre += 1 * 4;
+
+    if(GRE_S(p->gre))
+        size_gre += 1 * 4;
 
 
+    p->eth_inner = (struct sniff_ethernet*)
+                        (p->_data + SIZE_ETHERNET + size_ip_outer + size_gre);
+
+    p->ip_inner = (struct sniff_ip*)
+                        (p->_data + SIZE_ETHERNET * 2 + size_ip_outer + size_gre);
+
+    size_ip_inner = p->ip_inner->ip_hl * 4;
+
+    switch(p->ip_inner->ip_p) {
+        case IPPROTO_TCP:
+            LOG_D("   Protocol: TCP\n");
+            break;
+        case IPPROTO_ICMP:
+            LOG_D("   Protocol: ICMP\n");
+            break;
+        default:
+            LOG_E(FMT("   Protocol: %2X \n", p->ip_inner->ip_p));
+            LOG_E    ("   Protocol: unknown\n");
+            return;
+    }
+    p->tcp = (struct sniff_tcp*)
+        (p->_data + SIZE_ETHERNET * 2 + size_ip_outer + size_gre + size_ip_inner);
+
+    LOG_D("Parse Over\n");
     return ;
 }
 
@@ -144,7 +192,7 @@ int pcap_read()
         printf("Epoch Time: %d:%d seconds\n", header->ts.tv_sec, header->ts.tv_usec);
 
         //parse_ETH_PKT(data, header->caplen);
-        got_packet(NULL, header, data);
+        // got_packet(NULL, header, data);
 
         // loop through the packet and print it as hexidecimal representations of octets
         // We also have a function that does this similarly below: PrintData()

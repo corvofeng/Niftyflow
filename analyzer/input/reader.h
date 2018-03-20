@@ -23,6 +23,7 @@ using std::vector;
 using std::shared_ptr;
 
 class Reader {
+private:
     pthread_t t_reader;
     vector<shared_ptr<PKT_QUEUE>> *_queue_vec;
     pcap_t *_pcap;
@@ -31,11 +32,6 @@ class Reader {
 
     /**
      * @brief 构建解析时需要的数据包
-     *
-     * @param header
-     * @param 
-     *
-     * @return 
      */
     shared_ptr<PARSE_PKT> _pkt_generater(
             const struct pcap_pkthdr* header,
@@ -43,10 +39,9 @@ class Reader {
 
     /**
      * @brief 根据数据包的hash结果, 将其放置在不同的队列中
-     *
-     * @param pkt
      */
     void _push_to_queue(shared_ptr<PARSE_PKT> pkt);
+
 public:
     Reader(): _queue_vec(NULL), _pcap(NULL) {}
     void bind_queue_vec(vector<shared_ptr<PKT_QUEUE>>* queue_vec) {
@@ -59,13 +54,13 @@ public:
             LOG_D("Must bind queue vec and pcap, then called run\n");
             return ;
         }
+        LOG_D("Creat process\n");
         pthread_create(&t_reader, NULL, &Reader::read_and_push, this);
     }
 
     void bind_pcap(pcap_t *pcap){
         this->_pcap = pcap;
     }
-
 
     void join() {
         (void) pthread_join(t_reader, NULL);
@@ -76,11 +71,5 @@ public:
         r->_inner_read_and_push();
     }
 };
-
-
-/**
- * @brief GRE 解除封装
- */
-void gre_decap(u_char* data);
 
 #endif /* end of include guard: READER_H_AKS58L6J */

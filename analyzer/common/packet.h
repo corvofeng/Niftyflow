@@ -17,6 +17,15 @@
  *    http://www.tcpdump.org/sniffex.c, 我发现自己傻得像个两百斤的胖子
  *    而后又发现了 "/usr/include/netinet/in.h",
  *    我开始明白, 自己其实是个两百五十斤的胖子.
+ *
+ *  2018-03-20: 在解析GRE数据包时, 发现了大端小端的问题, 数据包中默认为大端
+ *              字节序, 而我们系统上为小端字节序. **对于超过8位的数据**,
+ *              若是不进行字节序转换, 将会出现数据包不匹配.
+ *
+ *              一个典型问题就是GRE中的 **Protocol type**, 它是一个16位的数据
+ *              在使用时, 需要将其重新拼接.
+ *
+ *              对于小于8位的数据将不会存在这个问题, 不必过分担心, 望周知.
  */
 
 #include <pcap.h>
@@ -29,6 +38,8 @@
 #include <arpa/inet.h>
 #include <stdint.h>
 #include "con_queue.h"
+#include <asm/byteorder.h>
+
 
 /* default snap length (maximum bytes per packet to capture) */
 #define SNAP_LEN 1518
@@ -46,9 +57,23 @@ struct sniff_ethernet {
         uint16_t ether_type;                     /* IP? ARP? RARP? etc */
 };
 
-/* IP header */
+/* IP header
+ * https://en.wikipedia.org/wiki/IPv4#Header, 在数据包中, 必须考虑数据包的大小端
+ * 问题
+ *
+ */
 struct sniff_ip {
-        u_char  ip_vhl;                 /* version << 4 | header length >> 2 */
+
+#if defined(__LITTLE_ENDIAN_BITFIELD)
+    u_char ip_hl  :4,
+           ip_ver :4;
+#elif defined (__BIG_ENDIAN_BITFIELD)
+    u_char ip_ver :4,
+           ip_hl  :4;
+#else
+#error  "Please fix <asm/byteorder.h>"
+#endif
+        // u_char  ip_vhl;                 /* version << 4 | header length >> 2 */
         u_char  ip_tos;                 /* type of service */
         uint16_t ip_len;                 /* total length */
         uint16_t ip_id;                  /* identification */
@@ -62,8 +87,9 @@ struct sniff_ip {
         uint16_t ip_sum;                 /* checksum */
         struct  in_addr ip_src,ip_dst;  /* source and dest address */
 };
-#define IP_HL(ip)               (((ip)->ip_vhl) & 0x0f)
-#define IP_V(ip)                (((ip)->ip_vhl) >> 4)
+
+#define IP_HL(ip)               (((ip)->ip_hl))
+#define IP_V(ip)                (((ip)->ip_ver))
 
 /* TCP header */
 typedef u_int tcp_seq;
@@ -110,12 +136,16 @@ struct sniff_std_gre {
 #define GRE_S(gre)               (((gre)->gre_mhl) & 0x2000)
 #define GRE_V(gre)               (((gre)->gre_mhl) & 0x0007)
 
+// JUST for little little endian
+#define GRE_TYPE(gre)            (((gre)->gre_type >> 8)|((gre)->gre_type << 8) & 0xFFFF)
+
 
 // Just a copy from #include <linux/if_ether.h>
 #define ETH_P_ERSPAN	0x88BE		/* ERSPAN type II		*/
 
 /**
- * 只读, 不可写
+ * **只读, 不可写**
+ *    所有的数据包首先会被解析成如下格式, 以供之后的快路径, 慢路径使用
  * @brief Only readable, do not modify the content
  */
 struct PARSE_PKT{
@@ -127,14 +157,18 @@ struct PARSE_PKT{
     struct sniff_ip *ip_outer;          // 内外层的IPv4头部
     struct sniff_ip *ip_inner;
 
+    struct sniff_tcp * tcp;            // 最内层的TCP头部
 
     struct pcap_pkthdr header;         // pcap头部, 可以查询时间
     u_char *_data;
     PARSE_PKT(): _data(NULL) {}
+
     ~PARSE_PKT() {
         if(_data) free(_data);
     }
 };
+
+void PARSE_PKT_print(PARSE_PKT* p) ;
 
 void
 got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
