@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     LOG_D("size of trace: " << sizeof(PKT_TRACE_T) << "\n");
     eMain.run();
 
-    // pcap_read();
+    pcap_read();
     // trans_test();
     return 0;
 }

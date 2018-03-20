@@ -28,7 +28,7 @@ add_executable(analyzer ${SOURCE_FILES})
 # 设置输出路径
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-TARGET_LINK_LIBRARIES(analyzer reader trans process)
+TARGET_LINK_LIBRARIES(analyzer reader trans process common)
 
 #TARGET_LINK_LIBRARIES(analyzer ${PCAP_LIBRARY})
 #TARGET_LINK_LIBRARIES(lex_rel lex)

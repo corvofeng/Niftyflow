@@ -15,9 +15,10 @@
 
 #include <vector>
 #include <memory>
-#include "ip.h"
+#include <pthread.h>
 #include "con_queue.h"
 #include "on_process.h"
+#include "packet.h"
 
 using std::vector;
 using std::shared_ptr;
@@ -31,10 +32,14 @@ public:
     virtual ~EverflowMain ();
 
 private:
-    int process_cnt;    /**< 记录同时处理的分析器个数 */
+    int processer_cnt;    /**< 记录同时处理的processor个数 */
+    int reader_cnt;       /**< 记录同时处理的reader个数 */
+
+    vector<pthread_t> reader_vec;
 
     vector<shared_ptr<Processer>> processer_vec; /**< 多个分析器进行 */
-    vector<shared_ptr<Queue<IP_PKT>>> queue_vec; /**< 每个分析器绑定一个队列*/
+    vector<shared_ptr<PKT_QUEUE>> queue_vec; /**< 每个分析器绑定一个队列 */
+
 };
 
 

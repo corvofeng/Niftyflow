@@ -17,6 +17,7 @@
 #include <iostream>
 #include <sys/types.h>
 #include <unistd.h>
+#include <cstdarg>
 #include <sys/syscall.h>   /* For SYS_xxx definitions */
 
 
@@ -136,5 +137,30 @@ public:
 //((*Logger::instance()) << "[" <<  __FILENAME__  << ":" <<__LINE__ << "] "<<  msg);\
 // For quick access you could define a macro
 
+/**
+ * copy from
+ * https://stackoverflow.com/questions/2342162/stdstring-formatting-like-sprintf
+ *
+ * missing string printf
+ * this is safe and convenient but not exactly efficient
+ */
+inline std::string FMT(const char* fmt, ...){
+    int size = 512;
+    char* buffer = 0;
+    buffer = new char[size];
+    va_list vl;
+    va_start(vl, fmt);
+    int nsize = vsnprintf(buffer, size, fmt, vl);
+    if(size<=nsize){ //fail delete buffer and try again
+        delete[] buffer;
+        buffer = 0;
+        buffer = new char[nsize+1]; //+1 for /0
+        nsize = vsnprintf(buffer, size, fmt, vl);
+    }
+    std::string ret(buffer);
+    va_end(vl);
+    delete[] buffer;
+    return ret;
+}
 
 #endif /* end of include guard: LOG_H_EVNJHQW5 */

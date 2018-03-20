@@ -9,7 +9,7 @@ Processer::~Processer() {
 
 }
 
-void Processer::bind_queue(std::shared_ptr<Queue<IP_PKT>> q) {
+void Processer::bind_queue(shared_ptr<PKT_QUEUE> q) {
     this->q_ = q;
     return ;
 }

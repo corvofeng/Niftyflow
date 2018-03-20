@@ -18,10 +18,12 @@
  * https://juanchopanzacpp.wordpress.com/2013/02/26/concurrent-queue-c11/
  */
 
-#include <queue>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <queue>
+
+using std::queue;
 
 template <typename T>
 class Queue

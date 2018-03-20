@@ -1,8 +1,7 @@
 
 # 设置源码文件
-#set(SOURCE_FILES ./reader.cpp ./reader.h)
+set(SOURCE_FILES ./common.cpp ./log.h ./packet.h
+                ./conf.h ./lock.h
+                ./trace.h)
 
-#add_library(reader ${SOURCE_FILES})
-
-#TARGET_LINK_LIBRARIES(reader ${PCAP_LIBRARY})
-
+add_library(common ${SOURCE_FILES})
