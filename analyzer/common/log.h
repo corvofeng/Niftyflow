@@ -19,6 +19,8 @@
 #include <unistd.h>
 #include <cstdarg>
 #include <sys/syscall.h>   /* For SYS_xxx definitions */
+#include <iomanip>      // std::setw
+
 
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
@@ -118,15 +120,19 @@ public:
  * logger << "This will be appended to myfile.log" << std::endl;
  */
 
-// 线程首先获取锁, 之后调用单例对象进行. 
-#define LOG_L(lvl, msg) do{                                                                  \
-    if(Logger::instance()->isLvlValid(lvl)) {                                                \
-        Lock l(&(Logger::instance()->mtx));                                                  \
-        ((*Logger::instance())                                                               \
-            << Logger::lName(lvl)                                                            \
-            << "[" <<  __FILENAME__  << ":" <<__LINE__ << "] " << syscall(SYS_gettid) << " " \
-            <<  msg);                                                                        \
-    }                                                                                        \
+/**
+ * 线程首先获取锁, 之后调用单例对象进行. 这是线程安全的日志记录方式
+ * 修改前请了解你的所作所为. 修改后几乎需要重新编译所有的库
+ */
+#define LOG_L(lvl, msg) do{                                                    \
+    if(Logger::instance()->isLvlValid(lvl)) {                                  \
+        Lock l(&(Logger::instance()->mtx));                                    \
+        ((*Logger::instance())                                                 \
+            << Logger::lName(lvl)                                              \
+            << "[" <<  __FILENAME__  << ":" << std::setw(3) << __LINE__ << "] " \
+            << syscall(SYS_gettid) << " "                                      \
+            <<  msg);                                                          \
+    }                                                                          \
   } while(0)
 
 #define LOG_D(msg) LOG_L(Level::DEBUG   , msg)

@@ -1,48 +1,38 @@
 /*
- * https://www.rhyous.com/2011/11/13/how-to-read-a-pcap-file-from-wireshark-with-c/
- * How to read a packet capture file.
+ *=======================================================================
+ *    Filename:reader.cpp
+ *
+ *     Version: 1.0
+ *  Created on: March 20, 2018
+ *
+ *      Author: corvo
+ *=======================================================================
  */
 
-/*
- * Step 1 - Add includes
- */
 #include <string>
 #include "reader.h"
 
 using namespace std;
 
+/**
+ * @brief 根据p->_data构建完整的数据包p, static表示仅在该文件中使用
+ */
+static void pkt_init(shared_ptr<PARSE_PKT> p);
 
 void Reader::_inner_read_and_push() {
-    // Create a header object:
-    // http://www.winpcap.org/docs/docs_40_2/html/structpcap__pkthdr.html
     struct pcap_pkthdr *header;
 
-    // Create a character array using a u_char
-    // u_char is defined here:
-    // typedef unsigned char   u_char;
     const u_char *data;
     LOG_D("_inner_read_and_push\n");
 
     u_int packetCount = 0;
     while (int returnValue = pcap_next_ex(this->_pcap, &header, &data) >= 0) {
-        for (u_int i=0; (i < header->caplen ) ; i++)
-        {
-            // Start printing on the next after every 16 octets
-            if ( (i % 16) == 0) printf("\n");
-
-            // Print each octet as hex (x), make sure there is always two characters (.2).
-            printf("%.2x ", data[i]);
-        }
-
-        // Add two lines between packets
-        printf("\n\n");
-
         _push_to_queue(_pkt_generater(header, data));
         break;
     }
 }
 
-static void pkt_init(shared_ptr<PARSE_PKT> p);
+
 shared_ptr<PARSE_PKT> Reader::_pkt_generater(
             const struct pcap_pkthdr* header,
             const u_char *packet) {
@@ -62,9 +52,6 @@ void Reader::_push_to_queue(shared_ptr<PARSE_PKT> pkt) {
 }
 
 
-/**
- * @brief 根据p->_data构建完整的数据包p
- */
 static void pkt_init(shared_ptr<PARSE_PKT> p) {
     p->eth_outer = (struct sniff_ethernet*)(p->_data);
     p->ip_outer = (struct sniff_ip*)(p->_data + SIZE_ETHERNET);
@@ -129,7 +116,10 @@ static void pkt_init(shared_ptr<PARSE_PKT> p) {
     return ;
 }
 
-
+/**
+ * https://www.rhyous.com/2011/11/13/how-to-read-a-pcap-file-from-wireshark-with-c/
+ * How to read a packet capture file.
+ */
 int pcap_read()
 {
     LOG_I("pcap read\n");

@@ -12,6 +12,10 @@
 #ifndef TRACE_H_PAJBWR5N
 #define TRACE_H_PAJBWR5N
 
+/**
+ * 2018-03-19: 直到今天trace的数据结构终于敲定
+ */
+
 #include <stdint.h>
 
 typedef struct{
