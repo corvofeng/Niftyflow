@@ -1,0 +1,15 @@
+
+# 忽略所有文件
+/*
+
+# 以下的文件进行包括
+!.gitignore
+!*.tex
+!*.bib
+
+# img与orig_md文件夹进行包括
+!/img/
+!img/*
+
+!/orig_md/
+!orig_md/*
