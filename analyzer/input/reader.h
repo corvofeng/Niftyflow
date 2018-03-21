@@ -54,7 +54,7 @@ public:
             LOG_D("Must bind queue vec and pcap, then called run\n");
             return ;
         }
-        LOG_D("Creat process\n");
+        LOG_D("Creat Reader process\n");
         pthread_create(&t_reader, NULL, &Reader::read_and_push, this);
     }
 

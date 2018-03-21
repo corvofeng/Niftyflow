@@ -15,9 +15,22 @@
 using namespace std;
 
 /**
- * @brief 根据p->_data构建完整的数据包p, static表示仅在该文件中使用
+ *
+ * 2018-03-21:  添加hash函数, 进过解析后的数据包将会进行hash操作, 而后将其放在
+ *              相应的队列中
+ */
+
+/**
+ * @brief 根据p->_data构建完整的数据包p, static表示仅在该文件中使用, 下面两个
+ *        并不想提供给别人使用, 仅仅作为Reader功能的一部分, 单独来维护.
  */
 static void pkt_init(shared_ptr<PARSE_PKT> p);
+
+/**
+ * https://stackoverflow.com/questions/3215232/hash-function-for-src-dest-ip-port
+ * @brief 根据数据包的元素进行hash操作, 并没有什么特别的尝试.
+ */
+static int hash_func(shared_ptr<PARSE_PKT> pkt);
 
 void Reader::_inner_read_and_push() {
     struct pcap_pkthdr *header;
@@ -36,11 +49,23 @@ void Reader::_inner_read_and_push() {
 shared_ptr<PARSE_PKT> Reader::_pkt_generater(
             const struct pcap_pkthdr* header,
             const u_char *packet) {
+    /**
+     * 这里进行了malloc操作, 但是malloc之后, 马上将其交给了智能指针中的成员,
+     * 完全可以保证内存不泄露. 但是为了性能, 这里最好使用对象池来请求.
+     * 我很懒, 希望未来有人可以做. 有关对象池的使用, 请查看:
+     *      https://stackoverflow.com/a/27837534/5563477
+     *
+     * 主要原理是使用shared_ptr, 将析构函数重写, 使其析构时添加回池中. 由于总是
+     * 动态的分配释放会有较大的损失, 而数据包也能保持在一个固定的数量中,
+     * 这里是一个很适合的场景
+     *   http://gameprogrammingpatterns.com/object-pool.html
+     */
     shared_ptr<PARSE_PKT> pkt = shared_ptr<PARSE_PKT>(new PARSE_PKT);
+    pkt->_data = (u_char*)malloc(sizeof(u_char) * pkt->header.len);
 
     // 因为header中为数字型的成员, 直接赋值即可.
     pkt->header = *header;   // copy ts and len, they are nums, = is alright.
-    pkt->_data = (u_char*)malloc(sizeof(u_char) * pkt->header.len);
+
     memcpy(pkt->_data, packet, pkt->header.len);
     pkt_init(pkt);
 
@@ -48,7 +73,24 @@ shared_ptr<PARSE_PKT> Reader::_pkt_generater(
 }
 
 void Reader::_push_to_queue(shared_ptr<PARSE_PKT> pkt) {
+    int idx = hash_func(pkt) % (*_queue_vec).size();
+    (*_queue_vec)[idx]->push(pkt);  // 不理解的话, 请查阅_queue_vec的结构
+}
 
+static int hash_func(shared_ptr<PARSE_PKT> pkt) {
+    int ret = 0;
+    struct sniff_ip* ip = pkt->ip_inner;
+
+    /*
+    (size_t) ip->ip_src
+        ((size_t)(key.src.s_addr) * 59) ^
+((size_t)(key.dst.s_addr)) ^
+((size_t)(key.sport) << 16) ^
+((size_t)(key.dport)) ^
+((size_t)(key.proto));
+*/
+
+    return 1;
 }
 
 
@@ -60,7 +102,7 @@ static void pkt_init(shared_ptr<PARSE_PKT> p) {
     int size_gre = 0;
     int size_ip_inner = 0;
 
-    size_ip_outer = (p->ip_outer->ip_hl)*4;
+    size_ip_outer = (IP_HL(p->ip_outer))*4;
 
     switch(p->ip_outer->ip_p) {
         case IPPROTO_GRE:
@@ -95,7 +137,7 @@ static void pkt_init(shared_ptr<PARSE_PKT> p) {
     p->ip_inner = (struct sniff_ip*)
                         (p->_data + SIZE_ETHERNET * 2 + size_ip_outer + size_gre);
 
-    size_ip_inner = p->ip_inner->ip_hl * 4;
+    size_ip_inner = IP_HL(p->ip_inner) * 4;
 
     switch(p->ip_inner->ip_p) {
         case IPPROTO_TCP:
@@ -103,7 +145,7 @@ static void pkt_init(shared_ptr<PARSE_PKT> p) {
             break;
         case IPPROTO_ICMP:
             LOG_D("   Protocol: ICMP\n");
-            break;
+            return;
         default:
             LOG_E(FMT("   Protocol: %2X \n", p->ip_inner->ip_p));
             LOG_E    ("   Protocol: unknown\n");
