@@ -15,8 +15,14 @@
 using namespace std;
 
 /**
+ * 2018-03-22: 使用valgrind检测, 一直发现内存错误, 原因是分配内存时使用了
+ *              `pkt->_data = new u_char[pkt->header.len];`
+ *              这里的pkt->header还没有进行赋值, 所以其len是0的. 之后想要读
+ *              内存就会发生错误. 改为
+ *                  `pkt->_data = new u_char[>header->len];`之后使用valgrind
+ *              测试, 已经可以通过.
  *
- * 2018-03-21:  添加hash函数, 进过解析后的数据包将会进行hash操作, 而后将其放在
+ * 2018-03-21: 添加hash函数, 进过解析后的数据包将会进行hash操作, 而后将其放在
  *              相应的队列中
  */
 
@@ -29,6 +35,7 @@ static void pkt_init(shared_ptr<PARSE_PKT> p);
 /**
  * https://stackoverflow.com/questions/3215232/hash-function-for-src-dest-ip-port
  * @brief 根据数据包的元素进行hash操作, 并没有什么特别的尝试.
+ *          目前对于非TCP数据包, 直接返回0.
  */
 static int hash_func(shared_ptr<PARSE_PKT> pkt);
 
@@ -40,7 +47,13 @@ void Reader::_inner_read_and_push() {
 
     u_int packetCount = 0;
     while (int returnValue = pcap_next_ex(this->_pcap, &header, &data) >= 0) {
-        _push_to_queue(_pkt_generater(header, data));
+        if (header->len != header->caplen)
+            LOG_W(FMT("Warning! Capture size different than packet size: %ld bytes\n", header->len));
+
+        shared_ptr<PARSE_PKT> pkt = _pkt_generater(header, data);
+        if(pkt) {
+            _push_to_queue(pkt);
+        }
         break;
     }
 }
@@ -54,14 +67,21 @@ shared_ptr<PARSE_PKT> Reader::_pkt_generater(
      * 完全可以保证内存不泄露. 但是为了性能, 这里最好使用对象池来请求.
      * 我很懒, 希望未来有人可以做. 有关对象池的使用, 请查看:
      *      https://stackoverflow.com/a/27837534/5563477
+     * 主要原理是使用shared_ptr, 将析构函数重写, 使其析构时添加回池中.
      *
-     * 主要原理是使用shared_ptr, 将析构函数重写, 使其析构时添加回池中. 由于总是
-     * 动态的分配释放会有较大的损失, 而数据包也能保持在一个固定的数量中,
-     * 这里是一个很适合的场景
+     * 由于总是动态的分配释放内存会有较大的损失, 程序中的数据包总是
+     * 保持在一个固定的数量中, 这里是一个很适合的场景
      *   http://gameprogrammingpatterns.com/object-pool.html
      */
-    shared_ptr<PARSE_PKT> pkt = shared_ptr<PARSE_PKT>(new PARSE_PKT);
-    pkt->_data = (u_char*)malloc(sizeof(u_char) * pkt->header.len);
+    shared_ptr<PARSE_PKT> pkt;
+
+    try {
+        pkt = shared_ptr<PARSE_PKT>(new PARSE_PKT);
+        pkt->_data = new u_char[header->len];
+    } catch (std::bad_alloc&) {
+        LOG_E("malloc error\n");
+        return NULL;
+    }
 
     // 因为header中为数字型的成员, 直接赋值即可.
     pkt->header = *header;   // copy ts and len, they are nums, = is alright.
@@ -79,18 +99,19 @@ void Reader::_push_to_queue(shared_ptr<PARSE_PKT> pkt) {
 
 static int hash_func(shared_ptr<PARSE_PKT> pkt) {
     int ret = 0;
-    struct sniff_ip* ip = pkt->ip_inner;
+    if(pkt->tcp == NULL) // 非TCP数据包, 均返回0
+        return ret;
 
-    /*
-    (size_t) ip->ip_src
-        ((size_t)(key.src.s_addr) * 59) ^
-((size_t)(key.dst.s_addr)) ^
-((size_t)(key.sport) << 16) ^
-((size_t)(key.dport)) ^
-((size_t)(key.proto));
-*/
+    struct sniff_ip* ip = pkt->ip_inner;    // 使用内层的IP数据包
+    struct sniff_tcp* tcp = pkt->tcp;
 
-    return 1;
+    ret =
+        ((size_t) ip->ip_src.s_addr * 59 ) ^
+        ((size_t) ip->ip_dst.s_addr) ^
+        ((size_t) tcp->th_sport) ^
+        ((size_t) tcp->th_dport) ^
+        ((size_t) tcp->th_seq);
+    return ret;
 }
 
 

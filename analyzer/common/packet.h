@@ -13,6 +13,8 @@
 #define PACKET_H_WL06DAMQ
 
 /**
+ * ## 数据包PARSE_PKT中的数据均为大端的网络字节序
+ *
  *  2018-03-21: 将头文件<asm/byteorder.h>去掉.
  *
  *  2018-03-20: 在解析GRE数据包时, 发现了大端小端的问题, 数据包中默认为大端
@@ -89,8 +91,8 @@ struct sniff_ip {
 typedef u_int tcp_seq;
 
 struct sniff_tcp {
-        uint16_t th_sport;               /* source port */
-        uint16_t th_dport;               /* destination port */
+        uint16_t th_sport;              /* source port */
+        uint16_t th_dport;              /* destination port */
         tcp_seq th_seq;                 /* sequence number */
         tcp_seq th_ack;                 /* acknowledgement number */
         u_char  th_offx2;               /* data offset, rsvd */
@@ -157,9 +159,17 @@ struct PARSE_PKT{
 
     struct pcap_pkthdr header;         // pcap头部, 可以查询时间
 
-    PARSE_PKT(): _data(NULL) {}
+    PARSE_PKT(): _data(NULL), tcp(NULL), ip_inner(NULL), ip_outer(NULL),
+                gre(NULL), eth_outer(NULL), eth_inner(NULL) {}
     ~PARSE_PKT() {
-        if(_data) free(_data);
+        if(_data) delete [] _data;
+        _data = NULL;
+        tcp = NULL;
+        ip_inner = NULL;
+        ip_outer = NULL,
+        gre = NULL;
+        eth_outer = NULL;
+        eth_inner = NULL;
     }
 };
 

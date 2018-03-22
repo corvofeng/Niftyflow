@@ -18,10 +18,27 @@
 #include <memory>
 #include "packet.h"
 
-struct HashBacket {
-    enum {ROW_SIZE=1024, COL_SIZE=4};
-    PKT_TRACE_T bkt[ROW_SIZE][COL_SIZE];
-};
+/**
+ *
+ * 2018-03-21: 开始编写快路径的处理, 发现了一个比较难的问题, 就是交换机的ID
+ *           很难直接确定. 理想的情况是数据包中携带自己的交换机信息,
+ *           但是目前还没有.
+ *
+ *             根据目前的数据包结构以及数据包中的数据分布, 暂时使用外层
+ *           IP数据包源地址的, 例如IP源地址是190.1.1.19, 则取19作为交换机ID,
+ *           并不是说这样做是正确的选择.
+ *
+ *             假如传播过程中使用了三层交换机, 那么这个IP并不是真正的交换机IP,
+ *          同样, 使用了二层交换机后, 不论是哪个MAC地址, 都不能称之为真正交换机
+ *          的MAC地址.
+ *
+ *            如果我们想要得知真正的交换机ID, 最好是在GRE数据包中的可选位加入
+ *          交换机ID, 这样才能得到不经其他交换机修改的ID信息.
+ *
+ *            ID信息的获取请查看`on_process.cpp`中的static函数
+ */
+
+enum {ROW_SIZE=1024, COL_SIZE=4}; // 使用enum只是因为他不占空间, 类似于define;
 
 using std::shared_ptr;
 
@@ -40,8 +57,13 @@ private:
     Processer(Processer&); // 禁止拷贝
 
     int proc_id;
+    bool _stop;
     pthread_t t_fast;
     pthread_t t_slow;
+
+    struct {
+        PKT_TRACE_T b[ROW_SIZE][COL_SIZE];
+    }  _bkts[3];                // 三个hash桶
 
     bool is_slow_over;
     pthread_mutex_t is_over_mtx;
@@ -51,6 +73,12 @@ private:
     void get_packets();
     void _inner_slow_path();
     void _inner_fast_path();
+
+    /**
+     * 从指定桶中寻找数据包, 并将其所在的地址返回, 如果找不到, 则返回NULL
+     */
+    PKT_TRACE_T* find_trace_in_bkt(PKT_TRACE_T bkt[COL_SIZE],
+                                    const PARSE_PKT* pkt);
 
 public:
     Processer();

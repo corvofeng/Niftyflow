@@ -13,6 +13,14 @@
 #define TRACE_H_PAJBWR5N
 
 /**
+ * 2018-03-22: 添加了毫秒数的换算工具. int是32位的时间戳, 大概有$$21*10^{8}$$
+ *          20×10^8 ÷ 3600 ÷ 24 ÷ 1000 等于23, 也就是说, 换算成毫秒表示时间,
+ *          只能表示23天, 连一个月都做不到.
+ *
+ *          这里, 我决定再精简一些, 将时间戳换算为基于当前一天的偏移,
+ *          如果数据包中的日期是3月22日,那么trace中的时间戳表示的是
+ *          从3-22日0点起经过的毫秒数.
+ *
  * 2018-03-19: 直到今天trace的数据结构终于敲定
  */
 
@@ -21,7 +29,7 @@
 typedef struct{
     uint32_t src_ip;    // 32bits 源IP地址
     uint32_t dst_ip;    // 32bits 目的IP地址
-    uint16_t ip_ID;     // 16bits 标识符
+    uint16_t ip_id;     // 16bits 标识符
     uint8_t protocol;   // 8bits  协议字段
 } __attribute__((packed)) IP_PKT_KEY_T;
 
@@ -35,8 +43,7 @@ typedef struct{
 
     /**
      * 32bits 收到第一个报文的时间戳: 如果使用秒级的计数单位, 是无法刻画出真实
-     * 的数据包的时间情况, 这里的时间戳是毫秒级别的时间戳, 每个时间都是基于
-     * 当前年份的偏移.
+     * 的数据包的时间情况, 这里的时间戳是毫秒级别的时间戳.
      *
      *  Timestamp记录收到报文的时间,
      *  如果对于某一跳交换机超过1秒还没收到其报文,
@@ -62,5 +69,13 @@ typedef struct{
 
     uint16_t reserved : 5;
 } __attribute__((packed)) PKT_TRACE_T;
+
+
+/**
+ * 通过函数毫秒数
+ */
+uint32_t get_time_start(struct timeval tv);
+
+
 
 #endif /* end of include guard: TRACE_H_PAJBWR5N */
