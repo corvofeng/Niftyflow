@@ -5,7 +5,6 @@
 
 int main() {
 
-   redis_test();
-    return -1;
+   return redis_test();
 }
 
