@@ -15,6 +15,9 @@
 using namespace std;
 
 /**
+ * 2018-03-23: 初次将break去掉, 使用valgrind检测, 程序运行正常, 检测出几个丢包
+ *              问题
+ *
  * 2018-03-22: 使用valgrind检测, 一直发现内存错误, 原因是分配内存时使用了
  *              `pkt->_data = new u_char[pkt->header.len];`
  *              这里的pkt->header还没有进行赋值, 所以其len是0的. 之后想要读
@@ -54,7 +57,7 @@ void Reader::_inner_read_and_push() {
         if(pkt) {
             _push_to_queue(pkt);
         }
-        break;
+//        break;
     }
 }
 

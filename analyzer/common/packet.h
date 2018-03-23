@@ -158,6 +158,11 @@ struct PARSE_PKT{
     u_char *_data;
 
     struct pcap_pkthdr header;         // pcap头部, 可以查询时间
+                                       // struct pcap_pkthdr {
+                                       //    struct timeval ts; /* time stamp */ 
+                                       //    bpf_u_int32 caplen;
+                                       //    bpf_u_int32 len;
+                                       // };
 
     PARSE_PKT(): _data(NULL), tcp(NULL), ip_inner(NULL), ip_outer(NULL),
                 gre(NULL), eth_outer(NULL), eth_inner(NULL) {}

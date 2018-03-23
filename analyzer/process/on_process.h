@@ -19,6 +19,13 @@
 #include "packet.h"
 
 /**
+ *  快慢路径中的切换使用了自旋锁, 真正的处理过程中, 执行较慢的一个线程将会拖慢
+ *  另一个, 如果是这样, 需要针对慢的线程进行优化.
+ *
+ *
+ * 2018-03-23: 昨天进行了讨论, 其中有几个要点:
+ *            1. 使用外层数据的源IP地址标识路由器 ID,
+ *            2. 判断有无丢包, 检查trace路径中有至少两个出口交换机.
  *
  * 2018-03-21: 开始编写快路径的处理, 发现了一个比较难的问题, 就是交换机的ID
  *           很难直接确定. 理想的情况是数据包中携带自己的交换机信息,
@@ -38,7 +45,7 @@
  *            ID信息的获取请查看`on_process.cpp`中的static函数
  */
 
-enum {ROW_SIZE=1024, COL_SIZE=4}; // 使用enum只是因为他不占空间, 类似于define;
+enum {BKT_SIZE = 3, ROW_SIZE=1024, COL_SIZE=4}; // 使用enum只是因为他不占空间, 类似于define;
 
 using std::shared_ptr;
 
@@ -62,8 +69,8 @@ private:
     pthread_t t_slow;
 
     struct {
-        PKT_TRACE_T b[ROW_SIZE][COL_SIZE];
-    }  _bkts[3];                // 三个hash桶
+        PKT_TRACE_T **b;                // 二维数组, 在构造函数中初始化
+    }  _bkts[BKT_SIZE];                 // 三个hash桶
 
     bool is_slow_over;
     pthread_mutex_t is_over_mtx;

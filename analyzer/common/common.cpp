@@ -4,7 +4,12 @@
 
 void PARSE_PKT_print(PARSE_PKT* p) {
 
+}
 
+
+
+uint32_t get_time_start(const struct timeval& tv, const struct timeval& shift) {
+    return (tv.tv_sec - shift.tv_sec)*1000 + tv.tv_usec - shift.tv_usec;
 }
 
 /*

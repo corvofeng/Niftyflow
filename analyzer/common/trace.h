@@ -33,6 +33,8 @@ typedef struct{
     uint8_t protocol;   // 8bits  协议字段
 } __attribute__((packed)) IP_PKT_KEY_T;
 
+enum {TRACE_CNT = 5};   // 只记录5跳信息
+
 /**
  * @brief trace数据结构
  */
@@ -55,7 +57,7 @@ typedef struct{
         uint16_t switch_id: 12;
         uint16_t hop_rcvd : 2;
         uint16_t hop_timeshift: 10; // 与timestart相减得到的偏移, 也为ms
-    } __attribute__((packed)) hop_info[4];
+    } __attribute__((packed)) hop_info[TRACE_CNT - 1];
 
     uint16_t hp1_switch_id: 12; // 第一跳交换机id
     uint16_t hp1_rcvd: 2;       // 第一跳交换机收到的报文数
@@ -72,9 +74,45 @@ typedef struct{
 
 
 /**
- * 通过函数毫秒数
+ * 获取基于偏移的毫秒数.
  */
-uint32_t get_time_start(struct timeval tv);
+uint32_t get_time_shift(const struct timeval& tv,
+                            const struct timeval& start);
+
+// 只比较前12位, 不论是什么类型
+#define IS_SAME_ID(id1, id2)  (((id1) & 0x0FFF) == ((id2) & 0x0FFF))
+
+/**
+ * 获取hop_timeshift的确切值, 这个函数存在的根本原因是timeshift为10位.
+ *
+ * 考虑下面一种情况:
+ *    如果数据包的时间发生了混乱, trace中的timestart其实并不是第一跳的时间
+ *  那么hop_timeshift就有可能为负值, 在保存时, 我们做了截断, 也就是说
+ *  最高位会被切掉.
+ *
+ *   以`-2`为例, 32位的int表示-2会以`11...1110`这种形式来表示, 因为我们将最高
+ * 位设计为了符号位, 但在截断之后, 我们保存的数字应该是`1111111110`,
+ * 这样会出现什么问题呢? 10位的数字计算机中是没有定义符号位的, 这里, 我们需要
+ * 首先对其进行有符号扩展, 扩展至32位符号数.
+ *
+ * 其实我想说, 不通配的数据结构定义会导致无穷无尽的问题,
+ */
+#define GET_EXACT_TIME_SHIFT(_fake_shift, _exact_shift) do { \
+    unsigned int fake = (_fake_shift);                       \
+    int&  exact = (_exact_shift);                            \
+    if(fake& 0x00000200) {                                   \
+        exact = 0XFFFFFC000 | fake ;                         \
+    } else {                                                 \
+        exact = 0x0 | fake;                                  \
+    }                                                        \
+} while(0)
+
+// tv_sec % (24 * 3600)  计算当天偏移的秒数
+#define GET_TIMESTAMP_OF_DAY(tv)            \
+            ( ((tv.tv_sec) % (24 * 3600)) * 1000 + (tv.tv_usec))
+
+#define GET_CUR_DAY(tv) ((tv.tv_sec) - (tv.tv_sec)%(24 * 3600))
+
 
 
 
