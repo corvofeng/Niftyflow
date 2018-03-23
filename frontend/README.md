@@ -7,9 +7,9 @@
 
 采用Bootstrap+jQuery, 不管写成什么样, 这的确是我的极限了.
 
-采用`webpack`打包, 但是`webpack`的版本很旧. 使用新版本的webpack对HTML的支持
-我实在没能调出来, `package.json`和`webpack*.js`都是从网上寻找得到的, 请会
-做前端的同学尽可能的修改.
+采用`webpack`打包, 目前使用的是4.2版本, 这边已经可以正常使用了.
+
+如果你对`node`不熟悉, 推荐使用`WebStorm`, 打开项目安装依赖即可.
 
 ## 运行方式
 
