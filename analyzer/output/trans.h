@@ -30,8 +30,9 @@ typedef struct connection_details
 
 
 void trans_test();
-void mysql_test();
-void redis_test();
+bool mysql_test();
+bool redis_test();
+
 MYSQL_RES* mysql_perform_query(MYSQL *connection, char *sql_query);
 MYSQL* mysql_connection_setup(struct connection_details mysql_details);
 

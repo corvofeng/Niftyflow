@@ -6,7 +6,6 @@
 #include <sys/time.h>   // for gettimeofday
 
 
-
 Processer::Processer(): _stop(false){
     for(int i = 0; i < BKT_SIZE; i++) {
         _bkts[i].b = new PKT_TRACE_T*[ROW_SIZE];
@@ -61,7 +60,9 @@ static bool is_exact_trace(const PKT_TRACE_T* p_trace, const PARSE_PKT* pkt);
 void Processer::_inner_slow_path() {
     LOG_D("Inner slow path\n");
     while(!_stop) {
-        while(is_slow_over); // spinlock
+        int wait_times = 0;
+        while(is_slow_over) wait_times++; // spinlock
+        if(wait_times > PROCESS_THRESHOLD) LOG_W("FAST PROCESS IS TOO SLOW, JUST FINE\n");
 
         LOG_D("Parse Bucket in slow path\n");
 
@@ -136,7 +137,9 @@ void Processer::_inner_fast_path() {
         trace_add_pkt(saved_trace, pkt.get());
 
         if(clock() - start > 1000) {
-            while(!is_slow_over) ;  // spinlock, 检查慢路径是否结束
+            int wait_times = 0;
+            while(!is_slow_over) wait_times++ ;  // spinlock, 检查慢路径是否结束
+            if(wait_times > PROCESS_THRESHOLD) LOG_W("SLOW PROCESS IS TOO SLOW\n");
 
             auto TMP = _bkts[0].b;
             _bkts[0].b = _bkts[1].b;
@@ -164,7 +167,7 @@ PKT_TRACE_T* Processer::find_trace_in_bkt(PKT_TRACE_T* bkt_slot,
 
 static void trace_add_pkt(PKT_TRACE_T* trace, const PARSE_PKT* pkt) {
     int c = query_switch_id(pkt);
-    
+
     LOG_D("Read a new packet:" << c << "\n");
 
     struct timeval tv_shift = pkt->header.ts;
@@ -172,7 +175,7 @@ static void trace_add_pkt(PKT_TRACE_T* trace, const PARSE_PKT* pkt) {
 
     // LOG_D(FMT("Epoch Time: %d: %d seconds\n", tv_shift.tv_sec, tv_shift.tv_usec));
 
-    if(!trace->used) {
+    if(!trace->used) {  /** 当前trace第一次使用  */
         trace->used = true;
         trace->key.src_ip = pkt->ip_inner->ip_src.s_addr;
         trace->key.dst_ip = pkt->ip_inner->ip_dst.s_addr;
@@ -187,10 +190,13 @@ static void trace_add_pkt(PKT_TRACE_T* trace, const PARSE_PKT* pkt) {
         trace->is_probe = 0;
 
         trace->timestart = time_stamp;
-    } else {
+
+    } else {        /** 当前trace已经存在, 现在向其中添加一跳的数据包 */
         if (trace->hp1_switch_id = c) {
             trace->hp1_rcvd ++;
-            if(trace->hp1_rcvd >= 3) trace->is_loop = true ;
+
+            // 一个交换机出现了三次, 认为是环路
+            if(trace->hp1_rcvd >= 3)trace->is_loop = true;
         }
 
         // 检查之前的trace数据中, 是否已经存在来自该交换机的数据包
@@ -202,7 +208,7 @@ static void trace_add_pkt(PKT_TRACE_T* trace, const PARSE_PKT* pkt) {
             }
         }
 
-        if(exist_idx == -1) {   // 之前不存在, 寻找第一个可以放置的位置进行放置
+        if(exist_idx == -1) { /** 之前不存在相同的交换机, 寻找第一个可以放置的位置进行放置 */
             bool is_full = true;
             for(int i = 0; i < TRACE_CNT - 1; i++) {
                 if(trace->hop_info[i].hop_rcvd == 0) {
@@ -210,15 +216,16 @@ static void trace_add_pkt(PKT_TRACE_T* trace, const PARSE_PKT* pkt) {
                     trace->hop_info[i].hop_rcvd = 1;
                     trace->hop_info[i].hop_timeshift =
                                 (time_stamp - trace->timestart) & 0x000003FF;
-
                     is_full = false;
+                    // trace->is_drop = false; // 当前认为所有Trace数据包均丢包
                     break;
                 }
             }
-            if (is_full){
+            if (is_full) {  // 路径上有超过5个不同的交换机, 目前认为是丢包
                 LOG_E("There is a trace exceed 5 hops\n");
                 trace->is_drop = true;
             }
+
         } else {    // 之前已有, 需要更新之前的信息
             trace->hop_info[exist_idx].hop_rcvd ++;
             if(trace->hop_info[exist_idx].hop_rcvd >= 3) trace->is_loop = true;
@@ -229,8 +236,8 @@ static void trace_add_pkt(PKT_TRACE_T* trace, const PARSE_PKT* pkt) {
 static bool is_exact_trace(const PKT_TRACE_T* p_trace, const PARSE_PKT* pkt) {
     struct sniff_ip* ip = pkt->ip_inner;
 
-    return (ip->ip_src.s_addr  == p_trace->key.src_ip) &&
-            (ip->ip_dst.s_addr == p_trace->key.dst_ip) &&
+    return (ip->ip_src.s_addr  == p_trace->key.src_ip)   &&
+            (ip->ip_dst.s_addr == p_trace->key.dst_ip)   &&
             (ip->ip_p          == p_trace->key.protocol) &&
             (ip->ip_id         == p_trace->key.ip_id);
 }
@@ -239,8 +246,8 @@ static unsigned int bkt_hash_func_(const PARSE_PKT* pkt) {
     struct sniff_ip* ip = pkt->ip_inner;    // 使用内层的IP数据包
     unsigned int ret =
         ((size_t) ip->ip_src.s_addr * 59 ) ^
-        ((size_t) ip->ip_dst.s_addr) ^
-        ((size_t) ip->ip_p) ^
+        ((size_t) ip->ip_dst.s_addr)       ^
+        ((size_t) ip->ip_p)                ^
         ((size_t) ip->ip_id);
     return ret;
 }

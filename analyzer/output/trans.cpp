@@ -5,11 +5,12 @@ void trans_test() {
     redis_test();
 }
 
-void redis_test() {
+bool redis_test() {
     redisContext *c = redisConnect("127.0.0.1", 6379);
     if (c != NULL && c->err) {
         printf("Error: %s\n", c->errstr);
         // handle error
+        return false;
     } else {
         printf("Connected to Redis\n");
     }
@@ -21,9 +22,10 @@ void redis_test() {
     freeReplyObject(reply);
 
     redisFree(c);
+    return true;
 }
 
-void mysql_test() {
+bool mysql_test() {
     MYSQL *conn = mysql_init(NULL);
     MYSQL_RES *res;
     MYSQL_ROW row;
@@ -35,6 +37,7 @@ void mysql_test() {
     mysqlID.database = "DCN_shot";
 
     conn = mysql_connection_setup(mysqlID);
+    if(conn == NULL) exit(-1);
 
     // assign the results return to the MYSQL_RES pointer
     res = mysql_perform_query(conn, "show tables");
@@ -47,6 +50,7 @@ void mysql_test() {
     mysql_free_result(res);
     // clean up the database link 
     mysql_close(conn);
+    return true;
 }
 
 MYSQL* mysql_connection_setup(struct connection_details mysql_details)
@@ -60,7 +64,7 @@ MYSQL* mysql_connection_setup(struct connection_details mysql_details)
                 mysql_details.password,
                 mysql_details.database, 0, NULL, 0)) {
         printf("Conection error : %s\n", mysql_error(connection));
-        exit(1);
+        return NULL;
     }
     return connection;
 }
