@@ -1,40 +1,43 @@
-var path = require('path')
-var webpack = require('webpack')
-var HtmlWebpackPlugin = require('html-webpack-plugin')
+var path = require('path');
+var HtmlWebpackPlugin = require('html-webpack-plugin');
+//var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var webpackMajorVersion = require('webpack/package.json').version.split('.')[0];
 
 module.exports = {
-  devtool: 'cheap-eval-source-map',
-  entry: [
-    'webpack-dev-server/client?http://localhost:8080',
-    'webpack/hot/dev-server',
-    './src/index'
-  ],
-  output: {
-    path: path.join(__dirname, 'dist'),
-    filename: 'bundle.js'
-  },
-  plugins: [
-    new webpack.HotModuleReplacementPlugin(),
-    new HtmlWebpackPlugin({
-      template: './src/index.html'
-    })
-  ],
-  module: {
-    loaders: [{
-      test: /\.css$/,
-      loaders: ['style', 'css']
-    }, {
-      test: /\.html$/,
-      loader: "raw-loader" // loaders: ['raw-loader'] is also perfectly acceptable.
-    }
-    ]
-  },
-  devServer: {
-    contentBase:  [
-      path.resolve(__dirname, "dist"),
-      path.resolve(__dirname, "node_modules")
+    context: __dirname,
+    entry: [
+        'webpack-dev-server/client?http://localhost:8080',
+        './src/index.js'
     ],
 
-    hot: true
-  }
-}
+    output: {
+        path: path.join(__dirname, 'dist/webpack-' + webpackMajorVersion),
+        publicPath: '',
+        filename: 'bundle.js'
+    },
+    module: {
+        rules: [
+            { test: /\.css$/, loaders:['style-loader', 'css-loader'] },
+            {     test: /\.(png|jpg|gif)$/,
+                use: [
+                    {
+                        loader: 'file-loader',
+                        options: {}  
+                    }
+                ]  },
+            { test: /\.html$/, loader: 'html-loader' }
+        ]
+    },
+    devServer: {
+        contentBase:  [
+            path.resolve(__dirname, "dist"),
+            path.resolve(__dirname, "node_modules")
+        ]
+    },
+    plugins: [
+        new HtmlWebpackPlugin({
+            template: './src/index.html'
+        })
+    ],
+    mode: 'development'
+};
