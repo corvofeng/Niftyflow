@@ -177,8 +177,8 @@ static void trace_add_pkt(PKT_TRACE_T* trace, const PARSE_PKT* pkt) {
 
     if(!trace->used) {  /** 当前trace第一次使用  */
         trace->used = true;
-        trace->key.src_ip = pkt->ip_inner->ip_src.s_addr;
-        trace->key.dst_ip = pkt->ip_inner->ip_dst.s_addr;
+        trace->key.ip_src = pkt->ip_inner->ip_src;
+        trace->key.ip_dst = pkt->ip_inner->ip_dst;
         trace->key.protocol = pkt->ip_inner->ip_p;
         trace->key.ip_id = pkt->ip_inner->ip_id;
         trace->hp1_switch_id = c;
@@ -236,8 +236,8 @@ static void trace_add_pkt(PKT_TRACE_T* trace, const PARSE_PKT* pkt) {
 static bool is_exact_trace(const PKT_TRACE_T* p_trace, const PARSE_PKT* pkt) {
     struct sniff_ip* ip = pkt->ip_inner;
 
-    return (ip->ip_src.s_addr  == p_trace->key.src_ip)   &&
-            (ip->ip_dst.s_addr == p_trace->key.dst_ip)   &&
+    return (ip->ip_src.s_addr  == p_trace->key.ip_src.s_addr)   &&
+            (ip->ip_dst.s_addr == p_trace->key.ip_dst.s_addr)   &&
             (ip->ip_p          == p_trace->key.protocol) &&
             (ip->ip_id         == p_trace->key.ip_id);
 }

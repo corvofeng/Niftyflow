@@ -1,8 +1,54 @@
 #include "trans.h"
+#include <sys/socket.h> // for inet_ntoa
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
+#include <stdio.h>
 
 void trans_test() {
     mysql_test();
     redis_test();
+}
+
+
+// 获取在结构体中的偏移
+#define  MEM_OFFSET(SCT, MEM) (&((SCT*)0)->MEM)
+
+typedef struct BINDS{
+    enum_field_types type;
+    bool is_null;
+    int offset;
+};
+
+
+void save_trace(MYSQL* conn, PKT_TRACE_T* trace) {
+
+    struct BINDS arr[] = {
+        {MYSQL_TYPE_STRING, },
+    };
+
+    MYSQL_BIND    bind[8];
+    // memset(bind, 0, sizeof(bind));
+    //char *s_ip = inet_ntoa((in_addr)trace->key.src_ip);
+    //char *d_ip = inet_ntoa((in_addr)trace->key.dst_ip);
+ //   int proto = trace->key.protocol;
+    int generat_time = trace->timestart;
+
+  //   bind[0].buffer_type= MYSQL_TYPE_STRING; // 源IP
+  //   bind[0].buffer= "s_ip";
+  //   bind[0].is_null= 0;
+  //   bind[0].length=  5;
+
+  //   bind[1].buffer_type= MYSQL_TYPE_STRING; // 目的IP
+  //   bind[1].buffer= "d_ip"
+  //   bind[1].is_null= 0;
+  //   bind[1].length= 5;
+
+  //   bind[0].buffer_type= MYSQL_TYPE_STRING; // 
+  //   bind[0].buffer= "s_ip";
+  //   bind[0].is_null= 0;
+  //   bind[1].length= 5;
+
 }
 
 bool redis_test() {
@@ -33,7 +79,7 @@ bool mysql_test() {
     struct connection_details mysqlID;
     mysqlID.server = "127.0.0.1";
     mysqlID.user = "root";
-    mysqlID.password = "***";
+    mysqlID.password = "fengyuhao";
     mysqlID.database = "DCN_shot";
 
     conn = mysql_connection_setup(mysqlID);

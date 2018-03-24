@@ -13,6 +13,8 @@
 #define TRACE_H_PAJBWR5N
 
 /**
+ * 2018-03-24: trace数据结构中的src_ip 与dst_ip数据结构进行了修改. 天啊!!!
+ *
  * 2018-03-22: 添加了毫秒数的换算工具. int是32位的时间戳, 大概有$$21*10^{8}$$
  *          20×10^8 ÷ 3600 ÷ 24 ÷ 1000 等于23, 也就是说, 换算成毫秒表示时间,
  *          只能表示23天, 连一个月都做不到.
@@ -25,12 +27,17 @@
  */
 
 #include <stdint.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <netinet/ip.h> /* superset of previous */
+
+// TODO: 这里修改了数据结构, 天啊, 好多地方要改了
 
 typedef struct{
-    uint32_t src_ip;    // 32bits 源IP地址
-    uint32_t dst_ip;    // 32bits 目的IP地址
-    uint16_t ip_id;     // 16bits 标识符
-    uint8_t protocol;   // 8bits  协议字段
+    struct in_addr ip_src; // 32bits 源IP地址
+    struct in_addr ip_dst; // 32bits 目的IP地址
+    uint16_t ip_id;        // 16bits 标识符
+    uint8_t protocol;      // 8bits  协议字段
 } __attribute__((packed)) IP_PKT_KEY_T;
 
 enum {TRACE_CNT = 5};   // 只记录5跳信息
@@ -48,8 +55,7 @@ typedef struct{
      * 的数据包的时间情况, 这里的时间戳是毫秒级别的时间戳.
      *
      *  Timestamp记录收到报文的时间,
-     *  如果对于某一跳交换机超过1秒还没收到其报文,
-     *  则视为丢包
+     *  如果对于某一跳交换机超过1秒还没收到其它的报文, 则视为丢包
      */
     uint32_t timestart;
 
@@ -92,8 +98,8 @@ uint32_t get_time_shift(const struct timeval& tv,
  *
  *   以`-2`为例, 32位的int表示-2会以`11...1110`这种形式来表示, 因为我们将最高
  * 位设计为了符号位, 但在截断之后, 我们保存的数字应该是`1111111110`,
- * 这样会出现什么问题呢? 10位的数字计算机中是没有定义符号位的, 这里, 我们需要
- * 首先对其进行有符号扩展, 扩展至32位符号数.
+ * 这样会出现什么问题呢? 10位的数字计算机中是没有定义符号位的. 我们就会认为
+ * 他是一个很大的正数. 这里, 我们需要首先对其进行有符号扩展, 扩展至32位符号数.
  *
  * 其实我想说, 不通配的数据结构定义会导致无穷无尽的问题,
  */

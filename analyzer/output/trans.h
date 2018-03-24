@@ -9,11 +9,14 @@
  *=======================================================================
  */
 
+/**
+ *
+ * 2018-03-23: 开始将trace数据存入数据库
+ */
 #ifndef TRANS_H_9TSB0WUC
 #define TRANS_H_9TSB0WUC
 
-
-
+#include "trace.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <mysql.h>
@@ -35,5 +38,26 @@ bool redis_test();
 
 MYSQL_RES* mysql_perform_query(MYSQL *connection, char *sql_query);
 MYSQL* mysql_connection_setup(struct connection_details mysql_details);
+
+/**
+ * 将一条trace路径存入数据库中, 这里需要依照数据库结构进行存储.
+ *
+ * +---------------+--------------+-----------------------------------+
+ * | Field         | Type         | Comment                           |
+ * +---------------+--------------+-----------------------------------+
+ * | id            | int(11)      |                                   |
+ * | s_ip          | varchar(120) | 源IP                              |
+ * | d_ip          | varchar(120) | 目的IP                            |
+ * | protocal      | int(11)      | 协议类型                          |
+ * | generate_time | timestamp    | 产生时间                          |
+ * | trace_data    | blob         | trace数据信息, 保存为二进制字符串 |
+ * | fdate         | int(11)      | 存入日期, 如果数据量过大则使用索引|
+ * | is_loop       | int(11)      | 是否有环                          |
+ * | is_drop       | int(11)      | 是否丢包                          |
+ * | is_probe      | int(11)      | 是否为探针                        |
+ * +---------------+--------------+-----------------------------------+
+ *
+ */
+void save_trace(MYSQL* conn, PKT_TRACE_T* trace);
 
 #endif /* end of include guard: TRANS_H_9TSB0WUC */

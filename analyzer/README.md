@@ -38,6 +38,31 @@ QtCreater打开, 它对CMake支持良好, 尤其是cmake到了3.8之后, 可以�
 以`MySQLTest`为例, 使用`MySQLTest.cpp`编译成为`./test/MySQLTest`
 而后建立一条测试`MySQLTest_tester`.
 
-除了使用`make test`之外, 也可以直接运行`./test/MySQLTest`.
+除了使用`make test`之外, 也可以直接执行`./test/MySQLTest`.
 
 
+## 数据库问题
+
+### 数据表结构
+
+
+
+### Triger 设置
+
+> 建立trigger, 由于Trace数据本身只携带了当日时间戳的偏移.
+> 最终我决定在存入数据库时, 直接用数据库存入当天日期作为fdate.
+>
+>
+> 如果出现了快到第二天0点时存入了数据, 而设置fdate时成为了第二天
+>   例如: 2018-03-22 23:59:55 时准备存入数据库,
+>     之后数据库中的fdate被设置为了2018-03-23, 这是一种不匹配,
+>
+> 有这么一种解决方式: 可以通过判断time_start的偏移, 如果偏移过大, 则认为它是
+> 第一天的数据, 也就是03-22的数据. 下面只是列了最简单的Trigger设置.
+
+```sql
+CREATE TRIGGER `fdate_set` BEFORE INSERT ON `tbl_trace_data`
+FOR EACH ROW BEGIN
+  SET NEW.fdate = CAST( DATE_FORMAT(NOW(),'%Y%m%d') AS UNSIGNED);
+END
+```

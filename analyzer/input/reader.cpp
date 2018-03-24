@@ -75,6 +75,8 @@ shared_ptr<PARSE_PKT> Reader::_pkt_generater(
      * 由于总是动态的分配释放内存会有较大的损失, 程序中的数据包总是
      * 保持在一个固定的数量中, 这里是一个很适合的场景
      *   http://gameprogrammingpatterns.com/object-pool.html
+     *
+     * TODO: 不用对象池真的很慢
      */
     shared_ptr<PARSE_PKT> pkt;
 
