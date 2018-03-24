@@ -2,8 +2,10 @@
 #include <sys/socket.h> // for inet_ntoa
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "log.h"
 
-#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 void trans_test() {
     mysql_test();
@@ -21,34 +23,128 @@ typedef struct BINDS{
 };
 
 
+
+#define INSERT_SAMPLE  "INSERT INTO               \
+    `tbl_trace_data`                              \
+    (`s_ip`, `d_ip`, `generate_time`, `protocal`, \
+     `fdate`, `is_loop`, `is_drop`, `is_probe`)   \
+    VALUES                                        \
+    (?, ?, ?, ?, ?, ?, ?, ?)"
+
 void save_trace(MYSQL* conn, PKT_TRACE_T* trace) {
 
     struct BINDS arr[] = {
         {MYSQL_TYPE_STRING, },
     };
+    LOG_D("START SAVER\n");
 
     MYSQL_BIND    bind[8];
-    // memset(bind, 0, sizeof(bind));
-    //char *s_ip = inet_ntoa((in_addr)trace->key.src_ip);
-    //char *d_ip = inet_ntoa((in_addr)trace->key.dst_ip);
- //   int proto = trace->key.protocol;
+    memset(bind, 0, sizeof(bind));
+    char *s_ip = inet_ntoa((in_addr)trace->key.ip_src);
+    long unsigned int s_len = strlen(s_ip);
+    char *d_ip = inet_ntoa((in_addr)trace->key.ip_dst);
+    long unsigned int d_len = strlen(d_ip);
+
     int generat_time = trace->timestart;
+    int proto = trace->key.protocol;
+    int loop = trace->is_loop ? 1: 0;
+    int drop = trace->is_drop? 1: 0;
+    int probe = trace->is_probe? 1: 0;
 
-  //   bind[0].buffer_type= MYSQL_TYPE_STRING; // 源IP
-  //   bind[0].buffer= "s_ip";
-  //   bind[0].is_null= 0;
-  //   bind[0].length=  5;
+    bind[0].buffer_type= MYSQL_TYPE_STRING; // 源IP
+    bind[0].buffer= s_ip;
+    bind[0].is_null= 0;
+    bind[0].length= &s_len;
 
-  //   bind[1].buffer_type= MYSQL_TYPE_STRING; // 目的IP
-  //   bind[1].buffer= "d_ip"
-  //   bind[1].is_null= 0;
-  //   bind[1].length= 5;
+    bind[1].buffer_type= MYSQL_TYPE_STRING; // 目的IP
+    bind[1].buffer= d_ip;
+    bind[1].is_null= 0;
+    bind[1].length= &d_len;
 
-  //   bind[0].buffer_type= MYSQL_TYPE_STRING; // 
-  //   bind[0].buffer= "s_ip";
-  //   bind[0].is_null= 0;
-  //   bind[1].length= 5;
+    bind[2].buffer_type= MYSQL_TYPE_LONG;   // 开始时间
+    bind[2].buffer= (char *)&generat_time;
+    bind[2].is_null= 0;
+    bind[2].length= 0;
 
+    bind[3].buffer_type= MYSQL_TYPE_LONG;   // 协议
+    bind[3].buffer= (char* )&proto;
+    bind[3].is_null= 0;
+    bind[3].length= 0;
+
+    bind[4].buffer_type= MYSQL_TYPE_BLOB;   // trace数据, 使用BLOB模式
+    bind[4].buffer= NULL;
+    bind[4].is_null= 0;
+    bind[4].length= 0;
+
+    bind[5].buffer_type= MYSQL_TYPE_LONG;   // 是否环路
+    bind[5].buffer= (char *)&loop;
+    bind[5].is_null= 0;
+    bind[5].length= 0;
+
+    bind[6].buffer_type= MYSQL_TYPE_LONG;   // 是否丢包
+    bind[6].buffer= (char*)&drop;
+    bind[6].is_null= 0;
+    bind[6].length= 0;
+
+    bind[7].buffer_type= MYSQL_TYPE_LONG;   // 是否探针
+    bind[7].buffer= (char *)&probe;
+    bind[7].is_null= 0;
+    bind[7].length= 0;
+
+
+    MYSQL_STMT    *stmt;
+    int           param_count;
+    my_ulonglong  affected_rows;
+
+
+    stmt = mysql_stmt_init(conn);
+    if (!stmt)
+    {
+      LOG_E(" mysql_stmt_init(), out of memory\n");
+      return ;
+    }
+    if (mysql_stmt_prepare(stmt, INSERT_SAMPLE, strlen(INSERT_SAMPLE)))
+    {
+        LOG_E(" mysql_stmt_prepare(), INSERT failed\n");
+        LOG_E(FMT(" %s\n", mysql_stmt_error(stmt)));
+        return ;
+    }
+    LOG_D(" prepare, INSERT successful\n");
+
+    /* Get the parameter count from the statement */
+    param_count= mysql_stmt_param_count(stmt);
+    LOG_D(FMT(" total parameters in INSERT: %d\n", param_count));
+
+    if (param_count != 8) /* validate parameter count */
+    {
+      LOG_E( " invalid parameter count returned by MySQL\n");
+      return ;
+    }
+
+    if (mysql_stmt_bind_param(stmt, bind))
+    {
+      LOG_E( " mysql_stmt_bind_param() failed\n");
+      LOG_E(FMT(" %s\n", mysql_stmt_error(stmt)));
+      return ;
+    }
+
+    /* Specify the data values for the first row */
+    // int_data= 10;             /* integer */
+    // strncpy(str_data, "MySQL", STRING_SIZE); /* string  */
+    // str_length= strlen(str_data);
+
+    /* Execute the INSERT statement - 1*/
+    if (mysql_stmt_execute(stmt))
+    {
+      LOG_E(" mysql_stmt_execute(), 1 failed\n");
+      LOG_E(FMT(" %s\n", mysql_stmt_error(stmt)));
+      return ;
+    }
+
+    /* Get the total rows affected */
+    affected_rows= mysql_stmt_affected_rows(stmt);
+    LOG_D(FMT(" total affected rows(insert 2): %lu\n",
+                (unsigned long) affected_rows));
 }
 
 bool redis_test() {
@@ -79,7 +175,7 @@ bool mysql_test() {
     struct connection_details mysqlID;
     mysqlID.server = "127.0.0.1";
     mysqlID.user = "root";
-    mysqlID.password = "fengyuhao";
+    mysqlID.password = "***";
     mysqlID.database = "DCN_shot";
 
     conn = mysql_connection_setup(mysqlID);

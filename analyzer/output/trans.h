@@ -11,7 +11,13 @@
 
 /**
  *
- * 2018-03-23: 开始将trace数据存入数据库
+ * 2018-03-23: 开始将trace数据存入数据库, 有关C语言访问数据库, 请查看以下几个
+ *              文档
+ *
+ * https://github.com/libgit2/libgit2-backends/blob/master/mysql/mysql.c
+ * https://dev.mysql.com/doc/refman/5.7/en/mysql-stmt-execute.html
+ * https://dev.mysql.com/doc/refman/5.5/en/c-api-prepared-statement-type-codes.html
+ *
  */
 #ifndef TRANS_H_9TSB0WUC
 #define TRANS_H_9TSB0WUC

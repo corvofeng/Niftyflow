@@ -150,6 +150,7 @@ void Processer::_inner_fast_path() {
                 Lock l(&is_over_mtx);
                 is_slow_over = false;
             }
+            start = clock();    // 重置时间
         }
     }
 }
