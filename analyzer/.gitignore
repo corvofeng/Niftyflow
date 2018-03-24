@@ -117,3 +117,11 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+#### joe made this: http://goel.io/joe
+
+#### visualstudiocode ####
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json

@@ -29,7 +29,9 @@ set(MY_TEST_LIST    LoggerTest;
                     PcapTest;
                     MySQLTest;
                     ProtobufTest;
-                    RedisTest;)
+                    RedisTest;
+                    ExampleTest;
+                    )
 
 # 添加所有可能使用到的库
 SET(LIBRARYS reader trans process common proto)
