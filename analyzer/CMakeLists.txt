@@ -10,15 +10,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 ")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror ")
 
 
-include(require/FindPCAP.cmake)     # 需要pcap库解析pcap文件
-include(require/FindMySQL.cmake)    # 结果存储至MySQL
-include(require/FindRedis.cmake)    # 从控制器中读取配置, 上传预警信息
+include(cmake/FindPCAP.cmake)     # 需要pcap库解析pcap文件
+include(cmake/FindMySQL.cmake)    # 结果存储至MySQL
+include(cmake/FindRedis.cmake)    # 从控制器中读取配置, 上传预警信息
 
 add_subdirectory(input)
 add_subdirectory(process)
 add_subdirectory(output)
 add_subdirectory(common)
 add_subdirectory(proto)
+add_subdirectory(lib)
+add_subdirectory(conf)
 
 enable_testing()
 add_subdirectory(test)
@@ -30,6 +32,7 @@ include_directories(
                     ${PROJECT_SOURCE_DIR}/output
                     ${PROJECT_SOURCE_DIR}/process
                     ${PROJECT_SOURCE_DIR}/common
+                    ${PROJECT_SOURCE_DIR}/lib
                     ${PROJECT_BINARY_DIR}   # for protobuf
                     )
 
@@ -49,5 +52,5 @@ add_executable(analyzer ${SOURCE_FILES})
 # 设置输出路径
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-TARGET_LINK_LIBRARIES(analyzer reader trans process common proto)
+TARGET_LINK_LIBRARIES(analyzer reader trans process common proto cJSON)
 

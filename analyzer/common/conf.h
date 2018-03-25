@@ -11,7 +11,11 @@
 #ifndef CONF_H_DIL08GJQ
 #define CONF_H_DIL08GJQ
 
+struct Conf {
 
+} Conf = {
+
+};
 
 
 #endif /* end of include guard: CONF_H_DIL08GJQ */
