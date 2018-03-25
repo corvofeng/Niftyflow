@@ -3,13 +3,14 @@
     "host": "127.0.0.1",
     "port": 3306,
     "user": "root",
-    "password": "..."
+    "password": "...",
+    "database": "DCN_shot"
   },
   "redis": {
-    "host": "127.0.0.1", 
+    "host": "127.0.0.1",
     "port": 6379,
-    "auth": "..."
-  },
-  "subscribe_chanel": "ever_chanel",
-  "alert_queue": "ever_queue"
+    "auth": "...",
+    "subscribe_chanel": "ever_chanel",
+    "alert_queue": "ever_queue"
+  }
 }

@@ -22,8 +22,6 @@ typedef struct BINDS{
     int offset;
 };
 
-
-
 #define INSERT_SAMPLE  "INSERT INTO               \
     `tbl_trace_data`                              \
     (`s_ip`, `d_ip`, `generate_time`, `protocal`, \
@@ -143,8 +141,9 @@ void save_trace(MYSQL* conn, PKT_TRACE_T* trace) {
 
     /* Get the total rows affected */
     affected_rows= mysql_stmt_affected_rows(stmt);
-    LOG_D(FMT(" total affected rows(insert 2): %lu\n",
+    LOG_D(FMT(" total affected rows(insert 1): %lu\n",
                 (unsigned long) affected_rows));
+    
 }
 
 bool redis_test() {
@@ -172,13 +171,7 @@ bool mysql_test() {
     MYSQL_RES *res;
     MYSQL_ROW row;
 
-    struct connection_details mysqlID;
-    mysqlID.server = "127.0.0.1";
-    mysqlID.user = "root";
-    mysqlID.password = "***";
-    mysqlID.database = "DCN_shot";
-
-    conn = mysql_connection_setup(mysqlID);
+    conn = mysql_connection_setup(Conf::instance());
     if(conn == NULL) exit(-1);
 
     // assign the results return to the MYSQL_RES pointer
@@ -195,16 +188,18 @@ bool mysql_test() {
     return true;
 }
 
-MYSQL* mysql_connection_setup(struct connection_details mysql_details)
+MYSQL* mysql_connection_setup(const Conf* c)
 {
     // first of all create a mysql instance and initialize the variables within
     MYSQL *connection = mysql_init(NULL);
 
     // connect to the database with the details attached.
-    if (!mysql_real_connect(connection,mysql_details.server,
-                mysql_details.user,
-                mysql_details.password,
-                mysql_details.database, 0, NULL, 0)) {
+    if (!mysql_real_connect(
+                connection,
+                c->mysql_host,
+                c->mysql_user,
+                c->mysql_password,
+                c->mysql_database, c->mysql_port, NULL, 0)) {
         printf("Conection error : %s\n", mysql_error(connection));
         return NULL;
     }

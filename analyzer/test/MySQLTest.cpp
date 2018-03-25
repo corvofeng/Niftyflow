@@ -5,15 +5,23 @@
 #include <stdio.h>
 #include <sys/socket.h> // for inet_aton
 #include "log.h"
+#include "conf.h"
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <iostream>
+#include <sstream>
+#include <fstream>
 
 
+/**
+ *  进行save测试, 但这样的测试会影响数据库正常的存储, 将会向数据库中添加一条
+ *  trace记录.
+ */
 void save_test() {
     PKT_TRACE_T trace;
     LOG_I("In MySQLTest save! get trace size: " << sizeof(trace) << "\n");
-    char* src = "192.168.1.112";
-    char* dst = "192.128.1.123";
+    char* src = (char *) "192.168.1.112";
+    char* dst = (char *)"192.128.1.123";
     inet_aton(src, &trace.key.ip_src);
     inet_aton(dst, &trace.key.ip_dst);
 
@@ -37,14 +45,8 @@ void save_test() {
     trace.is_drop = 0;
     trace.is_probe = 1;
 
-    struct connection_details mysqlID;
-    mysqlID.server = "127.0.0.1";
-    mysqlID.user = "root";
-    mysqlID.password = "***";
-    mysqlID.database = "DCN_shot";
-
     MYSQL *conn = mysql_init(NULL);
-    conn = mysql_connection_setup(mysqlID);
+    conn = mysql_connection_setup(Conf::instance());
     if(conn == NULL) exit(-1);
 
     save_trace(conn, &trace);
@@ -54,8 +56,13 @@ void save_test() {
 
 int main() {
     Logger::instance()->init(&std::cout, Level::DEBUG);
-    save_test();
-    //mysql_test();
+    std::ifstream input("../conf/conf.json");
+    std::stringstream sstr;
+    while (input >> sstr.rdbuf());
+    Conf::instance()->ConfRead(sstr.str().c_str());
+
+    // save_test();
+    mysql_test();
     return 0;
 }
 
