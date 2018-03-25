@@ -13,3 +13,4 @@
 
 !/orig_md/
 !orig_md/*
+!*.md
