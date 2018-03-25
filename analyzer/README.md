@@ -46,6 +46,7 @@ QtCreater打开, 它对CMake支持良好, 尤其是cmake到了3.8之后, 可以�
 
 ### 数据表结构
 
+经过强烈的思想斗争, 我决定不使用protobuf, 直接使用json作为trace存储工具.
 
 
 ### Triger 设置

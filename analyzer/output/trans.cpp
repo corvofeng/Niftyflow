@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "log.h"
+#include "cJSON/cJSON.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -14,26 +15,49 @@ void trans_test() {
 
 
 // 获取在结构体中的偏移
-#define  MEM_OFFSET(SCT, MEM) (&((SCT*)0)->MEM)
 
-typedef struct BINDS{
-    enum_field_types type;
-    bool is_null;
-    int offset;
-};
-
-#define INSERT_SAMPLE  "INSERT INTO               \
-    `tbl_trace_data`                              \
-    (`s_ip`, `d_ip`, `generate_time`, `protocal`, \
-     `fdate`, `is_loop`, `is_drop`, `is_probe`)   \
-    VALUES                                        \
+#define INSERT_SAMPLE  "INSERT INTO                  \
+    `tbl_trace_data`                                 \
+    (`s_ip`, `d_ip`, `generate_time`, `protocal`,    \
+     `trace_data`, `is_loop`, `is_drop`, `is_probe`) \
+    VALUES                                           \
     (?, ?, ?, ?, ?, ?, ?, ?)"
+
+enum {BUF_SIZE = 4096};
+static long unsigned get_trace_json(PKT_TRACE_T* pkt, char* buf) {
+    cJSON* tInfo = cJSON_CreateObject();
+    cJSON* tArr = cJSON_CreateArray();
+    cJSON* tItem;
+
+    cJSON_AddItemToArray(tArr, tItem = cJSON_CreateObject());
+    cJSON_AddItemToObject(tItem, "switch_id",
+                                    cJSON_CreateNumber(pkt->hp1_switch_id));
+    cJSON_AddItemToObject(tItem, "hop_rcvd", cJSON_CreateNumber(pkt->hp1_rcvd));
+    cJSON_AddItemToObject(tItem, "hop_timeshift", cJSON_CreateNumber(0));
+
+    for(int i = 0; i < TRACE_CNT - 1; i++) {
+        if(pkt->hop_info[i].hop_rcvd <= 0) break;   // 路径已经结束
+
+        cJSON_AddItemToArray(tArr, tItem = cJSON_CreateObject());
+        cJSON_AddItemToObject(tItem, "switch_id",
+                            cJSON_CreateNumber(pkt->hop_info[i].switch_id));
+        cJSON_AddItemToObject(tItem, "hop_rcvd",
+                cJSON_CreateNumber(pkt->hop_info[i].hop_rcvd));
+        cJSON_AddItemToObject(tItem, "hop_timeshift",
+                cJSON_CreateNumber(pkt->hop_info[i].hop_timeshift));
+    }
+    cJSON_AddItemToObject(tInfo, "trace_info", tArr);
+    LOG_D(cJSON_Print(tInfo) << "\n");
+    long int len = strlen(cJSON_Print(tInfo));
+    strcpy(buf, cJSON_Print(tInfo));
+
+    cJSON_Delete(tInfo);
+
+    return len;
+}
 
 void save_trace(MYSQL* conn, PKT_TRACE_T* trace) {
 
-    struct BINDS arr[] = {
-        {MYSQL_TYPE_STRING, },
-    };
     LOG_D("START SAVER\n");
 
     MYSQL_BIND    bind[8];
@@ -42,12 +66,14 @@ void save_trace(MYSQL* conn, PKT_TRACE_T* trace) {
     long unsigned int s_len = strlen(s_ip);
     char *d_ip = inet_ntoa((in_addr)trace->key.ip_dst);
     long unsigned int d_len = strlen(d_ip);
+    char buf[BUF_SIZE];
 
     int generat_time = trace->timestart;
     int proto = trace->key.protocol;
     int loop = trace->is_loop ? 1: 0;
     int drop = trace->is_drop? 1: 0;
     int probe = trace->is_probe? 1: 0;
+    long unsigned trace_len = get_trace_json(trace, buf);
 
     bind[0].buffer_type= MYSQL_TYPE_STRING; // 源IP
     bind[0].buffer= s_ip;
@@ -69,10 +95,10 @@ void save_trace(MYSQL* conn, PKT_TRACE_T* trace) {
     bind[3].is_null= 0;
     bind[3].length= 0;
 
-    bind[4].buffer_type= MYSQL_TYPE_BLOB;   // trace数据, 使用BLOB模式
-    bind[4].buffer= NULL;
+    bind[4].buffer_type= MYSQL_TYPE_STRING;   // trace数据, 使用BLOB模式
+    bind[4].buffer= buf;
     bind[4].is_null= 0;
-    bind[4].length= 0;
+    bind[4].length= &trace_len;
 
     bind[5].buffer_type= MYSQL_TYPE_LONG;   // 是否环路
     bind[5].buffer= (char *)&loop;
@@ -143,7 +169,6 @@ void save_trace(MYSQL* conn, PKT_TRACE_T* trace) {
     affected_rows= mysql_stmt_affected_rows(stmt);
     LOG_D(FMT(" total affected rows(insert 1): %lu\n",
                 (unsigned long) affected_rows));
-    
 }
 
 bool redis_test() {
