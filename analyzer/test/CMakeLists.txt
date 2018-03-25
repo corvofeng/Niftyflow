@@ -4,7 +4,7 @@ include_directories(${PROJECT_SOURCE_DIR}/input
                     ${PROJECT_SOURCE_DIR}/output
                     ${PROJECT_SOURCE_DIR}/process
                     ${PROJECT_SOURCE_DIR}/common
-                    ${PROJECT_SOURCE_DIR}/lib
+                    ${PROJECT_SOURCE_DIR}/libs
                     ${PROJECT_BINARY_DIR}
                     ${CHECK_INCLUDE_DIRS}
                     )
@@ -14,7 +14,7 @@ link_directories(${PROJECT_BINARY_DIR}/input
                  ${PROJECT_BINARY_DIR}/output
                  ${PROJECT_BINARY_DIR}/process
                  ${PROJECT_BINARY_DIR}/common
-                 ${PROJECT_BINARY_DIR}/lib
+                 ${PROJECT_BINARY_DIR}/libs
                  )
 
 # TARGET_LINK_LIBRARIES(analyzer reader trans process common)

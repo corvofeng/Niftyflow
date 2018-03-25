@@ -19,7 +19,7 @@ add_subdirectory(process)
 add_subdirectory(output)
 add_subdirectory(common)
 add_subdirectory(proto)
-add_subdirectory(lib)
+add_subdirectory(libs)
 add_subdirectory(conf)
 
 enable_testing()
@@ -32,7 +32,7 @@ include_directories(
                     ${PROJECT_SOURCE_DIR}/output
                     ${PROJECT_SOURCE_DIR}/process
                     ${PROJECT_SOURCE_DIR}/common
-                    ${PROJECT_SOURCE_DIR}/lib
+                    ${PROJECT_SOURCE_DIR}/libs
                     ${PROJECT_BINARY_DIR}   # for protobuf
                     )
 
