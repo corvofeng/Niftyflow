@@ -1,3 +1,4 @@
+conf/conf.json
 #### joe made this: http://goel.io/joe
 
 #### cmake ####
@@ -29,7 +30,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/

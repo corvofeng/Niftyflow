@@ -70,9 +70,10 @@ private:
     pthread_t t_fast;
     pthread_t t_slow;
 
-    struct {
+    struct {   // NOTE: 为了理解方便, 这里没有使用3维数组, 使用匿名类更方便
         PKT_TRACE_T **b;                // 二维数组, 在构造函数中初始化
     }  _bkts[BKT_SIZE];                 // 三个hash桶
+                            
 
     bool is_slow_over;
     pthread_mutex_t is_over_mtx;

@@ -13,6 +13,7 @@
 QtCreater打开, 它对CMake支持良好, 尤其是cmake到了3.8之后, 可以使用cmake server.
 
 ```bash
+> cp conf/conf-example.json conf/conf.json   # 添加配置文件
 > mkdir build
 > cd build
 > cmake ..

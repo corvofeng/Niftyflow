@@ -4,6 +4,7 @@ include_directories(${PROJECT_SOURCE_DIR}/input
                     ${PROJECT_SOURCE_DIR}/output
                     ${PROJECT_SOURCE_DIR}/process
                     ${PROJECT_SOURCE_DIR}/common
+                    ${PROJECT_SOURCE_DIR}/lib
                     ${PROJECT_BINARY_DIR}
                     ${CHECK_INCLUDE_DIRS}
                     )
@@ -13,6 +14,7 @@ link_directories(${PROJECT_BINARY_DIR}/input
                  ${PROJECT_BINARY_DIR}/output
                  ${PROJECT_BINARY_DIR}/process
                  ${PROJECT_BINARY_DIR}/common
+                 ${PROJECT_BINARY_DIR}/lib
                  )
 
 # TARGET_LINK_LIBRARIES(analyzer reader trans process common)
@@ -30,11 +32,12 @@ set(MY_TEST_LIST    LoggerTest;
                     MySQLTest;
                     ProtobufTest;
                     RedisTest;
+                    ConfTest;
                     ExampleTest;
                     )
 
 # 添加所有可能使用到的库
-SET(LIBRARYS reader trans process common proto)
+SET(LIBRARYS reader trans process common proto cJSON)
 
 FOREACH(TEST_ITEM ${MY_TEST_LIST})
     #message(STATUS ${TEST_ITEM})
