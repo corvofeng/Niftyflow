@@ -1,0 +1,3 @@
+
+let g:ale_cpp_clangtidy_options = 'p /home/corvo/GitRepo/graduate/analyzer/build/'
+set noautochdir

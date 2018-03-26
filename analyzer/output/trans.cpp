@@ -43,8 +43,12 @@ static long unsigned get_trace_json(PKT_TRACE_T* pkt, char* buf) {
                             cJSON_CreateNumber(pkt->hop_info[i].switch_id));
         cJSON_AddItemToObject(tItem, "hop_rcvd",
                 cJSON_CreateNumber(pkt->hop_info[i].hop_rcvd));
+
+        int real_shift;
+        // 获取真实的偏移时间, 具体原因请查看@common/trace.h
+        GET_EXACT_TIME_SHIFT(pkt->hop_info[i].hop_timeshift, real_shift); 
         cJSON_AddItemToObject(tItem, "hop_timeshift",
-                cJSON_CreateNumber(pkt->hop_info[i].hop_timeshift));
+                        cJSON_CreateNumber(real_shift));
     }
     cJSON_AddItemToObject(tInfo, "trace_info", tArr);
     LOG_D(cJSON_Print(tInfo) << "\n");

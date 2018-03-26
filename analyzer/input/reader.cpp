@@ -15,6 +15,7 @@
 using namespace std;
 
 /**
+ * 2018-03-26: 在解析数据包完成后, 立刻进行计数器累加操作
  * 2018-03-23: 初次将break去掉, 使用valgrind检测, 程序运行正常, 检测出几个丢包
  *              问题
  *
@@ -55,12 +56,30 @@ void Reader::_inner_read_and_push() {
 
         shared_ptr<PARSE_PKT> pkt = _pkt_generater(header, data);
         if(pkt) {
+            run_counter(pkt);
             _push_to_queue(pkt);
         }
 //        break;
     }
 }
 
+void Reader::run_counter(shared_ptr<PARSE_PKT> pkt) {
+    for(auto& item : *this->_counter_map) {
+        const CounterRule& c_rule = item.first;
+        Counter& cnt = item.second;
+
+        // 只要违反一条规则, 马上进行下一个判断
+        if(c_rule.ip_src.s_addr != -1 && c_rule.ip_src.s_addr != pkt->ip_inner->ip_src.s_addr)
+            continue;
+        if(c_rule.ip_dst.s_addr != -1 && c_rule.ip_dst.s_addr != pkt->ip_inner->ip_dst.s_addr)
+            continue;
+        if(c_rule.protocol != -1 &&
+                c_rule.protocol != pkt->ip_inner->ip_p)
+            continue;
+        // if(c_rule.switch_id != -1 ) TODO: 补全交换机ID信息
+        cnt.add_one();
+    }
+}
 
 shared_ptr<PARSE_PKT> Reader::_pkt_generater(
             const struct pcap_pkthdr* header,
