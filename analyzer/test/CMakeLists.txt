@@ -27,17 +27,17 @@ include(CTest)
 
 SET(CTEST_OUTPUT_ON_FAILURE ON)
 
+# ProtobufTest; 后来决定不用protobuf了
 set(MY_TEST_LIST    LoggerTest;
                     PcapTest;
                     MySQLTest;
-                    ProtobufTest;
                     RedisTest;
                     ConfTest;
                     ExampleTest;
                     )
 
 # 添加所有可能使用到的库
-SET(LIBRARYS reader trans process common proto cJSON)
+SET(LIBRARYS reader trans process common cJSON)
 
 FOREACH(TEST_ITEM ${MY_TEST_LIST})
     #message(STATUS ${TEST_ITEM})

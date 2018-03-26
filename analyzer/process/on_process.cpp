@@ -193,7 +193,7 @@ static void trace_add_pkt(PKT_TRACE_T* trace, const PARSE_PKT* pkt) {
         trace->timestart = time_stamp;
 
     } else {        /** 当前trace已经存在, 现在向其中添加一跳的数据包 */
-        if (trace->hp1_switch_id = c) {
+        if (trace->hp1_switch_id = c) { // TODO: use IS_SAME_ID
             trace->hp1_rcvd ++;
 
             // 一个交换机出现了三次, 认为是环路

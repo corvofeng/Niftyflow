@@ -25,9 +25,10 @@ int main(int argc, char *argv[])
     Watcher watcher;
     watcher.init_connect(Conf::instance());
 
-
+    watcher.run();
 
     // eMain.run();
+    watcher.join();
 
     return 0;
 }

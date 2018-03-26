@@ -20,7 +20,6 @@ add_subdirectory(input)
 add_subdirectory(process)
 add_subdirectory(output)
 add_subdirectory(common)
-add_subdirectory(proto)
 add_subdirectory(libs)
 add_subdirectory(conf)
 
@@ -54,5 +53,5 @@ add_executable(analyzer ${SOURCE_FILES})
 # 设置输出路径
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-TARGET_LINK_LIBRARIES(analyzer reader trans process common proto cJSON)
+TARGET_LINK_LIBRARIES(analyzer reader trans process common cJSON)
 

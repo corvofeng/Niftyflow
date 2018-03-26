@@ -42,7 +42,12 @@ class Watcher
 public:
 
     Watcher():_counter_map(NULL), _main(NULL){}
-    ~Watcher () {}
+    ~Watcher () {
+        if(c_mysql)
+            mysql_close(c_mysql);
+        if(c_redis)
+            redisFree(c_redis);
+    }
     void bind_counter_map(map<CounterRule, Counter>* counter_map) {
         this->_counter_map = counter_map;
     }
@@ -61,8 +66,20 @@ private:
     MYSQL *c_mysql;             // 数据库连接
     redisContext *c_redis;      // redis连接
 
+public:
+
+    void run() {
+        pthread_create(&t_pubsub_chanel, NULL, &Watcher::pubsub_process, this);
+        pthread_create(&t_push_queue, NULL, &Watcher::push_queue_process, this);
+    }
+
+    void join() {
+        (void) pthread_join(t_pubsub_chanel, NULL);
+        (void) pthread_join(t_push_queue, NULL);
+    }
+
     static void* pubsub_process(void *context) {
-       Watcher *w = (Watcher*)context;
+        Watcher *w = (Watcher*)context;
         w->_inner_pubsub();
     }
 

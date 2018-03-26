@@ -24,6 +24,7 @@
 #include "atom_counter.h"
 #include "cnt_rule.h"
 #include <unordered_set>
+#include "message.h"
 
 using std::vector;
 using std::map;
@@ -38,8 +39,10 @@ class EverflowMain
 {
 public:
 
-    EverflowMain ();
+    EverflowMain();
     void run();
+
+    void join();
 
     // 初始化阶段, 首先向控制器请求INIT, 而后
     // 控制器会将一些配置信息返回.
@@ -55,7 +58,7 @@ public:
 
     void processer_active();
 
-    virtual ~EverflowMain ();
+    ~EverflowMain ();
 
 private:
     int processer_cnt;    /**< 记录同时处理的processor个数 */
@@ -64,7 +67,8 @@ private:
     int cur_id;           /**< 记录当前分析器的ID 只要初始化获得,
                                 一旦确定, 将不会改变 */
 
-    map<CounterRule, Counter> counter_map;
+    Queue<Message> message_queue;           // 消息队列设置
+    map<CounterRule, Counter> counter_map;  // 记录计数器的规则
     unordered_set<int> out_switch_set;      // 出口交换机的id
 
     vector<pcap_t*> pcap_vec;

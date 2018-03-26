@@ -4,9 +4,11 @@
 #include <hiredis/hiredis.h>
 
 void Watcher::_inner_pubsub() {
+    while(1) {
 
-
+    }
 }
+
 void Watcher::_inner_push() {
 
 }

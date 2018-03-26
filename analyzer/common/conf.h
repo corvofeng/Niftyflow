@@ -88,7 +88,7 @@ public:
         do {
 
             if(host->type==cJSON_String) {
-                this->mysql_host = (char*)malloc(strlen(host->valuestring));
+                this->mysql_host = (char*)malloc(strlen(host->valuestring) + 1);
                 strcpy(this->mysql_host, host->valuestring);
             } else break;
 
@@ -97,32 +97,27 @@ public:
             } else break;
 
             if(user->type==cJSON_String) {
-                this->mysql_user = (char*)malloc(strlen(user->valuestring));
+                this->mysql_user = (char*)malloc(strlen(user->valuestring) + 1);
                 strcpy(this->mysql_user, user->valuestring);
             } else break;
 
             if(password->type==cJSON_String) {
-                this->mysql_password = (char*)malloc(strlen(password->valuestring));
+                this->mysql_password = (char*)malloc(strlen(password->valuestring)+1);
                 strcpy(this->mysql_password, password->valuestring);
             } else break;
 
             if(database->type==cJSON_String) {
-                this->mysql_database = (char*)malloc(strlen(database->valuestring));
-                strcpy(this->mysql_database, database->valuestring);
-            } else break;
-
-            if(database->type==cJSON_String) {
-                this->mysql_database = (char*)malloc(strlen(database->valuestring));
+                this->mysql_database = (char*)malloc(strlen(database->valuestring) + 1);
                 strcpy(this->mysql_database, database->valuestring);
             } else break;
 
             if(jhost->type==cJSON_String) {
-                this->redis_host = (char*)malloc(strlen(jhost->valuestring));
+                this->redis_host = (char*)malloc(strlen(jhost->valuestring) + 1);
                 strcpy(this->redis_host, jhost->valuestring);
             } else break;
 
             if(jauth->type==cJSON_String) {
-                this->redis_auth = (char*)malloc(strlen(jauth->valuestring));
+                this->redis_auth = (char*)malloc(strlen(jauth->valuestring) + 1);
                 strcpy(this->redis_auth, jauth->valuestring);
             } else break;
 
@@ -131,12 +126,12 @@ public:
             } else break;
 
             if(jchanel->type==cJSON_String) {
-                this->redis_chanel = (char*)malloc(strlen(jchanel->valuestring));
+                this->redis_chanel = (char*)malloc(strlen(jchanel->valuestring) + 1);
                 strcpy(this->redis_chanel, jchanel->valuestring);
             } else break;
 
             if(jqueue->type==cJSON_String) {
-                this->redis_queue = (char*)malloc(strlen(jqueue->valuestring));
+                this->redis_queue = (char*)malloc(strlen(jqueue->valuestring) + 1);
                 strcpy(this->redis_queue, jqueue->valuestring);
             } else break;
 
@@ -151,16 +146,20 @@ public:
         }
     }
 
+    void try_clean() {
+        LOG_D("In conf delete\n");
+        if(mysql_host)     free(mysql_host);
+        if(mysql_user)     free(mysql_user);
+        if(mysql_password) free(mysql_password);
+        if(mysql_database) free(mysql_database);
+        if(redis_host)     free(redis_host);
+        if(redis_auth)     free(redis_auth);
+        if(redis_chanel)   free(redis_chanel);
+        if(redis_queue)    free(redis_queue);
+    }
 
     ~Conf() {
-        if(!mysql_host)     free (mysql_host);
-        if(!mysql_user)     free (mysql_user);
-        if(!mysql_password) free (mysql_password);
-        if(!mysql_database) free (mysql_database);
-        if(!redis_host)     free (redis_host);
-        if(!redis_auth)     free (redis_auth);
-        if(!redis_chanel)   free (redis_chanel);
-        if(!redis_queue)    free (redis_queue);
+        try_clean();
     }
 
 };

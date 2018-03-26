@@ -33,7 +33,9 @@ void EverflowMain::run() {
         p->run();
     for(auto r: reader_vec)
         r->run();
+}
 
+void EverflowMain::join() {
     for(auto p : processer_vec)
         p->join();
 
@@ -47,3 +49,25 @@ EverflowMain::~EverflowMain() {
         pcap_close(p);
     }
 }
+
+void EverflowMain::on_init()  {
+    // TODO: 向消息队列中添加初始化请求,
+    // 而后进入等待状态, 直到收到自己相关的初始返回
+}
+
+void EverflowMain::reader_pause() {
+    for(auto r: reader_vec) {
+        r->do_pause();
+    }
+    bool allPause = false;
+    while(!allPause) {
+        for(auto r: reader_vec) {
+           if(!r->is_pause_ok()) 
+               allPause = true;
+        }
+    }
+}
+
+
+
+
