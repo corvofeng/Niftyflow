@@ -24,6 +24,25 @@ void trans_test() {
     (?, ?, ?, ?, ?, ?, ?, ?)"
 
 enum {BUF_SIZE = 4096};
+
+/**
+ * @brief 将trace数据中的路径信息转换为JSON字符串.
+ *  {
+ *    "trace_info": [
+ *      {
+ *        "switch_id": 234,
+ *        "hop_rcvd": 2,
+ *        "hop_timeshift": 0
+ *      },
+ *      {
+ *        "switch_id": 113,
+ *        "hop_rcvd": 2,
+ *        "hop_timeshift": 12
+ *      },
+ *      ...
+ *    ]
+ *  }
+ */
 static long unsigned get_trace_json(PKT_TRACE_T* pkt, char* buf) {
     cJSON* tInfo = cJSON_CreateObject();
     cJSON* tArr = cJSON_CreateArray();
@@ -195,6 +214,49 @@ bool redis_test() {
     return true;
 }
 
+redisContext* redis_connection_setup(const Conf* conf) {
+    redisContext *c = redisConnect(conf->redis_host, conf->redis_port);
+    if (c != NULL && c->err) {
+        LOG_E(c->errstr << "\n");
+        // handle error
+        return NULL;
+    }
+    redisReply *reply;
+    if (conf->redis_auth) {
+        reply = (redisReply*) redisCommand(c, "AUTH %s", conf->redis_auth);
+        LOG_D("AUTH: " << reply->str << "\n");
+        freeReplyObject(reply);
+    }
+
+    reply = (redisReply*) redisCommand(c, "PING");
+    LOG_D("PING: " << reply->str << "\n");
+    freeReplyObject(reply);
+
+    return c;
+}
+MYSQL* mysql_connection_setup(const Conf* c)
+{
+    // first of all create a mysql instance and initialize the variables within
+    MYSQL *connection = mysql_init(NULL);
+
+    // connect to the database with the details attached.
+    if (!mysql_real_connect(
+                connection,
+                c->mysql_host,
+                c->mysql_user,
+                c->mysql_password,
+                c->mysql_database, c->mysql_port, NULL, 0)) {
+        printf("Conection error : %s\n", mysql_error(connection));
+        return NULL;
+    }
+
+    // 断线之后将会进行一次重连工作
+    bool reconnect = 1;
+    mysql_options(connection, MYSQL_OPT_RECONNECT, &reconnect);
+
+    return connection;
+}
+
 bool mysql_test() {
     MYSQL *conn = mysql_init(NULL);
     MYSQL_RES *res;
@@ -217,23 +279,7 @@ bool mysql_test() {
     return true;
 }
 
-MYSQL* mysql_connection_setup(const Conf* c)
-{
-    // first of all create a mysql instance and initialize the variables within
-    MYSQL *connection = mysql_init(NULL);
 
-    // connect to the database with the details attached.
-    if (!mysql_real_connect(
-                connection,
-                c->mysql_host,
-                c->mysql_user,
-                c->mysql_password,
-                c->mysql_database, c->mysql_port, NULL, 0)) {
-        printf("Conection error : %s\n", mysql_error(connection));
-        return NULL;
-    }
-    return connection;
-}
 
 MYSQL_RES* mysql_perform_query(MYSQL *connection, char *sql_query)
 {
@@ -246,6 +292,3 @@ MYSQL_RES* mysql_perform_query(MYSQL *connection, char *sql_query)
 
     return mysql_use_result(connection);
 }
-
-
-

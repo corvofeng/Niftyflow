@@ -40,6 +40,21 @@ public:
 
     EverflowMain ();
     void run();
+
+    // 初始化阶段, 首先向控制器请求INIT, 而后
+    // 控制器会将一些配置信息返回.
+    void on_init();
+
+    // 在调用reader_pause之后才可以调用增加删除规则.
+    void reader_pause();
+    void add_rules(vector<CounterRule>& rules);
+    void del_rules(vector<CounterRule>& rules);
+    void reader_active();
+
+    void processer_pause();
+
+    void processer_active();
+
     virtual ~EverflowMain ();
 
 private:

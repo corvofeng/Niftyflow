@@ -59,7 +59,9 @@ void Reader::_inner_read_and_push() {
             run_counter(pkt);
             _push_to_queue(pkt);
         }
-//        break;
+        // break;
+        while(this->pause)
+            this->is_pause = true;
     }
 }
 

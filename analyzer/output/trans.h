@@ -34,6 +34,7 @@ bool redis_test();
 
 MYSQL_RES* mysql_perform_query(MYSQL *connection, char *sql_query);
 MYSQL* mysql_connection_setup(const Conf* c);
+redisContext* redis_connection_setup(const Conf* c);
 
 /**
  * 将一条trace路径存入数据库中, 这里需要依照数据库结构进行存储.
