@@ -4,16 +4,48 @@
 #include <hiredis/hiredis.h>
 
 void Watcher::_inner_pubsub() {
-    while(1) {
+    LOG_D("In watcher pubsub\n");
 
+    redisReply *reply;
+    reply = (redisReply*)redisCommand(this->c_redis,
+                            "SUBSCRIBE %s", conf->redis_chanel);
+
+    LOG_D("Listen: " << conf->redis_chanel << "\n");
+    freeReplyObject(reply);
+
+    while(!stop) {
+        if (redisGetReply(this->c_redis, (void**)&reply) == REDIS_OK) {
+            if (reply == NULL) continue;
+            if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 3) {
+
+                /*
+                printf( "Received[] channel %s %s: %s\n",
+                            reply->element[0]->str,
+                            reply->element[1]->str,
+                            reply->element[2]->str );
+                            */
+                command_parse(reply->element[2]->str);
+            }
+            freeReplyObject(reply);
+        }
     }
 }
 
-void Watcher::_inner_push() {
-
+void Watcher::command_parse(char *commands) {
+    LOG_D("Command: " << commands << "\n");
 }
 
-void Watcher::init_connect(const Conf* conf) {
+void Watcher::_inner_push() {
+    LOG_D("In watcher push\n");
+    while(!stop) {
+        Message msg = msg_queue.pop();
+    }
+}
+
+void Watcher::init(Conf* conf) {
+    this->conf = conf;
+}
+void Watcher::init_connect() {
     do {
         this->c_mysql = mysql_connection_setup(conf);
         if(this->c_mysql == NULL)

@@ -59,6 +59,7 @@ void EverflowMain::add_rules(vector<CounterRule>& rules) {
     for(auto rule : rules) {
         //this->counter_map.insert(std::make_pair<CounterRule, Counter>
         //    (CounterRule(rule), Counter(0)));
+        //    一旦获取计数器, 使用shared_ptr, 防止内存泄露
         this->counter_map[CounterRule(rule)] = shared_ptr<Counter>(new Counter(0));
     }
 }

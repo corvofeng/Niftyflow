@@ -23,7 +23,8 @@ int main(int argc, char *argv[])
 
     // Init connect and read config
     Watcher watcher;
-    watcher.init_connect(Conf::instance());
+    watcher.init(Conf::instance());
+    watcher.init_connect();
 
     watcher.run();
 
