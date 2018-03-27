@@ -68,7 +68,7 @@ private:
                                 一旦确定, 将不会改变 */
 
     Queue<Message> message_queue;           // 消息队列设置
-    map<CounterRule, Counter> counter_map;  // 记录计数器的规则
+    map<CounterRule, shared_ptr<Counter>> counter_map;  // 记录计数器的规则
     unordered_set<int> out_switch_set;      // 出口交换机的id
 
     vector<pcap_t*> pcap_vec;

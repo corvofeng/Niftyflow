@@ -20,6 +20,7 @@
  *
  *
  * {
+ *   "id": 123,
  *   "mysql": {
  *     "host": "127.0.0.1",
  *     "port": 3306,
@@ -47,6 +48,7 @@ private:
             redis_chanel(NULL),
             redis_queue(NULL) {}
 public:
+    int   analyzer_id;
     char* mysql_host;
     int   mysql_port;
     char* mysql_user;
@@ -70,6 +72,8 @@ public:
             LOG_E("Read file error\n");
         }
 
+        cJSON *jAnalyzer = cJSON_GetObjectItem(jConf, "id");
+
         cJSON *jMysql = cJSON_GetObjectItem(jConf, "mysql");
         cJSON *host = cJSON_GetObjectItem(jMysql, "host");
         cJSON *port = cJSON_GetObjectItem(jMysql, "port");
@@ -86,6 +90,9 @@ public:
 
         bool parse_ok = false;
         do {
+            if(jAnalyzer->type == cJSON_Number) {
+                this->analyzer_id = jAnalyzer->valueint;
+            } else break;
 
             if(host->type==cJSON_String) {
                 this->mysql_host = (char*)malloc(strlen(host->valuestring) + 1);

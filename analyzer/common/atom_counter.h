@@ -23,6 +23,9 @@ class Counter {
 public:
     Counter(): cnt(0) {}
 
+    Counter(const int i): cnt(i) {
+    
+    }
     void set_zero() {
         std::unique_lock<std::mutex> mlock(mutex_);
         this->cnt = 0;

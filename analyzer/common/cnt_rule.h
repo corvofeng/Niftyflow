@@ -31,10 +31,24 @@
  *          会被计数.
  */
 struct CounterRule {
+    int rule_id;
     struct in_addr ip_src; // 32bits 源IP地址
     struct in_addr ip_dst; // 32bits 目的IP地址
     int switch_id: 12;     // 交换机ID
     char protocol;         // 协议类型
+
+    CounterRule(const CounterRule& cr) {
+        this->rule_id = cr.rule_id;
+        this->ip_src = cr.ip_src;
+        this->ip_dst = cr.ip_dst;
+        this->switch_id = cr.switch_id;
+        this->protocol = cr.protocol;
+    }
+
+    bool operator<(const CounterRule& r2) const {
+        return this->rule_id < r2.rule_id;
+    }
+
 };
 
 #endif /* end of include guard: FILTER_H_JI4PYOA3 */

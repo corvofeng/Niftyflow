@@ -17,6 +17,8 @@ int main()
     Logger::instance()->init(&std::cout, Level::DEBUG);
     Conf::instance()->ConfRead(sstr.str().c_str());
 
+    printf("Analyer id: %d\n", Conf::instance()->analyzer_id);
+
     printf("MySQL:\n");
     printf("host:   %s\n", Conf::instance()->mysql_host);
     printf("port;   %d\n", Conf::instance()->mysql_port);

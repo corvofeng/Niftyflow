@@ -55,17 +55,39 @@ void EverflowMain::on_init()  {
     // 而后进入等待状态, 直到收到自己相关的初始返回
 }
 
+void EverflowMain::add_rules(vector<CounterRule>& rules) {
+    for(auto rule : rules) {
+        //this->counter_map.insert(std::make_pair<CounterRule, Counter>
+        //    (CounterRule(rule), Counter(0)));
+        this->counter_map[CounterRule(rule)] = shared_ptr<Counter>(new Counter(0));
+    }
+}
+void EverflowMain::del_rules(vector<CounterRule>& rules) {
+    for(auto rule: rules) {
+
+        this->counter_map.erase(rule);
+    }
+}
+
 void EverflowMain::reader_pause() {
     for(auto r: reader_vec) {
         r->do_pause();
     }
     bool allPause = false;
-    while(!allPause) {
+
+    while(!allPause) {  // 确保每个读入线程均暂停
+        allPause = true;
         for(auto r: reader_vec) {
-           if(!r->is_pause_ok()) 
+           if(!r->is_pause_ok())
                allPause = true;
         }
     }
+    return ;
+}
+
+void EverflowMain::reader_active() {
+    for(auto r: reader_vec)
+        r->cancel_pause();
 }
 
 
