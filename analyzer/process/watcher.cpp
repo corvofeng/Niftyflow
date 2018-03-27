@@ -3,19 +3,20 @@
 #include "trans.h"
 #include "ever_main.h"
 #include <hiredis/hiredis.h>
+#include "cJSON/cJSON.h"
 
 void Watcher::_inner_pubsub() {
     LOG_D("In watcher pubsub\n");
 
     redisReply *reply;
-    reply = (redisReply*)redisCommand(this->c_redis,
+    reply = (redisReply*)redisCommand(this->c_redis_pubsub,
                             "SUBSCRIBE %s", conf->redis_chanel);
 
     LOG_D("Listen: " << conf->redis_chanel << "\n");
     freeReplyObject(reply);
 
     while(!stop) {
-        if (redisGetReply(this->c_redis, (void**)&reply) == REDIS_OK) {
+        if (redisGetReply(this->c_redis_pubsub, (void**)&reply) == REDIS_OK) {
             if (reply == NULL) continue;
             if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 3) {
 
@@ -34,12 +35,44 @@ void Watcher::_inner_pubsub() {
 
 void Watcher::command_parse(char *commands) {
     LOG_D("Command: " << commands << "\n");
+    cJSON *jConf = cJSON_Parse(commands);
+    if(!jConf) LOG_E("Read commands err: " << commands << "\n");
+}
+
+/**
+ *
+ * 初始化
+ *  {
+ *    "ACTION": "INIT",
+ *    "ANALYZER_ID":  123
+ *  }
+ */
+void Watcher::send_init() {
+    cJSON *jMsg = cJSON_CreateObject();
+    cJSON_AddStringToObject(jMsg, "ACTION", "INIT");
+    cJSON_AddNumberToObject(jMsg, "ANALYZER_ID", conf->analyzer_id);
+
+    Message m(cJSON_PrintUnformatted(jMsg));
+    LOG_D(cJSON_Print(jMsg) << "\n");
+    this->_msg_queue->push(m);
+    cJSON_Delete(jMsg);
+}
+
+void Watcher::wait_command_init() {
+
 }
 
 void Watcher::_inner_push() {
     LOG_D("In watcher push\n");
+    const char *_queue_str = conf->redis_queue;
+    redisReply *reply;
     while(!stop) {
-        Message msg = _msg_queue->pop();
+        Message m = _msg_queue->pop();
+        LOG_D("In queue: " << m.msg << "\n");
+        reply = (redisReply*)redisCommand(this->c_redis_queue,
+                            "LPUSH %s %s", _queue_str, m.msg.c_str());
+        LOG_D("Reply " << reply->str << "\n");
+        freeReplyObject(reply);
     }
 }
 
@@ -58,18 +91,17 @@ void Watcher::init_connect() {
             break;
         LOG_D("Connect mysql ok\n");
 
-        this->c_redis = redis_connection_setup(conf);
+        this->c_redis_pubsub = redis_connection_setup(conf);
+        this->c_redis_queue = redis_connection_setup(conf);
 
-        if(this->c_redis == NULL)
+        if(!this->c_redis_pubsub && !this->c_redis_queue)
             break;
         LOG_D("Connect redis ok\n");
 
         return;
     }while(0);
 
-// err handler
-    if(c_mysql)
-        mysql_close(c_mysql);
-    if(c_redis)
-        redisFree(c_redis);
+// err handler, 正常情况下不该执行到这里.
+    LOG_D("Connect error\n");
+    try_free();
 }

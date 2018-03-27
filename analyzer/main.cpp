@@ -26,6 +26,8 @@ int main(int argc, char *argv[])
     watcher.init(Conf::instance(), &eMain);
     watcher.init_connect();
 
+    watcher.send_init();
+    watcher.wait_command_init();
 
     watcher.run();
 

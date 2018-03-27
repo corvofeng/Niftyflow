@@ -46,12 +46,19 @@ class Conf;
 class Watcher
 {
 public:
-    Watcher():_counter_map(NULL), _main(NULL), stop(false){}
-    ~Watcher () {
+    Watcher():_counter_map(NULL), _main(NULL),
+                stop(false), is_command_init_ok(false){}
+
+    void try_free() {
         if(c_mysql)
             mysql_close(c_mysql);
-        if(c_redis)
-            redisFree(c_redis);
+        if(c_redis_queue)
+            redisFree(c_redis_queue);
+        if(c_redis_pubsub)
+            redisFree(c_redis_pubsub);
+    }
+    ~Watcher () {
+        try_free();
     }
     pthread_t t_pubsub_chanel;
     pthread_t t_push_queue;
@@ -62,6 +69,14 @@ public:
      *          通过绑定这些变量, 可以进行对其的监听或是修改.
      */
     void init(Conf* conf, EverflowMain* main);
+
+    /**
+     * @brief 向队列中发送请求, 而后进入等待状态.
+     *
+     *  直到收到分析器发回的初始化信息, wait_command_init才会返回, 确保初始化成功
+     */
+    void send_init();
+    void wait_command_init();
 
     void _inner_pubsub();   // 接受控制器发来的信息
     void _inner_push();     // 从Message队列中取出并推送.
@@ -77,14 +92,16 @@ private:
     Conf *conf;
     EverflowMain* _main;        // 主要类的句柄, 可以借此访问其中的成员, 
                                 // 初始化时获取
-                                //
+
     map<CounterRule, shared_ptr<Counter>>* _counter_map;  // 记录计数器的规则
     Queue<Message>* _msg_queue;
     unordered_set<int>* _out_switch_set;      // 出口交换机的id
 
     MYSQL *c_mysql;             // 数据库连接
-    redisContext *c_redis;      // redis连接
+    redisContext *c_redis_pubsub; // redis连接
+    redisContext *c_redis_queue;  // redis连接
     bool stop;
+    bool is_command_init_ok;    // 标记是否第一次获取初始化的请求结果
 
 public:
     // 以下几个函数均是线程相关的定义函数, 与真正的逻辑关系不大
