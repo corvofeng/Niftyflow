@@ -1,6 +1,7 @@
 #include "watcher.h"
 #include "log.h"
 #include "trans.h"
+#include "ever_main.h"
 #include <hiredis/hiredis.h>
 
 void Watcher::_inner_pubsub() {
@@ -38,13 +39,18 @@ void Watcher::command_parse(char *commands) {
 void Watcher::_inner_push() {
     LOG_D("In watcher push\n");
     while(!stop) {
-        Message msg = msg_queue.pop();
+        Message msg = _msg_queue->pop();
     }
 }
 
-void Watcher::init(Conf* conf) {
+void Watcher::init(Conf* conf, EverflowMain* main) {
     this->conf = conf;
+    this->_main = main;
+    this->_msg_queue =  main->get_message_queue();
+    this->_out_switch_set = main->get_out_switch_set();
+    this->_counter_map = main->get_counter_map();
 }
+
 void Watcher::init_connect() {
     do {
         this->c_mysql = mysql_connection_setup(conf);

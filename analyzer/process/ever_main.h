@@ -42,9 +42,7 @@ class EverflowMain
 public:
 
     EverflowMain();
-    void run();
-
-    void join();
+    ~EverflowMain ();
 
     // 初始化阶段, 首先向控制器请求INIT, 而后
     // 控制器会将一些配置信息返回.
@@ -56,12 +54,17 @@ public:
     void del_rules(vector<CounterRule>& rules);
     void reader_active();
 
+    // TODO: 增加删除出口交换机
     void processer_pause();
-
     void processer_active();
 
-    ~EverflowMain ();
+    Queue<Message>* get_message_queue() {return &message_queue;}
+    map<CounterRule, shared_ptr<Counter>>* get_counter_map() {return &counter_map;}
+    unordered_set<int>* get_out_switch_set() {return &out_switch_set;}
 
+    // 线程相关的函数, 启动输入和解析线程.
+    void run();
+    void join();
 private:
     int processer_cnt;    /**< 记录同时处理的processor个数 */
     int reader_cnt;       /**< 记录同时处理的reader个数 */
@@ -69,16 +72,17 @@ private:
     int cur_id;           /**< 记录当前分析器的ID 只要初始化获得,
                                 一旦确定, 将不会改变 */
 
+    // 以下几个变量由Watcher进行增加删除
     Queue<Message> message_queue;           // 消息队列设置
     map<CounterRule, shared_ptr<Counter>> counter_map;  // 记录计数器的规则
     unordered_set<int> out_switch_set;      // 出口交换机的id
 
+
+    vector<shared_ptr<Reader>> reader_vec;  /**< 可以多个线程进行读取,
+                                               每个线程可以向多个队列中写入 */
     vector<pcap_t*> pcap_vec;
-    vector<shared_ptr<Reader>> reader_vec;
 
     vector<shared_ptr<Processer>> processer_vec; /**< 多个分析器进行 */
     vector<shared_ptr<PKT_QUEUE>> queue_vec; /**< 每个分析器绑定一个队列 */
 };
-
-
 #endif /* end of include guard: EVER_MAIN_H_5UBIZCWM */

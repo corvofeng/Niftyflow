@@ -24,11 +24,15 @@
 #include "cnt_rule.h"
 #include "con_queue.h"
 #include "message.h"
+#include <memory>
+#include <unordered_set>
 #include <map>
 #include <mysql.h>
 #include <hiredis/hiredis.h>
 
 using std::map;
+using std::shared_ptr;
+using std::unordered_set;
 class EverflowMain;
 class Conf;
 
@@ -42,7 +46,6 @@ class Conf;
 class Watcher
 {
 public:
-
     Watcher():_counter_map(NULL), _main(NULL), stop(false){}
     ~Watcher () {
         if(c_mysql)
@@ -50,31 +53,41 @@ public:
         if(c_redis)
             redisFree(c_redis);
     }
-    void bind_counter_map(map<CounterRule, Counter>* counter_map) {
-        this->_counter_map = counter_map;
-    }
     pthread_t t_pubsub_chanel;
     pthread_t t_push_queue;
 
-    void init(Conf* conf);
-    void _inner_pubsub();
-    void _inner_push(); // 从Message队列中取出并推送.
+    /**
+     * @brief 初始化函数, 绑定配置文件以及EverflowMain中的几个重要变量,
+     *          重要变量包括以下的_counter_map, _msg_queue, _out_switch_set.
+     *          通过绑定这些变量, 可以进行对其的监听或是修改.
+     */
+    void init(Conf* conf, EverflowMain* main);
+
+    void _inner_pubsub();   // 接受控制器发来的信息
+    void _inner_push();     // 从Message队列中取出并推送.
     void init_connect();
 
+    /**
+     * @brief 解析从控制器发来的信息, 如果控制信息有效, 将会执行相关指令
+     */
+    void command_parse(char *commands);
+
 private:
-    EverflowMain* _main;            // 主要类的句柄, 可以借此访问其中的成员
-    map<CounterRule, Counter>* _counter_map;
-    Queue<Message> msg_queue;
+
+    Conf *conf;
+    EverflowMain* _main;        // 主要类的句柄, 可以借此访问其中的成员, 
+                                // 初始化时获取
+                                //
+    map<CounterRule, shared_ptr<Counter>>* _counter_map;  // 记录计数器的规则
+    Queue<Message>* _msg_queue;
+    unordered_set<int>* _out_switch_set;      // 出口交换机的id
 
     MYSQL *c_mysql;             // 数据库连接
     redisContext *c_redis;      // redis连接
     bool stop;
-    Conf *conf;
 
 public:
-
-    void command_parse(char *commands);
-
+    // 以下几个函数均是线程相关的定义函数, 与真正的逻辑关系不大
     void run() {
         pthread_create(&t_pubsub_chanel, NULL, &Watcher::pubsub_process, this);
         pthread_create(&t_push_queue, NULL, &Watcher::push_queue_process, this);

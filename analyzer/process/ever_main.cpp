@@ -50,11 +50,6 @@ EverflowMain::~EverflowMain() {
     }
 }
 
-void EverflowMain::on_init()  {
-    // TODO: 向消息队列中添加初始化请求,
-    // 而后进入等待状态, 直到收到自己相关的初始返回
-}
-
 void EverflowMain::add_rules(vector<CounterRule>& rules) {
     for(auto rule : rules) {
         //this->counter_map.insert(std::make_pair<CounterRule, Counter>
