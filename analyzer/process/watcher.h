@@ -14,6 +14,12 @@
 
 /**
  * 2018-03-28:  redis的阻塞到底是什么原因啊, 好烦, 我都改了一上午了.
+ *              最后发现Linux下的pthread和 STL里面的mutex和condition不能混用,
+ *              condition会把pthread的线程都阻塞.
+ *
+ *              而后进行内存泄露问题的查找, cJSON_Print会进行动态的内存分配,
+ *              需要在使用过之后free, 释放内存
+ *
  * 2018-03-27: 上午一直在调redis的PubSub, 直到下午重启之后, 换了个函数调用就
  *              可以了, 想想也真是玄学, 你根本不知道它会在哪里阻塞
  *
@@ -29,6 +35,7 @@
 #include <map>
 #include <mysql.h>
 #include <hiredis/hiredis.h>
+#include <unistd.h>
 
 using std::map;
 using std::shared_ptr;
@@ -61,6 +68,7 @@ public:
     ~Watcher () {
         try_free();
     }
+
     pthread_t t_pubsub_chanel;
     pthread_t t_push_queue;
 
@@ -73,7 +81,6 @@ public:
 
     /**
      * @brief 向队列中发送请求, 而后进入等待状态.
-     *
      *  直到收到分析器发回的初始化信息, wait_command_init才会返回, 确保初始化成功
      */
     void send_init();
@@ -107,8 +114,8 @@ private:
 public:
     // 以下几个函数均是线程相关的定义函数, 与真正的逻辑关系不大
     void run() {
-        pthread_create(&t_push_queue,    NULL, &Watcher::push_queue_process, this);
-        pthread_create(&t_pubsub_chanel, NULL, &Watcher::pubsub_process, this);
+        pthread_create(&t_pubsub_chanel , NULL , &Watcher::pubsub_process     , this);
+        pthread_create(&t_push_queue    , NULL , &Watcher::push_queue_process , this);
     }
 
     void join() {

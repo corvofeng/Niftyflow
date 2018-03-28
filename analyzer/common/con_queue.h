@@ -18,10 +18,11 @@
  * https://juanchopanzacpp.wordpress.com/2013/02/26/concurrent-queue-c11/
  */
 
-#include <thread>
-#include <mutex>
-#include <condition_variable>
+#include <pthread.h>
+// #include <mutex>
+// #include <condition_variable>
 #include <queue>
+#include "lock.h"
 
 using std::queue;
 
@@ -31,10 +32,10 @@ class Queue
     public:
         T pop()
         {
-            std::unique_lock<std::mutex> mlock(mutex_);
+            Lock l(&mutex_);
             while (queue_.empty())
             {
-                cond_.wait(mlock);
+                pthread_cond_wait(&cond_, &mutex_); /** 此时期望的行为: 进程进入休眠状态 */
             }
             auto item = queue_.front();
             queue_.pop();
@@ -43,35 +44,45 @@ class Queue
 
         void pop(T& item)
         {
-            std::unique_lock<std::mutex> mlock(mutex_);
+            Lock l(&mutex_);
             while (queue_.empty())
             {
-                cond_.wait(mlock);
+                pthread_cond_wait(&cond_, &mutex_); /** 此时期望的行为: 进程进入休眠状态 */
             }
             item = queue_.front();
+
             queue_.pop();
         }
 
         void push(const T& item)
         {
-            std::unique_lock<std::mutex> mlock(mutex_);
+            Lock l(&mutex_);
             queue_.push(item);
-            mlock.unlock();
-            cond_.notify_one();
+            pthread_cond_signal(&cond_); /** 解除休眠状态 */
         }
 
         void push(T&& item)
         {
-            std::unique_lock<std::mutex> mlock(mutex_);
+            Lock l(&mutex_);
             queue_.push(std::move(item));
-            mlock.unlock();
-            cond_.notify_one();
+            pthread_cond_signal(&cond_); /** 解除休眠状态 */
+        }
+
+        Queue() {
+            pthread_mutex_init(&mutex_, NULL);
+            pthread_cond_init(&cond_, NULL);
+        }
+        ~Queue() {
+            pthread_mutex_destroy(&mutex_);
+            pthread_cond_destroy(&cond_);
         }
 
     private:
         std::queue<T> queue_;
-        std::mutex mutex_;
-        std::condition_variable cond_;
+        pthread_mutex_t mutex_;
+        pthread_cond_t cond_;
+        // std::mutex mutex_;
+        // std::condition_variable cond_;
 };
 
 

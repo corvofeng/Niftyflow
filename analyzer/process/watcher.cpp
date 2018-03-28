@@ -2,6 +2,7 @@
 #include "log.h"
 #include "trans.h"
 #include "ever_main.h"
+#include <unistd.h>
 #include <hiredis/hiredis.h>
 #include "cJSON/cJSON.h"
 
@@ -27,6 +28,7 @@ void Watcher::_inner_pubsub() {
                                         (void**)&reply))== REDIS_OK) {
 
             if (reply == NULL) continue;
+            LOG_D("Get reply " << reply->element[0]->str << "\n");
             if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 3) {
                 if ( strcmp( reply->element[0]->str, "message") == 0 ) {
                     command_parse(reply->element[2]->str);
@@ -64,9 +66,11 @@ void Watcher::send_init() {
     cJSON_AddStringToObject(jMsg, "ACTION", "INIT");
     cJSON_AddNumberToObject(jMsg, "ANALYZER_ID", conf->analyzer_id);
 
-    Message m(cJSON_PrintUnformatted(jMsg));
-    LOG_D(cJSON_Print(jMsg) << "\n");
+    char* s = cJSON_PrintUnformatted(jMsg);
+    Message m(s);
+    LOG_D(s << "\n");
     this->_msg_queue->push(m);
+    free(s);    // 使用cJSON_Print时会调用malloc, 需要进行释放
     cJSON_Delete(jMsg);
 }
 
@@ -84,7 +88,12 @@ void Watcher::_inner_push() {
         LOG_D("In queue: " << m.msg << "\n");
         reply = (redisReply*)redisCommand(this->c_redis_queue,
                             "LPUSH %s %s", _queue_str, m.msg.c_str());
-        LOG_D("Reply " << reply->str << "\n");
+        if(reply->type == REDIS_REPLY_INTEGER) {
+            LOG_D("Reply " << reply->integer << "\n");
+        } else {
+            LOG_W("Get return err\n");
+        }
+
         freeReplyObject(reply);
     }
 }

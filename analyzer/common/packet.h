@@ -44,6 +44,7 @@
 #include <arpa/inet.h>
 #include <stdint.h>
 #include "con_queue.h"
+#include <memory>
 //#include <asm/byteorder.h>
 
 

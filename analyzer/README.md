@@ -4,7 +4,7 @@
 > * MySQL    : MySQL 连接
 > * HiResdis : Redis 连接
 > * LibPacp  : 解析pcap文件
-> *.Protobuf : trace数据并不规则, 将其序列化为Protobuf进行保存, 便于控制器读取.
+> * cJSON    : JSON的读写
 
 
 ## 项目编译
