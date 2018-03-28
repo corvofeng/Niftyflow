@@ -268,9 +268,9 @@ bool mysql_test() {
     // assign the results return to the MYSQL_RES pointer
     res = mysql_perform_query(conn, "show tables");
 
-    printf("MySQL Tables in mysql database:\n");
+    LOG_D("MySQL Tables in mysql database:\n");
     while ((row = mysql_fetch_row(res)) !=NULL)
-        printf("%s\n", row[0]);
+        LOG_D(FMT("%s\n", row[0]));
 
     // clean up the database result set 
     mysql_free_result(res);

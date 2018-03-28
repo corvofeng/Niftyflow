@@ -49,7 +49,7 @@ private:
      *      在得到is_pause_ok返回true时, 证明线程暂停成功,立刻进行规则的增加与
      *      删除.
      */
-    map<CounterRule, Counter> *_counter_map;
+    map<CounterRule, shared_ptr<Counter>> *_counter_map;
     bool stop;
 
     pcap_t *_pcap;
@@ -78,7 +78,7 @@ public:
         this->_queue_vec = queue_vec;
     }
 
-    void bind_counter_map(map<CounterRule, Counter>* counter_map) {
+    void bind_counter_map(map<CounterRule, shared_ptr<Counter>>* counter_map) {
         this->_counter_map = counter_map;
     }
 

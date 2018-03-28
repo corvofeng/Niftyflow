@@ -10,15 +10,22 @@ void Watcher::_inner_pubsub() {
     LOG_D("In watcher pubsub\n");
 
     redisReply *reply;
+    const char* _chanel_str = conf->redis_chanel;
     reply = (redisReply*)redisCommand(this->c_redis_pubsub,
-                            "SUBSCRIBE %s", conf->redis_chanel);
+                                    "SUBSCRIBE %s", _chanel_str);
 
-    LOG_D("Listen: " << conf->redis_chanel << "\n");
+    if(reply->type == REDIS_REPLY_ARRAY && reply->elements == 3) {
+        LOG_D("SUB Reply: " << reply->element[0]->str << "\n");
+    } else {
+        LOG_W("SUB Reply: " << reply->type << "\n");
+    }
     freeReplyObject(reply);
 
     while(!stop) {
         int rp;
-        if ( (rp = redisGetReply(this->c_redis_pubsub, (void**)&reply))== REDIS_OK) {
+        if ( (rp = redisGetReply(this->c_redis_pubsub,
+                                        (void**)&reply))== REDIS_OK) {
+
             if (reply == NULL) continue;
             if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 3) {
                 if ( strcmp( reply->element[0]->str, "message") == 0 ) {
@@ -70,6 +77,7 @@ void Watcher::wait_command_init() {
 void Watcher::_inner_push() {
     LOG_D("In watcher push\n");
     const char *_queue_str = conf->redis_queue;
+
     redisReply *reply;
     while(!stop) {
         Message m = _msg_queue->pop();
@@ -99,10 +107,10 @@ void Watcher::init_connect() {
         this->c_redis_pubsub = redis_connection_setup(conf);
         this->c_redis_queue = redis_connection_setup(conf);
 
+        LOG_D(FMT("%d, %d\n", this->c_redis_queue->fd, this->c_redis_pubsub->fd));
         if(!this->c_redis_pubsub && !this->c_redis_queue)
             break;
         LOG_D("Connect redis ok\n");
-
         return;
     }while(0);
 

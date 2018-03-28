@@ -13,7 +13,7 @@
 #define WATCHER_H_2RGQCSXG
 
 /**
- *
+ * 2018-03-28:  redis的阻塞到底是什么原因啊, 好烦, 我都改了一上午了.
  * 2018-03-27: 上午一直在调redis的PubSub, 直到下午重启之后, 换了个函数调用就
  *              可以了, 想想也真是玄学, 你根本不知道它会在哪里阻塞
  *
@@ -57,6 +57,7 @@ public:
         if(c_redis_pubsub)
             redisFree(c_redis_pubsub);
     }
+
     ~Watcher () {
         try_free();
     }
@@ -106,8 +107,8 @@ private:
 public:
     // 以下几个函数均是线程相关的定义函数, 与真正的逻辑关系不大
     void run() {
+        pthread_create(&t_push_queue,    NULL, &Watcher::push_queue_process, this);
         pthread_create(&t_pubsub_chanel, NULL, &Watcher::pubsub_process, this);
-        pthread_create(&t_push_queue, NULL, &Watcher::push_queue_process, this);
     }
 
     void join() {

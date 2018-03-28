@@ -1,6 +1,7 @@
 #include "ever_main.h"
 
 EverflowMain::EverflowMain() {
+    LOG_D("EverflowMain Init\n");
     this->processer_cnt = 3;
     this->reader_cnt = 1;   // 目前为单线程读入
 
@@ -24,6 +25,7 @@ EverflowMain::EverflowMain() {
         auto r = shared_ptr<Reader>(new Reader());
         r->bind_queue_vec(&this->queue_vec);
         r->bind_pcap(pcap_vec[i]);
+        r->bind_counter_map(&this->counter_map);
         reader_vec.push_back(r);
     }
 }
@@ -60,7 +62,6 @@ void EverflowMain::add_rules(vector<CounterRule>& rules) {
 }
 void EverflowMain::del_rules(vector<CounterRule>& rules) {
     for(auto rule: rules) {
-
         this->counter_map.erase(rule);
     }
 }

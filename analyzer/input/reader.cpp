@@ -68,7 +68,7 @@ void Reader::_inner_read_and_push() {
 void Reader::run_counter(shared_ptr<PARSE_PKT> pkt) {
     for(auto& item : *this->_counter_map) {
         const CounterRule& c_rule = item.first;
-        Counter& cnt = item.second;
+        shared_ptr<Counter> cnt = item.second;
 
         // 只要违反一条规则, 马上进行下一个判断
         if(c_rule.ip_src.s_addr != -1 && c_rule.ip_src.s_addr != pkt->ip_inner->ip_src.s_addr)
@@ -79,7 +79,7 @@ void Reader::run_counter(shared_ptr<PARSE_PKT> pkt) {
                 c_rule.protocol != pkt->ip_inner->ip_p)
             continue;
         // if(c_rule.switch_id != -1 ) TODO: 补全交换机ID信息
-        cnt.add_one();
+        cnt->add_one();
     }
 }
 

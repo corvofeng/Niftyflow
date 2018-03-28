@@ -25,13 +25,14 @@ int main(int argc, char *argv[])
     Watcher watcher;
     watcher.init(Conf::instance(), &eMain);
     watcher.init_connect();
-
     watcher.send_init();
-    watcher.wait_command_init();
 
     watcher.run();
+    watcher.wait_command_init();
 
-    // eMain.run();
+    eMain.run();
+    eMain.join();
+
     watcher.join();
 
     return 0;
