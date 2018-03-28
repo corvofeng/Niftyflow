@@ -53,20 +53,25 @@ EverflowMain::~EverflowMain() {
 }
 
 void EverflowMain::add_rules(vector<CounterRule>& rules) {
+    reader_pause();
     for(auto rule : rules) {
         //this->counter_map.insert(std::make_pair<CounterRule, Counter>
         //    (CounterRule(rule), Counter(0)));
         //    一旦获取计数器, 使用shared_ptr, 防止内存泄露
         this->counter_map[CounterRule(rule)] = shared_ptr<Counter>(new Counter(0));
     }
+    reader_active();
 }
 void EverflowMain::del_rules(vector<CounterRule>& rules) {
+    reader_pause();
     for(auto rule: rules) {
         this->counter_map.erase(rule);
     }
+    reader_active();
 }
 
 void EverflowMain::reader_pause() {
+    LOG_I("Pause reader start!!\n");
     for(auto r: reader_vec) {
         r->do_pause();
     }
@@ -79,12 +84,14 @@ void EverflowMain::reader_pause() {
                allPause = true;
         }
     }
+    LOG_I("Pause all reader ok!!\n");
     return ;
 }
 
 void EverflowMain::reader_active() {
     for(auto r: reader_vec)
         r->cancel_pause();
+    LOG_I("All reader restart!!\n");
 }
 
 

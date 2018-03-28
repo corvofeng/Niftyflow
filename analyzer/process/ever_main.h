@@ -44,7 +44,8 @@ public:
     EverflowMain();
     ~EverflowMain ();
 
-    // 在调用reader_pause之后才可以调用增加删除规则.
+    // 在调用reader_pause之后才可以调用增加删除规则, 暂停功能一定要慎用.
+    // 会导致所有reader均暂停
     void reader_pause();
     void add_rules(vector<CounterRule>& rules);
     void del_rules(vector<CounterRule>& rules);

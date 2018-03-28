@@ -46,10 +46,48 @@ void Watcher::_inner_pubsub() {
     }
 }
 
+
 void Watcher::command_parse(char *commands) {
     LOG_D("Command: " << commands << "\n");
     cJSON *jConf = cJSON_Parse(commands);
     if(!jConf) LOG_E("Read commands err: " << commands << "\n");
+
+    cJSON* jId = cJSON_GetObjectItem(jConf, "ANALYZER_ID");
+    do {
+        if(jId == NULL || jId->type != cJSON_Number) {// 字段错误
+            LOG_E("Read commands err: " << commands << "\n");
+            break;
+        }
+        if(jId->valueint != 0 && jId->valueint != conf->analyzer_id){// 不是针对自己
+            LOG_W("Not for me\n");
+            break;
+        }
+
+        cJSON* jMsg = cJSON_GetObjectItem(jConf, "MESSAGE");
+        if(jMsg == NULL) {
+            LOG_E("Read Message is empty !!\n");
+            break;
+        }
+        cJSON* jCounters = cJSON_GetObjectItem(jMsg, "COUNTER");
+        if(!jCounters || jCounters->type != cJSON_Array) {
+            LOG_E("Invalid counter message!!\n");
+            break;
+        }
+
+        int n = cJSON_GetArraySize(jCounters);
+        cJSON* jRuleItem;
+        for(int i = 0; i < n; i++) {
+            jRuleItem = cJSON_GetArrayItem(jCounters, i);
+            cJSON* jId = cJSON_GetObjectItem(jRuleItem, "CNT_ID");
+            cJSON* jIp_src = cJSON_GetObjectItem(jRuleItem, "SRC_IP");
+            cJSON* jIp_dst = cJSON_GetObjectItem(jRuleItem, "DST_IP");
+            cJSON* jSwh_id = cJSON_GetObjectItem(jRuleItem, "SWH_ID");
+            cJSON* jPtl = cJSON_GetObjectItem(jRuleItem, "PTL");
+            LOG_D("Get rule " << jId->valueint << "\n");
+
+        }
+
+    }while(0);
 
     cJSON_Delete(jConf);
 }

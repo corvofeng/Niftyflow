@@ -53,7 +53,7 @@ private:
     bool stop;
 
     pcap_t *_pcap;
-    bool is_pause;  // 返回暂停成功
+    bool is_pause;  // 返回暂停成功, 初始时认为程序处于暂停状态
     bool pause;
 
     void _inner_read_and_push();
@@ -73,7 +73,9 @@ private:
     void _push_to_queue(shared_ptr<PARSE_PKT> pkt);
 
 public:
-    Reader(): _queue_vec(NULL), _pcap(NULL), _counter_map(NULL), stop(false) {}
+    Reader(): _queue_vec(NULL), _pcap(NULL),
+            _counter_map(NULL), stop(false),
+            is_pause(true){}
     void bind_queue_vec(vector<shared_ptr<PKT_QUEUE>>* queue_vec) {
         this->_queue_vec = queue_vec;
     }

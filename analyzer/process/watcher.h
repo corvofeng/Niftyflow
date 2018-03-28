@@ -56,15 +56,6 @@ public:
     Watcher():_counter_map(NULL), _main(NULL),
                 stop(false), is_command_init_ok(false){}
 
-    void try_free() {
-        if(c_mysql)
-            mysql_close(c_mysql);
-        if(c_redis_queue)
-            redisFree(c_redis_queue);
-        if(c_redis_pubsub)
-            redisFree(c_redis_pubsub);
-    }
-
     ~Watcher () {
         try_free();
     }
@@ -91,7 +82,8 @@ public:
     void init_connect();
 
     /**
-     * @brief 解析从控制器发来的信息, 如果控制信息有效, 将会执行相关指令
+     * @brief 解析从控制器发来的信息, 如果控制信息有效, 将会执行相关指令, 十分庞大,
+     *       请查看文档后进行修改
      */
     void command_parse(char *commands);
 
@@ -112,6 +104,16 @@ private:
     bool is_command_init_ok;    // 标记是否第一次获取初始化的请求结果
 
 public:
+    void try_free() {
+        if(c_mysql)
+            mysql_close(c_mysql);
+        if(c_redis_queue)
+            redisFree(c_redis_queue);
+        if(c_redis_pubsub)
+            redisFree(c_redis_pubsub);
+    }
+
+
     // 以下几个函数均是线程相关的定义函数, 与真正的逻辑关系不大
     void run() {
         pthread_create(&t_pubsub_chanel , NULL , &Watcher::pubsub_process     , this);
