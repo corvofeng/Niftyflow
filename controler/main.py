@@ -9,19 +9,13 @@ vim: set ts=4 sw=4 tw=99 et:
 """
 
 
+import settings
 import tornado.ioloop
 import tornado.web
-import tornado.log
-import logging as SLOG
+from tornado.log import app_log
 from tornado.options import define, options
 from handlers.test_handler import TeshHandler
 from q_listen import q_listen
-import conn
-
-define('port', default=9999, help='run on the given port', type=int)
-define('debug', default=False, help="debug or relase", type=bool)
-define('autoreload', default=True, help="when modify auto reolad", type=bool)
-
 
 
 class Application(tornado.web.Application):
@@ -31,7 +25,7 @@ class Application(tornado.web.Application):
         ]
         settings = dict(
             debug=options.debug,
-            autoreload=options.autoreload
+            autoreload=options.autoreload,
         )
 
         super(Application, self).__init__(handlers, **settings)
@@ -44,10 +38,12 @@ def main():
     # 监听redis队列中的预警
     q_listen()
 
-    SLOG.info("App is listening: %d" % options.port)
+    app_log.debug('debug')
+    app_log.warning('warn')
+    app_log.error('error')
+    app_log.info("App is listening: {}".format(options.port))
     tornado.ioloop.IOLoop.current().start()
 
 
 if __name__ == "__main__":
-    tornado.options.parse_config_file('./server.conf')
     main()

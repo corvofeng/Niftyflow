@@ -10,8 +10,14 @@ vim: set ts=4 sw=4 tw=99 et:
 
 import json
 import tornado
+from settings import mysql_conn
+from settings import mysql_close
 
 class BaseHandler(tornado.web.RequestHandler):
+
+    def initialize(self):
+        self.db = mysql_conn()
+
     def post(self):
         pass
 
@@ -22,4 +28,7 @@ class BaseHandler(tornado.web.RequestHandler):
             'msg': msg,
             'data': data
         }, ensure_ascii=False, indent=2))
+
+    def on_finish(self):
+        mysql_close(self.db)
 
