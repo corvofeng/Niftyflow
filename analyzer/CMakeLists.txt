@@ -15,6 +15,7 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror ")
 include(cmake/FindPCAP.cmake)     # 需要pcap库解析pcap文件
 include(cmake/FindMySQL.cmake)    # 结果存储至MySQL
 include(cmake/FindRedis.cmake)    # 从控制器中读取配置, 上传预警信息
+include(cmake/FindLibEvent.cmake)
 
 add_subdirectory(input)
 add_subdirectory(process)
@@ -53,5 +54,5 @@ add_executable(analyzer ${SOURCE_FILES})
 # 设置输出路径
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
-TARGET_LINK_LIBRARIES(analyzer reader trans process common cJSON)
+TARGET_LINK_LIBRARIES(analyzer reader trans process common cJSON event)
 

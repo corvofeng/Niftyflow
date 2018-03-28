@@ -5,6 +5,7 @@
 #include <hiredis/hiredis.h>
 #include "cJSON/cJSON.h"
 
+
 void Watcher::_inner_pubsub() {
     LOG_D("In watcher pubsub\n");
 
@@ -16,19 +17,22 @@ void Watcher::_inner_pubsub() {
     freeReplyObject(reply);
 
     while(!stop) {
-        if (redisGetReply(this->c_redis_pubsub, (void**)&reply) == REDIS_OK) {
+        int rp;
+        if ( (rp = redisGetReply(this->c_redis_pubsub, (void**)&reply))== REDIS_OK) {
             if (reply == NULL) continue;
             if (reply->type == REDIS_REPLY_ARRAY && reply->elements == 3) {
-
-                /*
-                printf( "Received[] channel %s %s: %s\n",
-                            reply->element[0]->str,
-                            reply->element[1]->str,
-                            reply->element[2]->str );
-                            */
-                command_parse(reply->element[2]->str);
+                if ( strcmp( reply->element[0]->str, "message") == 0 ) {
+                    command_parse(reply->element[2]->str);
+                } else {
+                    LOG_W(FMT("Received[%s] channel %s: %s\n",
+                                reply->element[0]->str,
+                                reply->element[1]->str,
+                                reply->element[2]->str));
+                }
             }
             freeReplyObject(reply);
+        } else {
+            LOG_E("Reply with pubsub: " << rp << "\n");
         }
     }
 }
@@ -37,10 +41,11 @@ void Watcher::command_parse(char *commands) {
     LOG_D("Command: " << commands << "\n");
     cJSON *jConf = cJSON_Parse(commands);
     if(!jConf) LOG_E("Read commands err: " << commands << "\n");
+
+    cJSON_Delete(jConf);
 }
 
 /**
- *
  * 初始化
  *  {
  *    "ACTION": "INIT",
