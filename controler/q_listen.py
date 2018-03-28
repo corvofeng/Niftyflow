@@ -8,24 +8,25 @@
 vim: set ts=4 sw=4 tw=99 et:
 """
 
-import tornadoredis
 import tornado.gen
+from tornado.log import app_log
+from conn import redis_client_queue
+from conn import redis_client_pubsub
 
 
 # redis客户端 LPUSH q aaa  即可
 @tornado.gen.engine
 def q_listen():
-    c = tornadoredis.Client()
-    c.connect()
     while True:
-        msg = yield tornado.gen.Task(c.blpop, 'ever_queue')
+        msg = yield tornado.gen.Task(redis_client_queue.blpop, 'ever_queue')
         parse_request(msg)
 
 
 def parse_request(msg):
     """解析客户端来的消息
     """
-    print(msg)
+    app_log.debug(msg)
+    generate_sub(msg)
 
 
 def deal_alert(msg):
@@ -40,3 +41,6 @@ def deal_request(msg):
     pass
 
 
+def generate_sub(msg):
+    app_log.debug("Ret msg %s" % msg)
+    redis_client_pubsub.publish("ever_chanel", msg)
