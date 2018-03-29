@@ -17,7 +17,7 @@
 
 ```json
 {
-  "ANALYZER_ID": 124,                    // ID为0, 表示这是一种广播操作.
+  "ANALYZER_ID": 124,           // ID为0, 表示这是一种广播操作.
   "MESSAGE": {                  // 报文主体
     "COMMOND": "INIT",          // 初始化
     "SWH_ID": [
@@ -41,10 +41,10 @@
 ```json
 {
   "CNT_ID": 10,
-  "SRC_IP": "192.118.0.2",
+  "SRC_IP": "192.118.0.2",  // 缺省时要填0
   "DST_IP": "192.119.0.1",
-  "SWH_ID": 123, // 截取报文的交换机ID, 不单单指出口报文
-  "PTL": 6    // 协议类型
+  "SWH_ID": 123,            // 截取报文的交换机ID, 不单单指出口报文, 缺省时 -1
+  "PTL": 6                  // 协议类型, 缺省时 -1
 }
 ```
 
@@ -58,13 +58,13 @@
 
 ```json
 {
-  "ANALYZER_ID": 13,             // ID为0, 表示这是一种广播操作.
-  "MESSAGE": {          // 报文主体
-    "COMMOND": "RELOAD",   // 重载过程, 这里就认为是热重启
+  "ANALYZER_ID": 13,        // ID为0, 表示这是一种广播操作.
+  "MESSAGE": {              // 报文主体
+    "COMMOND": "RELOAD",    // 重载过程, 这里就认为是热重启
     "SWH_ID": [
         14, 23, 19, 40
     ],
-    "COUNTER": [                // 计数器的filter
+    "COUNTER": [            // 计数器的filter
         {
             "CNT_ID" : 1
             "SRC_IP": "192.118.0.2",
@@ -88,13 +88,13 @@
 
 ```json
 {
-  "ANALYZER_ID": 0,              // ID为0, 表示这是一种广播操作.
-  "MESSAGE": {          // 报文主体
-    "COMMOND": "ADD_RULE",   // 重载过程, 这里就认为是热重启
+  "ANALYZER_ID": 0,         // ID为0, 表示这是一种广播操作.
+  "MESSAGE": {              // 报文主体
+    "COMMOND": "ADD_RULE",  // 重载过程, 这里就认为是热重启
     "SWH_ID": [
         14, 23, 19, 40
     ],
-    "COUNTER": [                // 计数器的filter
+    "COUNTER": [           // 计数器的filter
         {
             "CNT_ID" : 1
             "SRC_IP": "192.118.0.2",
@@ -120,6 +120,4 @@
   }
 }
 ```
-
-
 
