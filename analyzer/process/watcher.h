@@ -95,18 +95,18 @@ private:
     pthread_t t_pubsub_chanel;	/**< 线程变量 */
     pthread_t t_push_queue;
 
-    Conf *conf;			/**< 全局配置, 初始化时传入 */
-    EverflowMain* _main; /**< 主要类的句柄, 可以借此访问其中的成员, 初始化时获取 */
+    Conf *conf;			     /**< 全局配置, 初始化时传入 */
+    EverflowMain* _main;     /**< 主要类的句柄, 可以借此访问其中的成员, 初始化时获取 */
 
     map<CounterRule, shared_ptr<Counter>>* _counter_map;  /**< 记录计数器的规则*/
-    Queue<Message>* _msg_queue;	/**< 消息队列 */
-    unordered_set<int>* _out_switch_set;    /** 出口交换机的id列表 */
+    Queue<Message>* _msg_queue;                           /**< 消息队列 */
+    unordered_set<int>* _out_switch_set;                  /** 出口交换机的id列表 */
 
-    MYSQL *c_mysql;             /**< 数据库连接 */
+    MYSQL *c_mysql;               /**< 数据库连接 */
     redisContext *c_redis_pubsub; /**< redis连接 */
     redisContext *c_redis_queue;  /**< redis连接 */
     bool stop;
-    bool is_command_init_ok;    /**< 标记是否第一次获取初始化的请求结果 */
+    bool is_command_init_ok;      /**< 标记是否第一次获取初始化的请求结果 */
 
 public:
     void try_free() {
