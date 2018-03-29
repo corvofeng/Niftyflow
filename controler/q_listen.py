@@ -55,7 +55,7 @@ def deal_request(msg):
     if msg.get('ACTION') == 'INIT':
         ret_msg = {}
         init_msg = on_init()
-        init_msg['COMMOND'] = 'INIT'
+        init_msg['COMMAND'] = 'INIT'
         ret_msg['ANALYZER_ID'] = ret_analyzer_id
         ret_msg['MESSAGE'] = init_msg
         generate_sub(json.dumps(ret_msg))
@@ -85,7 +85,7 @@ def on_init():
                 rule_item['CNT_ID'] = r['id']
                 rule_item['SRC_IP'] = r['ip_src']
                 rule_item['DST_IP'] = r['ip_dst']
-                rule_item['SWH_ID'] = None  # r['']
+                rule_item['SWH_ID'] = r['switch_id']
                 rule_item['PTL'] = r['protocol']
                 counter_rules.append(rule_item)
 

@@ -19,4 +19,8 @@
 入门可以查看[Tornado服务器的结构][1]
 
 
+[PyMySQL的使用][2]
+
+
 [1]: http://www.tornadoweb.org/en/stable/guide/structure.html
+[2]: https://pypi.python.org/pypi/PyMySQL
