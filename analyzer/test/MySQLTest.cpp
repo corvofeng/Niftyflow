@@ -61,8 +61,8 @@ int main() {
     while (input >> sstr.rdbuf());
     Conf::instance()->ConfRead(sstr.str().c_str());
 
-    // save_test();
-    mysql_test();
+    save_test();
+    // mysql_test();
     return 0;
 }
 

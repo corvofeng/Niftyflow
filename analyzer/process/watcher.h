@@ -13,10 +13,23 @@
 #define WATCHER_H_2RGQCSXG
 
 /**
+ *
+ *
+ * 2018-03-29: 经过研究后发现, 28日总结出的问题是不太对的, 真正的原因是, 没有
+ *              判断reply的数据类型就直接使用了, reply->str, 原来在push线程中
+ *              reply其实是integer类型的, 如果不按照类型取数据, 就连其他线程
+ *              也被阻塞了, 之后我可能会单独进行测试一下, 希望未来大家能在使用
+ *              Redis中的reply时, 首先确定返回类型, 再进行输出. 否则程序真的
+ *              不知道会在什么地方阻塞.
+ *
+ *              同样, 因为昨天的误发现了自己将pthread 与STL混用了,
+ *              也对队列进行了修改, 就当是为了防止未来可能的错误吧.
+ *
  * 2018-03-28:  redis的阻塞到底是什么原因啊, 好烦, 我都改了一上午了.
  *              最后发现Linux下的pthread和 STL里面的mutex和condition不能混用,
  *              condition会把pthread的线程都阻塞.
  *
+ *  **Attention**:
  *              而后进行内存泄露问题的查找, cJSON_Print会进行动态的内存分配,
  *              需要在使用过之后free, 释放内存
  *
@@ -60,7 +73,6 @@ public:
         try_free();
     }
 
-
     /**
      * @brief 初始化函数, 绑定配置文件以及EverflowMain中的几个重要变量,
      *          重要变量包括以下的_counter_map, _msg_queue, _out_switch_set.
@@ -83,19 +95,20 @@ public:
     void on_update_counter_rule(std::vector<CounterRule>& rules, int act);
 
     /**
-     * @brief 解析从控制器发来的信息, 如果控制信息有效, 将会执行相关指令, 十分庞大,
-     *       请查看文档后进行修改
+     * @brief 解析从控制器发来的信息, 如果控制信息有效,
+     *         将会执行相关指令, 十分庞大, 请查看文档后进行修改
+     *
      *         控制器的广播有可能针对所有分析器(id为0)
      *         也有可能只针对特定的一台(id为分析器的id),
-     * 		只有这两种情况才能影响交换机的配置
+     *         只有这两种情况才能影响交换机的配置
      */
     void command_parse(char *commands);
 
 private:
-    pthread_t t_pubsub_chanel;	/**< 线程变量 */
+    pthread_t t_pubsub_chanel;  /**< 线程变量 */
     pthread_t t_push_queue;
 
-    Conf *conf;			     /**< 全局配置, 初始化时传入 */
+    Conf *conf;              /**< 全局配置, 初始化时传入 */
     EverflowMain* _main;     /**< 主要类的句柄, 可以借此访问其中的成员, 初始化时获取 */
 
     map<CounterRule, shared_ptr<Counter>>* _counter_map;  /**< 记录计数器的规则*/
