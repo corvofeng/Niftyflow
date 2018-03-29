@@ -31,16 +31,14 @@
 #include <netinet/in.h>
 #include <netinet/ip.h> /* superset of previous */
 
-// TODO: 这里修改了数据结构, 天啊, 好多地方要改了
-
 typedef struct{
-    struct in_addr ip_src; // 32bits 源IP地址
-    struct in_addr ip_dst; // 32bits 目的IP地址
-    uint16_t ip_id;        // 16bits 标识符
-    uint8_t protocol;      // 8bits  协议字段
+    struct in_addr ip_src; /**< 32bits 源IP地址   */
+    struct in_addr ip_dst; /**< 32bits 目的IP地址 */
+    uint16_t ip_id;        /**< 16bits 标识符     */
+    uint8_t protocol;      /**< 8bits  协议字段   */
 } __attribute__((packed)) IP_PKT_KEY_T;
 
-enum {TRACE_CNT = 5};   // 只记录5跳信息
+enum {TRACE_CNT = 5};   /**< 只记录5跳信息 */
 
 /**
  * @brief trace数据结构
@@ -48,7 +46,7 @@ enum {TRACE_CNT = 5};   // 只记录5跳信息
 typedef struct{
     IP_PKT_KEY_T key;
 
-    uint16_t pkt_size;   // 16bits 数据包大小
+    uint16_t pkt_size;   /**< 16bits 数据包大小  */
 
     /**
      * 32bits 收到第一个报文的时间戳: 如果使用秒级的计数单位, 是无法刻画出真实
@@ -62,13 +60,13 @@ typedef struct{
     struct {
         uint16_t switch_id: 12;
         uint16_t hop_rcvd : 2;
-        uint16_t hop_timeshift: 10; // 与timestart相减得到的偏移, 也为ms
+        uint16_t hop_timeshift: 10; /**< 与timestart相减得到的偏移, 也为ms */
     } __attribute__((packed)) hop_info[TRACE_CNT - 1];
 
-    uint16_t hp1_switch_id: 12; // 第一跳交换机id
-    uint16_t hp1_rcvd: 2;       // 第一跳交换机收到的报文数
-    uint16_t used: 1;           // 以hash表进行存储,
-                                  // 记录hash表中的当前元素是否被占用.
+    uint16_t hp1_switch_id: 12; /**< 第一跳交换机id          */
+    uint16_t hp1_rcvd: 2;       /**< 第一跳交换机收到的报文数  */
+    uint16_t used: 1;           /**< 以hash表进行存储,
+                                     记录hash表中的当前元素是否被占用. */
 
     uint16_t is_loop: 1;
     uint16_t is_drop: 1;
@@ -118,8 +116,5 @@ uint32_t get_time_shift(const struct timeval& tv,
             ( ((tv.tv_sec) % (24 * 3600)) * 1000 + (tv.tv_usec))
 
 #define GET_CUR_DAY(tv) ((tv.tv_sec) - (tv.tv_sec)%(24 * 3600))
-
-
-
 
 #endif /* end of include guard: TRACE_H_PAJBWR5N */

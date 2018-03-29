@@ -16,6 +16,10 @@
 /**
  * copy from
  * https://juanchopanzacpp.wordpress.com/2013/02/26/concurrent-queue-c11/
+ *
+ *
+ * 2018-03-28: 在经过调试之后, 如果你使用Linux下的pthread, 就不要再用STL中的mutex
+ *             或是condition变量了, 故而将其全部改为pthread下的mutex_t和cond_t
  */
 
 #include <pthread.h>
