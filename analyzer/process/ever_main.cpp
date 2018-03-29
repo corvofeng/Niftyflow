@@ -46,7 +46,6 @@ void EverflowMain::join() {
 }
 
 EverflowMain::~EverflowMain() {
-
     for(auto p: pcap_vec) {
         pcap_close(p);
     }
