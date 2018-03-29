@@ -13,7 +13,7 @@
 #define PACKET_H_WL06DAMQ
 
 /**
- * ## 数据包PARSE_PKT中的数据均为大端的网络字节序
+ * **Attention** 数据包PARSE_PKT中的数据均为大端的网络字节序
  *
  *  2018-03-21: 将头文件<asm/byteorder.h>去掉.
  *
@@ -72,9 +72,9 @@ struct sniff_ethernet {
 struct sniff_ip {
         u_char  ip_vhl;                 /* version << 4 | header length >> 2 */
         u_char  ip_tos;                 /* type of service */
-        uint16_t ip_len;                 /* total length */
-        uint16_t ip_id;                  /* identification */
-        uint16_t ip_off;                 /* fragment offset field */
+        uint16_t ip_len;                /* total length */
+        uint16_t ip_id;                 /* identification */
+        uint16_t ip_off;                /* fragment offset field */
         #define IP_RF 0x8000            /* reserved fragment flag */
         #define IP_DF 0x4000            /* dont fragment flag */
         #define IP_MF 0x2000            /* more fragments flag */
@@ -146,24 +146,25 @@ struct sniff_std_gre {
  * @brief Only readable, do not modify the content
  */
 struct PARSE_PKT{
-    struct sniff_ethernet *eth_outer;   // 内外层的eth头部
+    struct sniff_ethernet *eth_outer;   /**< 内外层的eth头部 */
     struct sniff_ethernet *eth_inner;
 
-    struct sniff_std_gre *gre;          // GRE头部
+    struct sniff_std_gre *gre;          /**< GRE头部        */
 
-    struct sniff_ip *ip_outer;          // 内外层的IPv4头部
+    struct sniff_ip *ip_outer;          /**< 内外层的IPv4头部*/
     struct sniff_ip *ip_inner;
 
-    struct sniff_tcp * tcp;            // 最内层的TCP头部
+    struct sniff_tcp * tcp;            /**< 最内层的TCP头部  */
 
     u_char *_data;
 
-    struct pcap_pkthdr header;         // pcap头部, 可以查询时间
-                                       // struct pcap_pkthdr {
-                                       //    struct timeval ts; /* time stamp */ 
-                                       //    bpf_u_int32 caplen;
-                                       //    bpf_u_int32 len;
-                                       // };
+    struct pcap_pkthdr header;         /** pcap头部, 可以查询时间
+                                        * struct pcap_pkthdr {
+                                        *    struct timeval ts; // time stamp
+                                        *    bpf_u_int32 caplen;
+                                        *    bpf_u_int32 len;
+                                        * };
+                                        */
 
     PARSE_PKT(): _data(NULL), tcp(NULL), ip_inner(NULL), ip_outer(NULL),
                 gre(NULL), eth_outer(NULL), eth_inner(NULL) {}

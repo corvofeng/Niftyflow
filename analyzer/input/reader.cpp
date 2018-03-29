@@ -55,7 +55,7 @@ void Reader::_inner_read_and_push() {
             this->is_pause = true;
 
         if (header->len != header->caplen)
-           LOG_W(FMT("Warning! Capture size different than packet size: %ld bytes\n",
+           LOG_W(FMT("Capture size different than packet size: %ld bytes\n",
                      header->len));
 
         shared_ptr<PARSE_PKT> pkt = _pkt_generater(header, data);
@@ -71,7 +71,7 @@ void Reader::run_counter(shared_ptr<PARSE_PKT> pkt) {
         const CounterRule& c_rule = item.first;
         shared_ptr<Counter> cnt = item.second;
 
-        // 只要违反一条规则, 马上进行下一个判断
+        // 如果规则不是缺省的, 那么只要违反一条规则, 马上进行对下一个规则的判断
         if(c_rule.ip_src.s_addr != 0
                 && c_rule.ip_src.s_addr != pkt->ip_inner->ip_src.s_addr)
             continue;
@@ -83,8 +83,9 @@ void Reader::run_counter(shared_ptr<PARSE_PKT> pkt) {
         if(c_rule.protocol != -1 &&
                 c_rule.protocol != pkt->ip_inner->ip_p)
             continue;
-        // if(c_rule.switch_id != -1 )
+
         // TODO: 补全交换机ID信息, 目前的数据报文中还没有交换机ID信息
+        // if(c_rule.switch_id != -1 )
 
         cnt->add_one();
     }

@@ -19,7 +19,7 @@
 
 
 /**
- *  2018-03-29: 考虑过之后, 决定将计数器规则进行更严格一点的定义
+ *  2018-03-29: 考虑过之后, 决定将计数器规则进行更严格一点的定义, 之后将会在规则中完善.
  *
  *  2018-03-26: 计数器规则部分我放在最后进行书写, 并不是因为他困难,
  *              只是我想最后在考虑filter相关的问题, filter需要与控制器部分
@@ -39,11 +39,12 @@
  */
 struct CounterRule {
     int rule_id;
-    struct in_addr ip_src; // 32bits 源IP地址
-    struct in_addr ip_dst; // 32bits 目的IP地址
-    int switch_id: 12;     // 交换机ID
-    unsigned char protocol;// 协议类型
+    struct in_addr ip_src; /**<  32bits 源IP地址   */
+    struct in_addr ip_dst; /**<  32bits 目的IP地址 */
+    int switch_id: 12;     /**<  交换机ID          */
+    unsigned char protocol;/**<  协议类型          */
 
+    // 必须要求rule_id
     explicit CounterRule(int _rule_id):
         rule_id(_rule_id), switch_id(-1), protocol(-1) {
         this->ip_src.s_addr = 0;
