@@ -51,17 +51,18 @@ void Reader::_inner_read_and_push() {
 
     u_int packetCount = 0;
     while (int returnValue = pcap_next_ex(this->_pcap, &header, &data) >= 0) {
+        while(this->pause)  // 程序启动时首先检查
+            this->is_pause = true;
+
         if (header->len != header->caplen)
-            LOG_W(FMT("Warning! Capture size different than packet size: %ld bytes\n", header->len));
+           LOG_W(FMT("Warning! Capture size different than packet size: %ld bytes\n",
+                     header->len));
 
         shared_ptr<PARSE_PKT> pkt = _pkt_generater(header, data);
         if(pkt) {
             run_counter(pkt);
             _push_to_queue(pkt);
         }
-        // break;
-        while(this->pause)
-            this->is_pause = true;
     }
 }
 
@@ -71,9 +72,9 @@ void Reader::run_counter(shared_ptr<PARSE_PKT> pkt) {
         shared_ptr<Counter> cnt = item.second;
 
         // 只要违反一条规则, 马上进行下一个判断
-        if(c_rule.ip_src.s_addr != -1 && c_rule.ip_src.s_addr != pkt->ip_inner->ip_src.s_addr)
+        if(c_rule.ip_src.s_addr != 0 && c_rule.ip_src.s_addr != pkt->ip_inner->ip_src.s_addr)
             continue;
-        if(c_rule.ip_dst.s_addr != -1 && c_rule.ip_dst.s_addr != pkt->ip_inner->ip_dst.s_addr)
+        if(c_rule.ip_dst.s_addr != 0 && c_rule.ip_dst.s_addr != pkt->ip_inner->ip_dst.s_addr)
             continue;
         if(c_rule.protocol != -1 &&
                 c_rule.protocol != pkt->ip_inner->ip_p)
