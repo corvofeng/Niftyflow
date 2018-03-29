@@ -47,12 +47,33 @@ void Watcher::_inner_pubsub() {
 }
 
 
+/**
+ * 样例输入
+ * {
+ *  "ANALYZER_ID": 123,
+ *  "MESSAGE": {
+ *    "COUNTER": [
+ *      {
+ *        "CNT_ID": 1,
+ *        "SRC_IP": "192.3.2.3",
+ *        "DST_IP": "",
+ *        "SWH_ID": 0,
+ *        "PTL": -1
+ *      }
+ *    ],
+ *    "SWH_ID": null,
+ *    "COMMOND": "INIT"
+ *  }
+ *}
+ */
 void Watcher::command_parse(char *commands) {
     LOG_D("Command: " << commands << "\n");
     cJSON *jConf = cJSON_Parse(commands);
     if(!jConf) LOG_E("Read commands err: " << commands << "\n");
 
     cJSON* jId = cJSON_GetObjectItem(jConf, "ANALYZER_ID");
+
+    vector<CounterRule> rules;
     do {
         if(jId == NULL || jId->type != cJSON_Number) {// 字段错误
             LOG_E("Read commands err: " << commands << "\n");
@@ -73,6 +94,12 @@ void Watcher::command_parse(char *commands) {
             LOG_E("Invalid counter message!!\n");
             break;
         }
+        cJSON* jCommand = cJSON_GetObjectItem(jMsg, "COMMAND");
+        if(!jCommand || jCommand->type != cJSON_String) {
+            LOG_E("Invalid command !!\n");
+            break;
+        }
+
 
         int n = cJSON_GetArraySize(jCounters);
         cJSON* jRuleItem;
@@ -85,12 +112,54 @@ void Watcher::command_parse(char *commands) {
             cJSON* jPtl = cJSON_GetObjectItem(jRuleItem, "PTL");
             LOG_D("Get rule " << jId->valueint << "\n");
 
+            if(jId == NULL || jId->type != cJSON_Number) {
+                LOG_E("Invalid msg\n");
+                continue;
+            }
+            CounterRule r(jId->valueint);
+
+            int flag;
+            flag = inet_aton(jIp_src->valuestring, &r.ip_src);
+            if(flag == 0) LOG_E("Parse ip failed\n");
+
+            flag = inet_aton(jIp_dst->valuestring, &r.ip_dst);
+            if(flag == 0) LOG_E("Parse ip failed\n");
+
+            r.switch_id = jSwh_id->valueint;
+            r.protocol = jPtl->valueint;
+
+            // r.ip_dst = inet_aton(jIp_src->)
+            rules.push_back(r);
+        }
+
+        if (strcmp(jCommand->valuestring, "DEL_RULE") == 0) {
+            on_update_counter_rule(rules, DEL_RULE);   // 只有在命令为DEL时才进行删除
+        } else {
+            on_update_counter_rule(rules, ADD_RULE);
         }
 
     }while(0);
 
     cJSON_Delete(jConf);
 }
+
+void Watcher::on_update_counter_rule(vector<CounterRule>& rules, int act) {
+    if(act != ADD_RULE && act != DEL_RULE) {
+        LOG_E("Unkonw action " << act << "\n");
+        return;
+    }
+
+    _main->reader_pause();
+    if(act == ADD_RULE) {
+        _main->add_rules(rules);
+    } else if (act == DEL_RULE) {
+        _main->del_rules(rules);
+    } else {
+        throw std::runtime_error("This stmt can't be called");
+    }
+    _main->reader_active();
+}
+
 
 /**
  * 初始化

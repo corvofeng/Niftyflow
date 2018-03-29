@@ -54,7 +54,7 @@ private:
 
     pcap_t *_pcap;
     bool is_pause;  // 返回暂停成功, 初始时认为程序处于暂停状态
-    bool pause;
+    bool pause;		// 外部控制变量, 置位为1表示我们需要程序暂停
 
     void _inner_read_and_push();
 
@@ -75,7 +75,7 @@ private:
 public:
     Reader(): _queue_vec(NULL), _pcap(NULL),
             _counter_map(NULL), stop(false),
-            is_pause(true){}
+            is_pause(true), pause(true){}
     void bind_queue_vec(vector<shared_ptr<PKT_QUEUE>>* queue_vec) {
         this->_queue_vec = queue_vec;
     }

@@ -80,8 +80,8 @@ void EverflowMain::reader_pause() {
     while(!allPause) {  // 确保每个读入线程均暂停
         allPause = true;
         for(auto r: reader_vec) {
-           if(!r->is_pause_ok())
-               allPause = true;
+           if(!r->is_pause_ok())	// 只要有一个线程没有暂停成功, 程序就会一直循环
+               allPause = false;
         }
     }
     LOG_I("Pause all reader ok!!\n");

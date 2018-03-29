@@ -60,8 +60,6 @@ public:
         try_free();
     }
 
-    pthread_t t_pubsub_chanel;
-    pthread_t t_push_queue;
 
     /**
      * @brief 初始化函数, 绑定配置文件以及EverflowMain中的几个重要变量,
@@ -81,27 +79,34 @@ public:
     void _inner_push();     // 从Message队列中取出并推送.
     void init_connect();
 
+    enum {ADD_RULE, DEL_RULE};
+    void on_update_counter_rule(std::vector<CounterRule>& rules, int act);
+
     /**
      * @brief 解析从控制器发来的信息, 如果控制信息有效, 将会执行相关指令, 十分庞大,
      *       请查看文档后进行修改
+     *         控制器的广播有可能针对所有分析器(id为0)
+     *         也有可能只针对特定的一台(id为分析器的id),
+     * 		只有这两种情况才能影响交换机的配置
      */
     void command_parse(char *commands);
 
 private:
+    pthread_t t_pubsub_chanel;	/**< 线程变量 */
+    pthread_t t_push_queue;
 
-    Conf *conf;
-    EverflowMain* _main;        // 主要类的句柄, 可以借此访问其中的成员, 
-                                // 初始化时获取
+    Conf *conf;			/**< 全局配置, 初始化时传入 */
+    EverflowMain* _main; /**< 主要类的句柄, 可以借此访问其中的成员, 初始化时获取 */
 
-    map<CounterRule, shared_ptr<Counter>>* _counter_map;  // 记录计数器的规则
-    Queue<Message>* _msg_queue;
-    unordered_set<int>* _out_switch_set;      // 出口交换机的id
+    map<CounterRule, shared_ptr<Counter>>* _counter_map;  /**< 记录计数器的规则*/
+    Queue<Message>* _msg_queue;	/**< 消息队列 */
+    unordered_set<int>* _out_switch_set;    /** 出口交换机的id列表 */
 
-    MYSQL *c_mysql;             // 数据库连接
-    redisContext *c_redis_pubsub; // redis连接
-    redisContext *c_redis_queue;  // redis连接
+    MYSQL *c_mysql;             /**< 数据库连接 */
+    redisContext *c_redis_pubsub; /**< redis连接 */
+    redisContext *c_redis_queue;  /**< redis连接 */
     bool stop;
-    bool is_command_init_ok;    // 标记是否第一次获取初始化的请求结果
+    bool is_command_init_ok;    /**< 标记是否第一次获取初始化的请求结果 */
 
 public:
     void try_free() {
@@ -111,8 +116,10 @@ public:
             redisFree(c_redis_queue);
         if(c_redis_pubsub)
             redisFree(c_redis_pubsub);
+        c_mysql = NULL;
+        c_redis_pubsub = NULL;
+        c_redis_queue = NULL;
     }
-
 
     // 以下几个函数均是线程相关的定义函数, 与真正的逻辑关系不大
     void run() {
