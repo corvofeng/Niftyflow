@@ -14,6 +14,7 @@
 #include <pthread.h>
 #include "trace.h"
 #include "log.h"
+#include <mysql.h>
 #include "con_queue.h"
 #include <memory>
 #include "packet.h"
@@ -21,6 +22,8 @@
 /**
  *  快慢路径中的切换使用了自旋锁, 真正的处理过程中, 执行较慢的一个线程将会拖慢
  *  另一个, 如果是这样, 需要针对慢的线程进行优化.
+ *
+ * 2018-03-30: 为每个Processor添加一个`MYSQL*`的连接对象.
  *
  * 2018-03-23: 今天已经将快慢路径的框架实现, 接下来将要试着保存至数据库与Redis中
  *
@@ -71,13 +74,14 @@ private:
     pthread_t t_slow;
 
     struct {   // NOTE: 为了理解方便, 这里没有使用3维数组, 使用匿名类更方便
-        PKT_TRACE_T **b;                // 二维数组, 在构造函数中初始化
-    }  _bkts[BKT_SIZE];                 // 三个hash桶
+        PKT_TRACE_T **b;                /**< 二维数组, 在构造函数中初始化 */
+    }  _bkts[BKT_SIZE];                 /**<  三个hash桶  */
 
     bool is_slow_over;
     pthread_mutex_t is_over_mtx;
 
-    shared_ptr<PKT_QUEUE> q_;   // USE shared_ptr Pointer
+    shared_ptr<PKT_QUEUE> q_;   /**< USE shared_ptr Pointer */
+    MYSQL* conn;                /**< MySQL连接对象          */
 
     void get_packets();
     void _inner_slow_path();

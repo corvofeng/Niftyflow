@@ -40,10 +40,10 @@
  */
 struct CounterRule {
     int rule_id;
-    struct in_addr ip_src; /**<  32bits 源IP地址   */
-    struct in_addr ip_dst; /**<  32bits 目的IP地址 */
-    int switch_id: 12;     /**<  交换机ID          */
-    unsigned char protocol;/**<  协议类型          */
+    struct in_addr ip_src;  /**<  32bits 源IP地址   */
+    struct in_addr ip_dst;  /**<  32bits 目的IP地址 */
+    int switch_id: 12;      /**<  交换机ID          */
+    int protocol;           /**<  协议类型          */
 
     // 必须要求rule_id
     explicit CounterRule(int _rule_id):

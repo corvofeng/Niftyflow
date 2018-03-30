@@ -30,8 +30,8 @@ int main(int argc, char *argv[])
 
     watcher->run();
 
-    // eMain.run();
-    // eMain.join();
+    eMain.run();
+    eMain.join();
 
     watcher->join();
 

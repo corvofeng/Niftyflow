@@ -128,6 +128,7 @@ void Watcher::command_parse(char *commands) {
             r.switch_id = jSwh_id->valueint;
             r.protocol = jPtl->valueint;
 
+            LOG_D("Get ptl " <<  r.protocol << "\n");
             // r.ip_dst = inet_aton(jIp_src->)
             rules.push_back(r);
         }
@@ -182,10 +183,6 @@ void Watcher::send_init() {
     cJSON_Delete(jMsg);
 }
 
-void Watcher::wait_command_init() {
-
-}
-
 void Watcher::_inner_push() {
     LOG_D("In watcher push\n");
     const char *_queue_str = conf->redis_queue;
@@ -208,6 +205,27 @@ void Watcher::_inner_push() {
 
 void Watcher::_inner_save_counter() {
     LOG_D("Start save counter\n");
+    map<int, int> r_2_c;    /**<  ruleid => cnt */
+
+    {
+        Lock l(&this->_counter_map_mtx);    // 加锁, 防止map的添加删除
+        for(auto& item : (*_counter_map)) {
+            const CounterRule& rule = item.first;
+            shared_ptr<Counter>& cnt  = item.second;
+            int r = rule.rule_id;           // rule_id
+            int c = cnt->get_and_clear();   // cnt, 线程安全
+            r_2_c.insert(std::make_pair(r, c));
+        }
+    }
+
+    int analyzer_id = Conf::instance()->analyzer_id;
+    for(auto& item: r_2_c) {
+        int r = item.first;
+        int c = item.second;
+        LOG_D("Get counter " << r << " : " << c << "\n");
+        save_counter(this->c_mysql, item.first,analyzer_id, c);
+    }
+    LOG_D("Start save counter over\n");
 }
 
 void Watcher::init(Conf* conf, EverflowMain* main) {
@@ -217,6 +235,7 @@ void Watcher::init(Conf* conf, EverflowMain* main) {
     this->_out_switch_set = main->get_out_switch_set();
     this->_counter_map = main->get_counter_map();
 
+    // 添加定时器
     (void) signal(SIGALRM, Watcher::timely_save_counter);
 }
 

@@ -35,62 +35,7 @@ enum {BUF_SIZE = 4096};
  * @param need_parm 需要的参数数量, 用于检查参数
  */
 static void _in_saver(MYSQL* conn, MYSQL_BIND* bind,
-                            const char* st, int need_parm) {
-    MYSQL_STMT    *stmt;
-    int           param_count;
-    my_ulonglong  affected_rows;
-
-    stmt = mysql_stmt_init(conn);
-
-    do {
-        if (!stmt) {
-            LOG_E(" Mysql_stmt_init(), out of memory\n");
-            break;
-        }
-        if (mysql_stmt_prepare(stmt, st, strlen(st))) {
-            LOG_E(" Mysql_stmt_prepare(), INSERT failed\n");
-            LOG_E(" " << mysql_stmt_error(stmt) << "\n");
-            break;
-        }
-        LOG_D(" Prepare, INSERT successful\n");
-
-        /* Get the parameter count from the statement */
-        param_count= mysql_stmt_param_count(stmt);
-        LOG_D(" Total parameters in INSERT: " << param_count << "\n");
-
-        if (param_count != need_parm) {  /* validate parameter count */ 
-            LOG_E( " Invalid parameter count returned by MySQL\n");
-            break;
-        }
-
-        if (mysql_stmt_bind_param(stmt, bind)) {
-            LOG_E( " Mysql_stmt_bind_param() failed\n");
-            LOG_E(" " << mysql_stmt_error(stmt) << "\n");
-            break;
-        }
-
-        if (mysql_stmt_execute(stmt)) {
-            LOG_E(" Mysql_stmt_execute(), 1 failed\n");
-            LOG_E(" " << mysql_stmt_error(stmt) << "\n");
-            break;
-        }
-
-        /* Get the total rows affected */
-        affected_rows= mysql_stmt_affected_rows(stmt);
-        LOG_D(" Total affected rows(insert 1): "
-                << (unsigned long) affected_rows << "\n");
-    } while(0);
-
-    /* Close the statement */
-    if (mysql_stmt_close(stmt)) {
-        /* mysql_stmt_close() invalidates stmt, so call          */
-        /* mysql_error(mysql) rather than mysql_stmt_error(stmt) */
-        LOG_E(" Failed while closing the statement\n");
-        LOG_E(" " << mysql_error(conn) << "\n");
-    }
-    LOG_D("Clear over\n");
-}
-
+                                const char* st, int need_parm);
 /**
  * @brief 将trace数据中的路径信息转换为JSON字符串.
  *  {
@@ -295,6 +240,66 @@ MYSQL* mysql_connection_setup(const Conf* c)
 
     return connection;
 }
+
+
+static void _in_saver(MYSQL* conn, MYSQL_BIND* bind,
+                            const char* st, int need_parm) {
+    MYSQL_STMT    *stmt;
+    int           param_count;
+    my_ulonglong  affected_rows;
+
+    stmt = mysql_stmt_init(conn);
+
+    do {
+        if (!stmt) {
+            LOG_E(" Mysql_stmt_init(), out of memory\n");
+            break;
+        }
+        if (mysql_stmt_prepare(stmt, st, strlen(st))) {
+            LOG_E(" Mysql_stmt_prepare(), INSERT failed\n");
+            LOG_E(" " << mysql_stmt_error(stmt) << "\n");
+            break;
+        }
+        LOG_D(" Prepare, INSERT successful\n");
+
+        /* Get the parameter count from the statement */
+        param_count= mysql_stmt_param_count(stmt);
+        LOG_D(" Total parameters in INSERT: " << param_count << "\n");
+
+        if (param_count != need_parm) {  /* validate parameter count */ 
+            LOG_E( " Invalid parameter count returned by MySQL\n");
+            break;
+        }
+
+        if (mysql_stmt_bind_param(stmt, bind)) {
+            LOG_E( " Mysql_stmt_bind_param() failed\n");
+            LOG_E(" " << mysql_stmt_error(stmt) << "\n");
+            break;
+        }
+
+        if (mysql_stmt_execute(stmt)) {
+            LOG_E(" Mysql_stmt_execute(), 1 failed\n");
+            LOG_E(" " << mysql_stmt_error(stmt) << "\n");
+            break;
+        }
+
+        /* Get the total rows affected */
+        affected_rows= mysql_stmt_affected_rows(stmt);
+        LOG_D(" Total affected rows(insert 1): "
+                << (unsigned long) affected_rows << "\n");
+    } while(0);
+
+    /* Close the statement */
+    if (mysql_stmt_close(stmt)) {
+        /* mysql_stmt_close() invalidates stmt, so call          */
+        /* mysql_error(mysql) rather than mysql_stmt_error(stmt) */
+        LOG_E(" Failed while closing the statement\n");
+        LOG_E(" " << mysql_error(conn) << "\n");
+    }
+    LOG_D("Clear over\n");
+}
+
+
 
 bool mysql_test() {
     MYSQL *conn = mysql_connection_setup(Conf::instance());

@@ -102,10 +102,9 @@ public:
 
     /**
      * @brief 向队列中发送请求, 而后进入等待状态.
-     *  直到收到分析器发回的初始化信息, wait_command_init才会返回, 确保初始化成功
+     *  直到收到分析器发回的初始化信息.
      */
     void send_init();
-    void wait_command_init();
 
     void _inner_pubsub();       // 接受控制器发来的信息
     void _inner_push();         // 从Message队列中取出并推送.

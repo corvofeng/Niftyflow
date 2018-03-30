@@ -67,19 +67,23 @@ void Reader::_inner_read_and_push() {
 }
 
 void Reader::run_counter(shared_ptr<PARSE_PKT> pkt) {
+    LOG_D("Run counter \n");
     for(auto& item : *this->_counter_map) {
         const CounterRule& c_rule = item.first;
-        shared_ptr<Counter> cnt = item.second;
+        shared_ptr<Counter>& cnt = item.second;
 
         // 如果规则不是缺省的, 那么只要违反一条规则, 马上进行对下一个规则的判断
         if(c_rule.ip_src.s_addr != 0
                 && c_rule.ip_src.s_addr != pkt->ip_inner->ip_src.s_addr)
             continue;
 
+
         if(c_rule.ip_dst.s_addr != 0
                 && c_rule.ip_dst.s_addr != pkt->ip_inner->ip_dst.s_addr)
             continue;
 
+        LOG_D("GET IP " << inet_ntoa(pkt->ip_inner->ip_src) << "\n");
+        LOG_D("C_RULE " << c_rule.protocol << "\n");
         if(c_rule.protocol != -1 &&
                 c_rule.protocol != pkt->ip_inner->ip_p)
             continue;
@@ -87,6 +91,7 @@ void Reader::run_counter(shared_ptr<PARSE_PKT> pkt) {
         // TODO: 补全交换机ID信息, 目前的数据报文中还没有交换机ID信息
         // if(c_rule.switch_id != -1 )
 
+        LOG_D("Rule been satisfy\n");
         cnt->add_one();
     }
 }

@@ -4,9 +4,12 @@
 #include <arpa/inet.h>
 #include <time.h> // for clock
 #include <sys/time.h>   // for gettimeofday
+#include "conf.h"       // for Conf::instance
+#include "trans.h"
 
 
 Processer::Processer(): _stop(false){
+    conn = mysql_connection_setup(Conf::instance());
     for(int i = 0; i < BKT_SIZE; i++) {
         _bkts[i].b = new PKT_TRACE_T*[ROW_SIZE];
         for(int j = 0; j < ROW_SIZE; j++) {
@@ -17,6 +20,7 @@ Processer::Processer(): _stop(false){
 }
 
 Processer::~Processer() {
+    mysql_close(conn);
     for(int i = 0; i < BKT_SIZE; i++) {
         for(int j = 0; j < ROW_SIZE; j++) {
             delete [] _bkts[i].b[j];
@@ -77,10 +81,12 @@ void Processer::_inner_slow_path() {
 
                 if(t->is_loop) {
                     LOG_D("CHECK LOOP\n");
+                    save_trace(conn, t);
                 }
 
                 if(t->is_drop) {
                     LOG_D("CHECK DROP\n");
+                    save_trace(conn, t);    // 目前不进行save操作
                 }
             }
             // 重置当前槽, 以提供后续使用
