@@ -7,6 +7,8 @@
 > * cJSON    : JSON的读写
 
 
+本程序中用到一些代码片段[gist][3], 可以直接运行
+
 ## 项目编译
 
 编译前, 首先要安装上面几个库, 我只在Linux上测试通过, 不保证window可用. 建议使用
@@ -199,5 +201,6 @@ PubSub可以简化控制器的逻辑.
 
 [1]: https://stackoverflow.com/questions/5875318/is-there-anyway-to-pass-arguments-to-a-signal-handler
 [2]: http://www.cplusplus.com/forum/unices/66284/
+[3]: https://gist.github.com/corvofeng
 
 
