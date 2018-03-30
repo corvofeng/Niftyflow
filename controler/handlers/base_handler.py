@@ -10,13 +10,20 @@ vim: set ts=4 sw=4 tw=99 et:
 
 import json
 import tornado
+from tornado.log import app_log
 from settings import mysql_conn
 from settings import mysql_close
 
 class BaseHandler(tornado.web.RequestHandler):
 
-    def initialize(self):
-        self.db = mysql_conn()
+    def initialize(self, with_db=False):
+        """ 初始化
+            @parm with_db 置位表示此Handler需要访问数据库
+        """
+        self.db = None
+        if with_db:
+            app_log.debug('connect db')
+            self.db = mysql_conn()
 
     def post(self):
         pass
@@ -30,5 +37,7 @@ class BaseHandler(tornado.web.RequestHandler):
         }, ensure_ascii=False, indent=2))
 
     def on_finish(self):
-        mysql_close(self.db)
+        if self.db:
+            app_log.debug('free db')
+            mysql_close(self.db)
 

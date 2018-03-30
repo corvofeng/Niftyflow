@@ -12,7 +12,7 @@ from tornado.log import access_log
 from handlers.base_handler import BaseHandler
 
 
-class TeshHandler(BaseHandler):
+class ProbeConstructHandler(BaseHandler):
     def post(self):
         access_log.info('Get an access')
         self.write_json('hello')
