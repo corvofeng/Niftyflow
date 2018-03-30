@@ -8,22 +8,87 @@
 #include <stdlib.h>
 #include <string.h>
 
-void trans_test() {
-    mysql_test();
-    redis_test();
-}
-
 
 // 获取在结构体中的偏移
 
-#define INSERT_SAMPLE  "INSERT INTO                  \
+#define INSERT_TRACE_SAMPLE  "INSERT INTO            \
     `tbl_trace_data`                                 \
     (`s_ip`, `d_ip`, `generate_time`, `protocal`,    \
      `trace_data`, `is_loop`, `is_drop`, `is_probe`) \
-    VALUES                                           \
-    (?, ?, ?, ?, ?, ?, ?, ?)"
+     VALUES                                          \
+     (?, ?, ?, ?, ?, ?, ?, ?)"
+
+#define INSERT_COUNTER_SAMPLE " INSERT INTO `tbl_counter` \
+    (`rule_id`, `analyzer_id`, `cnt`)                     \
+    VALUES                                                \
+    (   ?,          ?,          ? )"
+
 
 enum {BUF_SIZE = 4096};
+
+/**
+ * @brief  每次插入数据库都要进行下面的操作, 所有固定下来了
+ *
+ * @param conn
+ * @param bind   做好的bind参数
+ * @param st     数据库语句
+ * @param need_parm 需要的参数数量, 用于检查参数
+ */
+static void _in_saver(MYSQL* conn, MYSQL_BIND* bind,
+                            const char* st, int need_parm) {
+    MYSQL_STMT    *stmt;
+    int           param_count;
+    my_ulonglong  affected_rows;
+
+    stmt = mysql_stmt_init(conn);
+
+    do {
+        if (!stmt) {
+            LOG_E(" Mysql_stmt_init(), out of memory\n");
+            break;
+        }
+        if (mysql_stmt_prepare(stmt, st, strlen(st))) {
+            LOG_E(" Mysql_stmt_prepare(), INSERT failed\n");
+            LOG_E(" " << mysql_stmt_error(stmt) << "\n");
+            break;
+        }
+        LOG_D(" Prepare, INSERT successful\n");
+
+        /* Get the parameter count from the statement */
+        param_count= mysql_stmt_param_count(stmt);
+        LOG_D(" Total parameters in INSERT: " << param_count << "\n");
+
+        if (param_count != need_parm) {  /* validate parameter count */ 
+            LOG_E( " Invalid parameter count returned by MySQL\n");
+            break;
+        }
+
+        if (mysql_stmt_bind_param(stmt, bind)) {
+            LOG_E( " Mysql_stmt_bind_param() failed\n");
+            LOG_E(" " << mysql_stmt_error(stmt) << "\n");
+            break;
+        }
+
+        if (mysql_stmt_execute(stmt)) {
+            LOG_E(" Mysql_stmt_execute(), 1 failed\n");
+            LOG_E(" " << mysql_stmt_error(stmt) << "\n");
+            break;
+        }
+
+        /* Get the total rows affected */
+        affected_rows= mysql_stmt_affected_rows(stmt);
+        LOG_D(" Total affected rows(insert 1): "
+                << (unsigned long) affected_rows << "\n");
+    } while(0);
+
+    /* Close the statement */
+    if (mysql_stmt_close(stmt)) {
+        /* mysql_stmt_close() invalidates stmt, so call          */
+        /* mysql_error(mysql) rather than mysql_stmt_error(stmt) */
+        LOG_E(" Failed while closing the statement\n");
+        LOG_E(" " << mysql_error(conn) << "\n");
+    }
+}
 
 /**
  * @brief 将trace数据中的路径信息转换为JSON字符串.
@@ -50,7 +115,7 @@ static long unsigned get_trace_json(PKT_TRACE_T* pkt, char* buf) {
 
     cJSON_AddItemToArray(tArr, tItem = cJSON_CreateObject());
     cJSON_AddItemToObject(tItem, "switch_id",
-                                    cJSON_CreateNumber(pkt->hp1_switch_id));
+            cJSON_CreateNumber(pkt->hp1_switch_id));
     cJSON_AddItemToObject(tItem, "hop_rcvd", cJSON_CreateNumber(pkt->hp1_rcvd));
     cJSON_AddItemToObject(tItem, "hop_timeshift", cJSON_CreateNumber(0));
 
@@ -59,7 +124,7 @@ static long unsigned get_trace_json(PKT_TRACE_T* pkt, char* buf) {
 
         cJSON_AddItemToArray(tArr, tItem = cJSON_CreateObject());
         cJSON_AddItemToObject(tItem, "switch_id",
-                            cJSON_CreateNumber(pkt->hop_info[i].switch_id));
+                cJSON_CreateNumber(pkt->hop_info[i].switch_id));
         cJSON_AddItemToObject(tItem, "hop_rcvd",
                 cJSON_CreateNumber(pkt->hop_info[i].hop_rcvd));
 
@@ -67,7 +132,7 @@ static long unsigned get_trace_json(PKT_TRACE_T* pkt, char* buf) {
         // 获取真实的偏移时间, 具体原因请查看@common/trace.h
         GET_EXACT_TIME_SHIFT(pkt->hop_info[i].hop_timeshift, real_shift); 
         cJSON_AddItemToObject(tItem, "hop_timeshift",
-                        cJSON_CreateNumber(real_shift));
+                cJSON_CreateNumber(real_shift));
     }
     cJSON_AddItemToObject(tInfo, "trace_info", tArr);
 
@@ -142,76 +207,45 @@ void save_trace(MYSQL* conn, PKT_TRACE_T* trace) {
     bind[7].is_null= 0;
     bind[7].length= 0;
 
-
-    MYSQL_STMT    *stmt;
-    int           param_count;
-    my_ulonglong  affected_rows;
-
-
-    stmt = mysql_stmt_init(conn);
-    if (!stmt)
-    {
-      LOG_E(" mysql_stmt_init(), out of memory\n");
-      return ;
-    }
-    if (mysql_stmt_prepare(stmt, INSERT_SAMPLE, strlen(INSERT_SAMPLE)))
-    {
-        LOG_E(" mysql_stmt_prepare(), INSERT failed\n");
-        LOG_E(FMT(" %s\n", mysql_stmt_error(stmt)));
-        return ;
-    }
-    LOG_D(" prepare, INSERT successful\n");
-
-    /* Get the parameter count from the statement */
-    param_count= mysql_stmt_param_count(stmt);
-    LOG_D(FMT(" total parameters in INSERT: %d\n", param_count));
-
-    if (param_count != 8) /* validate parameter count */
-    {
-      LOG_E( " invalid parameter count returned by MySQL\n");
-      return ;
-    }
-
-    if (mysql_stmt_bind_param(stmt, bind))
-    {
-      LOG_E( " mysql_stmt_bind_param() failed\n");
-      LOG_E(FMT(" %s\n", mysql_stmt_error(stmt)));
-      return ;
-    }
-
-    /* Specify the data values for the first row */
-    // int_data= 10;             /* integer */
-    // strncpy(str_data, "MySQL", STRING_SIZE); /* string  */
-    // str_length= strlen(str_data);
-
-    /* Execute the INSERT statement - 1*/
-    if (mysql_stmt_execute(stmt))
-    {
-      LOG_E(" mysql_stmt_execute(), 1 failed\n");
-      LOG_E(FMT(" %s\n", mysql_stmt_error(stmt)));
-      return ;
-    }
-
-    /* Get the total rows affected */
-    affected_rows= mysql_stmt_affected_rows(stmt);
-    LOG_D(FMT(" total affected rows(insert 1): %lu\n",
-                (unsigned long) affected_rows));
+    _in_saver(conn, bind, INSERT_TRACE_SAMPLE, 8);
 }
 
-bool redis_test() {
-    redisContext *c = redisConnect("127.0.0.1", 6379);
+void save_counter(MYSQL* conn, int rule_id, int analyzer_id, int cnt) {
+    MYSQL_BIND    bind[8];
+    memset(bind, 0, sizeof(bind));
+
+    bind[0].buffer_type= MYSQL_TYPE_LONG;   // rule_id
+    bind[0].buffer= (char *)&rule_id;
+    bind[0].is_null= 0;
+    bind[0].length= 0;
+
+    bind[1].buffer_type= MYSQL_TYPE_LONG;   // analyzer_id
+    bind[1].buffer= (char *)&analyzer_id;
+    bind[1].is_null= 0;
+    bind[1].length= 0;
+
+    bind[2].buffer_type= MYSQL_TYPE_LONG;   // 计数值
+    bind[2].buffer= (char *)&cnt;
+    bind[2].is_null= 0;
+    bind[2].length= 0;
+
+    _in_saver(conn, bind, INSERT_COUNTER_SAMPLE, 3);
+}
+
+bool redis_test(const Conf* conf) {
+    redisContext *c = redisConnect(conf->redis_host, conf->redis_port);
     if (c != NULL && c->err) {
-        printf("Error: %s\n", c->errstr);
+        LOG_E("Error: "<< c->errstr << "\n");
         // handle error
         return false;
     } else {
-        printf("Connected to Redis\n");
+        LOG_E("Connected to Redis\n");
     }
 
     redisReply *reply;
 
     reply = (redisReply*) redisCommand(c, "PING");
-    printf("PING: %s\n", reply->str);
+    LOG_D("PING: " << reply->str << "\n");
     freeReplyObject(reply);
 
     redisFree(c);
@@ -250,7 +284,7 @@ MYSQL* mysql_connection_setup(const Conf* c)
                 c->mysql_user,
                 c->mysql_password,
                 c->mysql_database, c->mysql_port, NULL, 0)) {
-        printf("Conection error : %s\n", mysql_error(connection));
+        LOG_E("Conection error : "<< mysql_error(connection) << "\n");
         return NULL;
     }
 
@@ -274,7 +308,7 @@ bool mysql_test() {
 
     LOG_D("MySQL Tables in mysql database:\n");
     while ((row = mysql_fetch_row(res)) !=NULL)
-        LOG_D(FMT("%s\n", row[0]));
+        LOG_D(row[0] << "\n");
 
     // clean up the database result set 
     mysql_free_result(res);
@@ -290,7 +324,7 @@ MYSQL_RES* mysql_perform_query(MYSQL *connection, char *sql_query)
     // send the query to the database
     if (mysql_query(connection, sql_query))
     {
-        printf("MySQL query error : %s\n", mysql_error(connection));
+        LOG_E("MySQL query error :  " << mysql_error(connection) << "\n");
         exit(1);
     }
 

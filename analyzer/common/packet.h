@@ -64,7 +64,8 @@ struct sniff_ethernet {
         uint16_t ether_type;                     /* IP? ARP? RARP? etc */
 };
 
-/* IP header
+/**
+ * IP header
  * https://en.wikipedia.org/wiki/IPv4#Header, 在数据包中, 必须考虑数据包的大小端
  * 问题
  *

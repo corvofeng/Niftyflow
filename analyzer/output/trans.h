@@ -26,13 +26,14 @@
 #include "trace.h"
 #include "conf.h"
 #include <stdio.h>
+#include <map>
+#include <memory>
 #include <stdlib.h>
 #include <mysql.h>
 #include <hiredis/hiredis.h>
 
-void trans_test();
 bool mysql_test();
-bool redis_test();
+bool redis_test(const Conf* c);
 
 MYSQL_RES* mysql_perform_query(MYSQL *connection, char *sql_query);
 MYSQL* mysql_connection_setup(const Conf* c);
@@ -58,5 +59,23 @@ redisContext* redis_connection_setup(const Conf* c);
  *
  */
 void save_trace(MYSQL* conn, PKT_TRACE_T* trace);
+
+
+/**
+ *
+ * +---------------+---------------+--------------------+
+ * | Field         | Type          | Comment            |
+ * +---------------+---------------+--------------------+
+ * | id            | int(11)       |                    |
+ * | rule_id       | int(11)       | 计数器规则ID       |
+ * | generate_time | timestamp     | 数据产生时间(自动) |
+ * | analyzer_id   | int(11)       | 分析器ID           |
+ * | cnt           | int(11)       | 计数值             |
+ * | fdate         | int(11)       | 数据产生日期(自动) |
+ * +---------------+---------------+--------------------+
+ */
+class CounterRule;
+class Counter;
+void save_counter(MYSQL* conn, int rule_id, int analyzer_id, int cnt);
 
 #endif /* end of include guard: TRANS_H_9TSB0WUC */

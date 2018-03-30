@@ -79,6 +79,7 @@ private:
         timerclear(&counter_tval.it_value);
 
         counter_tval.it_value.tv_sec = 20;  /* 20 second timeout */
+        pthread_mutex_init(&_counter_map_mtx, NULL);
     }
 
 public:
@@ -89,6 +90,7 @@ public:
 
     ~Watcher () {
         try_free();
+        pthread_mutex_destroy(&_counter_map_mtx);
     }
 
     /**
@@ -110,6 +112,7 @@ public:
     void _inner_save_counter(); // 轮询所有counter, 将其保存在数据库中
     void init_connect();
 
+    //  防止在修改规则时产生上传操作, 这里采用加锁的模式
     enum {ADD_RULE, DEL_RULE};
     void on_update_counter_rule(std::vector<CounterRule>& rules, int act);
 
@@ -130,8 +133,9 @@ private:
     Conf *conf;              /**< 全局配置, 初始化时传入 */
     EverflowMain* _main;     /**< 主要类的句柄, 可以借此访问其中的成员, 初始化时获取 */
 
+    pthread_mutex_t _counter_map_mtx;              /**< 防止上传时的线程不安全*/
     map<CounterRule, shared_ptr<Counter>>* _counter_map;  /**< 记录计数器的规则*/
-    Queue<Message>* _msg_queue;                           /**< 消息队列 */
+    Queue<Message>* _msg_queue;                           /**< 消息队列        */
     unordered_set<int>* _out_switch_set;                  /** 出口交换机的id列表 */
 
     MYSQL *c_mysql;               /**< 数据库连接 */

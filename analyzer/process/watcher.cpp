@@ -144,6 +144,7 @@ void Watcher::command_parse(char *commands) {
 }
 
 void Watcher::on_update_counter_rule(vector<CounterRule>& rules, int act) {
+    Lock l(&this->_counter_map_mtx);
     if(act != ADD_RULE && act != DEL_RULE) {
         LOG_E("Unkonw action " << act << "\n");
         return;

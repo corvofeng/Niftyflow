@@ -17,7 +17,7 @@
  *  进行save测试, 但这样的测试会影响数据库正常的存储, 将会向数据库中添加一条
  *  trace记录.
  */
-void save_test() {
+void save_trace_test() {
     PKT_TRACE_T trace;
     LOG_I("In MySQLTest save! get trace size: " << sizeof(trace) << "\n");
     char* src = (char *) "192.168.1.112";
@@ -54,6 +54,22 @@ void save_test() {
     mysql_close(conn);
 }
 
+/**
+ *
+ */
+
+void save_counter_test() {
+
+    MYSQL *conn = mysql_init(NULL);
+    conn = mysql_connection_setup(Conf::instance());
+    if(conn == NULL) exit(-1);
+
+    save_counter(conn, 10, Conf::instance()->analyzer_id, 1234);
+
+    mysql_close(conn);
+}
+
+
 int main() {
     Logger::instance()->init(&std::cout, Level::DEBUG);
     std::ifstream input("../conf/conf.json");
@@ -61,8 +77,9 @@ int main() {
     while (input >> sstr.rdbuf());
     Conf::instance()->ConfRead(sstr.str().c_str());
 
-    save_test();
-    // mysql_test();
+    // save_trace_test(); // 此函数会直接修改数据库, 仅仅在测试数据库读写时使用
+    // save_counter_test(); // 此函数会直接修改数据库, 仅仅在测试数据库读写时使用
+    mysql_test();
     return 0;
 }
 
