@@ -12,6 +12,10 @@
 #include <sstream>
 #include <fstream>
 
+/**
+ * 2018-03-30: 解决了MySQL的连接泄露问题
+ */
+
 
 /**
  *  进行save测试, 但这样的测试会影响数据库正常的存储, 将会向数据库中添加一条
@@ -45,13 +49,13 @@ void save_trace_test() {
     trace.is_drop = 0;
     trace.is_probe = 1;
 
-    MYSQL *conn = mysql_init(NULL);
-    conn = mysql_connection_setup(Conf::instance());
+    MYSQL *conn = mysql_connection_setup(Conf::instance());
     if(conn == NULL) exit(-1);
 
     save_trace(conn, &trace);
 
     mysql_close(conn);
+    conn = NULL;
 }
 
 /**
@@ -60,8 +64,7 @@ void save_trace_test() {
 
 void save_counter_test() {
 
-    MYSQL *conn = mysql_init(NULL);
-    conn = mysql_connection_setup(Conf::instance());
+    MYSQL* conn = mysql_connection_setup(Conf::instance());
     if(conn == NULL) exit(-1);
 
     save_counter(conn, 10, Conf::instance()->analyzer_id, 1234);
@@ -80,6 +83,7 @@ int main() {
     // save_trace_test(); // 此函数会直接修改数据库, 仅仅在测试数据库读写时使用
     // save_counter_test(); // 此函数会直接修改数据库, 仅仅在测试数据库读写时使用
     mysql_test();
+    // mysql_library_end();
     return 0;
 }
 

@@ -88,6 +88,7 @@ static void _in_saver(MYSQL* conn, MYSQL_BIND* bind,
         LOG_E(" Failed while closing the statement\n");
         LOG_E(" " << mysql_error(conn) << "\n");
     }
+    LOG_D("Clear over\n");
 }
 
 /**
@@ -296,11 +297,10 @@ MYSQL* mysql_connection_setup(const Conf* c)
 }
 
 bool mysql_test() {
-    MYSQL *conn = mysql_init(NULL);
+    MYSQL *conn = mysql_connection_setup(Conf::instance());
     MYSQL_RES *res;
     MYSQL_ROW row;
 
-    conn = mysql_connection_setup(Conf::instance());
     if(conn == NULL) exit(-1);
 
     // assign the results return to the MYSQL_RES pointer
