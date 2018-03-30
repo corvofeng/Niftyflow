@@ -11,6 +11,10 @@
 #ifndef LOG_H_EVNJHQW5
 #define LOG_H_EVNJHQW5
 
+/**
+ * 2018-03-29: 这是一个线程安全的日志库, 可以直接在其他Linux程序上复用
+ */
+
 #include <string.h>
 #include "lock.h"
 #include <pthread.h>
@@ -144,11 +148,14 @@ public:
 // For quick access you could define a macro
 
 /**
+ * LOG_I(FMT("Hello world %d, %d\n", 1, 3)); 类似printf的功能
+ *
  * copy from
  * https://stackoverflow.com/questions/2342162/stdstring-formatting-like-sprintf
  *
  * missing string printf
  * this is safe and convenient but not exactly efficient
+ * 线程安全但并不是很高效, 请尽量避免
  */
 inline std::string FMT(const char* fmt, ...){
     int size = 512;

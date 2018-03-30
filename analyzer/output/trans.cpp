@@ -70,10 +70,14 @@ static long unsigned get_trace_json(PKT_TRACE_T* pkt, char* buf) {
                         cJSON_CreateNumber(real_shift));
     }
     cJSON_AddItemToObject(tInfo, "trace_info", tArr);
-    LOG_D(cJSON_Print(tInfo) << "\n");
-    long int len = strlen(cJSON_Print(tInfo));
-    strcpy(buf, cJSON_Print(tInfo));
 
+    char * info = cJSON_Print(tInfo);
+
+    LOG_D(info << "\n");
+    long int len = strlen(info);
+    strcpy(buf, info);
+
+    free(info);     // 使用cJSON_Print分配的内存一定要释放.
     cJSON_Delete(tInfo);
 
     return len;

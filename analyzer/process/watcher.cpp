@@ -205,12 +205,18 @@ void Watcher::_inner_push() {
     }
 }
 
+void Watcher::_inner_save_counter() {
+    LOG_D("Start save counter\n");
+}
+
 void Watcher::init(Conf* conf, EverflowMain* main) {
     this->conf = conf;
     this->_main = main;
     this->_msg_queue =  main->get_message_queue();
     this->_out_switch_set = main->get_out_switch_set();
     this->_counter_map = main->get_counter_map();
+
+    (void) signal(SIGALRM, Watcher::timely_save_counter);
 }
 
 void Watcher::init_connect() {

@@ -18,22 +18,22 @@ int main(int argc, char *argv[])
     while (input >> sstr.rdbuf());
     Conf::instance()->ConfRead(sstr.str().c_str());
 
+    Watcher *watcher = Watcher::instance();
+
     // Init main process
     EverflowMain eMain;
 
     // Init connect and read config
-    Watcher watcher;
-    watcher.init(Conf::instance(), &eMain);
-    watcher.init_connect();
-    watcher.send_init();
+    watcher->init(Conf::instance(), &eMain);
+    watcher->init_connect();
+    watcher->send_init();
 
-    watcher.run();
-    watcher.wait_command_init();
+    watcher->run();
 
     // eMain.run();
     // eMain.join();
 
-    watcher.join();
+    watcher->join();
 
     return 0;
 }
