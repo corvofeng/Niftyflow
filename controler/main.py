@@ -18,6 +18,7 @@ from handlers.test_handler import TeshHandler
 from handlers.trace_filter_handler import TraceFilterHandler
 from handlers.counter_filter_handler import CounterFilterHandler
 from handlers.probe_construct_handler import ProbeConstructHandler
+from handlers.rules_handler import RulesHandler
 
 from q_listen import q_listen
 
@@ -26,6 +27,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r'/v1/test', TeshHandler, dict(with_db=True)),
+            (r'/v1/rules', RulesHandler, dict(with_db=True)),
             (r'/v1/tracce_filter', TraceFilterHandler, dict(with_db=True)),
             (r'/v1/counter_filter', CounterFilterHandler, dict(with_db=True)),
             (r'/v1/probe_construct', ProbeConstructHandler, dict(with_db=False)),
