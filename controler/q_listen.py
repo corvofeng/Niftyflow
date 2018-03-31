@@ -69,9 +69,17 @@ def on_init():
 
     ret_msg = {}
 
+    ret_msg['COUNTER'] = get_counter_rules(db)
+    ret_msg['SWH_ID'] = None   # TODO: 添加出口交换机的数组
+
+    return ret_msg
+
+def get_counter_rules(conn):
+    """ 获取当前有效的rule信息
+    """
     counter_rules = []
     try:
-        with db.cursor() as cursor:
+        with conn.cursor() as cursor:
             sql = "SELECT * FROM counter_rule WHERE is_valid = 1"
             cursor.execute(sql)
             rules = cursor.fetchall()
@@ -88,14 +96,11 @@ def on_init():
                 rule_item['SWH_ID'] = r['switch_id']
                 rule_item['PTL'] = r['protocol']
                 counter_rules.append(rule_item)
+    except Exception as e:
+        app_log.debug('Get rule err {}'.format(e))
 
     finally:
         mysql_close(db)
-
-    ret_msg['COUNTER'] = counter_rules
-    ret_msg['SWH_ID'] = None   # TODO: 添加出口交换机的数组
-
-    return ret_msg
 
 
 def generate_sub(msg):
