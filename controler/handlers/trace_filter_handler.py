@@ -45,8 +45,8 @@ class TraceFilterHandler(BaseHandler):
             access_log.error('Get wrong ip {}, {}'.format(ip_src, ip_dst))
             self.write_json(None, status_code=400, msg='参数错误')
             return
-        except TypeError as e: # 这是为None的情况
-            pass
+        except Exception as e:
+            access_log.error('Get error {}'.format(e))
 
         try: # 时间检验
             start_time = to_time_stamp(start_time)
@@ -55,6 +55,8 @@ class TraceFilterHandler(BaseHandler):
             access_log.error('Get err time {}, {}'.format(start_time, end_time))
             self.write_json(None, status_code=400, msg='参数错误')
             return
+        except Exception as e:
+            access_log.error('Get error {}'.format(e))
 
         if start_time > end_time:   # 起止时间一定要有大小
             access_log.warning('Get err time {}, {}'.format(start_time, end_time))
@@ -72,6 +74,8 @@ class TraceFilterHandler(BaseHandler):
                               .format(is_probe, is_drop, is_loop, protocol))
             self.write_json(None, status_code=400, msg='参数错误')
             return
+        except Exception as e:
+            access_log.error('Get error {}'.format(e))
 
         last_sql = QUERY_SQL
         day1 = int(time_to_day(start_time))
@@ -101,6 +105,8 @@ class TraceFilterHandler(BaseHandler):
             cur = self.db.cursor()
             cur.execute(last_sql)
             rlts = cur.fetchall()
+        except Exception as e:
+            access_log.error('Get error {}'.format(e))
         finally:
             cur.close()
 
