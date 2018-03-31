@@ -3,6 +3,7 @@
 /*
 
 # 以下的文件进行包括
+!apidoc/.gitkeep
 !.gitignore
 !*.tex
 !*.bib
