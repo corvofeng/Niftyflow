@@ -32,6 +32,5 @@
     如果查询频繁且要求较高, 可以改为长连接, 这里全部使用短连接查询
 
 
-
 [1]: http://www.tornadoweb.org/en/stable/guide/structure.html
 [2]: https://pypi.python.org/pypi/PyMySQL
