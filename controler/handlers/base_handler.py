@@ -16,6 +16,14 @@ from settings import mysql_close
 
 class BaseHandler(tornado.web.RequestHandler):
 
+    def set_default_headers(self):
+        """ 目前允许跨域访问
+        """
+        app_log.info("setting headers!!!")
+        self.set_header("Access-Control-Allow-Origin", "*") # 这个地方可以写域名
+        self.set_header("Access-Control-Allow-Headers", "x-requested-with")
+        self.set_header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+
     def initialize(self, with_db=False):
         """ 初始化
             @parm with_db 置位表示此Handler需要访问数据库

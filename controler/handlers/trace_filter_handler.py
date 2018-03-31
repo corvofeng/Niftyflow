@@ -124,3 +124,40 @@ class TraceFilterHandler(BaseHandler):
 
         self.write_json(rlts)
 
+"""
+@api {post} /tracce_filter 请求Trace数据信息
+@apiVersion 0.0.1
+@apiName Trace filter
+@apiGroup Query
+
+@apiParam {String} start_time
+@apiParam {String} end_time
+@apiParam {String} [ip_src='0.0.0.0']
+@apiParam {String} [ip_dst='0.0.0.0']
+@apiParam {Number} [protocol=-1]
+@apiParam {Number} [is_loop=-1]
+@apiParam {Number} [is_drop=-1]
+@apiParam {Number} [is_probe=-1]
+
+@apiSuccessExample {json} Success-Response:
+HTTP/1.1 200 OK
+
+{
+    "code": 200,
+    "msg": "success.",
+    "data": [
+        {
+            "id": 1,
+            "s_ip": "192.3.1.3",
+            "d_ip": "192.3.1.3",
+            "protocal": 6,
+            "generate_time": 25592721,
+            "trace_data": "{\n\t\"trace_info\":\t[{\n\t\t\t\"switch_id\":\t19,\n\t\t\t\"hop_rcvd\":\t1,\n\t\t\t\"hop_timeshift\":\t0\n\t\t}]\n}",
+            "fdate": 20180330,
+            "is_loop": 0,
+            "is_drop": 1,
+            "is_probe": 0
+        }
+    ]
+}
+"""

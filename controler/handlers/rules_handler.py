@@ -13,6 +13,7 @@ from handlers.base_handler import BaseHandler
 
 
 RULE_QUERY = 'SELECT * FROM counter_rule'
+
 class RulesHandler(BaseHandler):
 
     def get(self):
@@ -193,3 +194,63 @@ class RulesHandler(BaseHandler):
         generate_sub(pub_msg)
 
         self.write_json('success')
+
+
+"""
+@api {get} /rules 请求所有规则
+@apiVersion 0.0.1
+@apiName All rules
+@apiGroup Query
+
+@apiDescription 查询所有的规则, 所有的rule在初始化时就应该被获取到, 而后通过
+rule_id查找counter数据.
+
+@apiSuccessExample {json} Success-Response:
+HTTP/1.1 200 OK
+{
+    "code": 200,
+    "msg": "success.",
+    "data": [
+        {
+            "id": 1,
+            "rule_name": "flow_from_192_3_2_3",
+            "ip_src": "192.3.2.3",
+            "ip_dst": "0",
+            "protocol": -1,
+            "switch_id": 0,
+            "is_valid": 0
+        }
+    ]
+}
+"""
+
+"""
+
+@api {post} /rules 添加删除规则
+@apiVersion 0.0.1
+@apiName Rules add or del
+@apiGroup Modify
+@apiDescription 对于操作者来说, 添加删除规则只是一个请求而已, 但是对于整个系统
+来说, 添加删除代表的是所有的分析器要暂停一遍, 才能将规则更新.
+
+
+@apiParam {String} act  只能使用 'ADD|DEL'
+@apiParam {Number} rule_id     在DEL操作时必须填写
+@apiParam {String} rule_name   在ADD操作时必须填写
+@apiParam {String} [ip_src='0.0.0.0']
+@apiParam {String} [ip_dst='0.0.0.0']
+@apiParam {Number} [protocol=-1]    报文中的协议类型
+@apiParam {Number} [switch_id=-1]   镜像报文的交换机ID
+
+@apiSuccessExample {json} Success-Response:
+HTTP/1.1 200 OK
+
+{
+    "code": 200,
+    "msg": "success.",
+    "data": "success"
+}
+"""
+
+
+

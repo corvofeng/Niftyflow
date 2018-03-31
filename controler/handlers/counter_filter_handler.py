@@ -10,12 +10,12 @@ vim: set ts=4 sw=4 tw=99 et:
 2018-03-31: 修正计数器规则请求时的bug.
 """
 
+
 from util.time_util import *
 from tornado.log import access_log
 from handlers.base_handler import BaseHandler
 
 QUERY_SQL = "SELECT * FROM tbl_counter WHERE 1"
-
 class CounterFilterHandler(BaseHandler):
 
     def post(self):
@@ -71,3 +71,43 @@ class CounterFilterHandler(BaseHandler):
             r['generate_time'] = time_print((date_to_stamp(r['generate_time'])))
 
         self.write_json(rlts)
+
+
+
+"""
+@api {post} /counter_filter  请求counter数据信息
+@apiVersion 0.0.1
+@apiName Counter filter
+@apiGroup Query
+
+@apiParam {String} start_time
+@apiParam {String} end_time
+@apiParam {Number} rule_id=0
+
+@apiSuccessExample {json} Success-Response:
+HTTP/1.1 200 OK
+{
+    "code": 200,
+    "msg": "success.",
+    "data": [
+        {
+            "id": 10,
+            "rule_id": 1,
+            "generate_time": "2018-03-30 16:14:55",
+            "analyzer_id": 123,
+            "cnt": 0,
+            "fdate": 20180330
+        },
+        {
+            "id": 11,
+            "rule_id": 1,
+            "generate_time": "2018-03-30 16:40:19",
+            "analyzer_id": 123,
+            "cnt": 41,
+            "fdate": 20180330
+        }
+    ]
+}
+"""
+
+
