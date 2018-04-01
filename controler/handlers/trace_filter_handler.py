@@ -150,7 +150,7 @@ HTTP/1.1 200 OK
             "id": 1,
             "s_ip": "192.3.1.3",
             "d_ip": "192.3.1.3",
-            "protocal": 6,
+            "protocol": 6,
             "generate_time": 25592721,
             "trace_data": "{\n\t\"trace_info\":\t[{\n\t\t\t\"switch_id\":\t19,\n\t\t\t\"hop_rcvd\":\t1,\n\t\t\t\"hop_timeshift\":\t0\n\t\t}]\n}",
             "fdate": 20180330,
