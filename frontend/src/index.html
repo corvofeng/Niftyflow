@@ -1,36 +1,204 @@
 <html>
+
 <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+
   <title>Webpack Tutorial</title>
-    <link rel="stylesheet" href="./bootstrap/dist/css/bootstrap.min.css">
-    <script src="./bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="./bundle.js"></script>
+  <link rel="stylesheet" href="./bootstrap/dist/css/bootstrap.min.css">
+  <!-- <link rel="stylesheet" href="./bootstrap-timepicker/css/bootstrap-timepicker.min.css"> -->
+  <!-- <script src="./bootstrap/dist/js/bootstrap.min.js"></script> -->
+  <!-- <script src="./bundle.js"></script> -->
 </head>
+
 <body>
+  <nav class="flex-column flex-sm-row">
+    <ul class="nav nav-tabs justify-content-left" id="dataTab" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="trace-tab" data-toggle="tab" href="#trace" role="tab" aria-selected="true">Trace数据</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="counter-tab" data-toggle="tab" href="#counter" role="tab" aria-selected="false">Counter数据</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="probe-tab" data-toggle="tab" href="#probe" role="tab" aria-selected="false">Probe构造</a>
+      </li>
+    </ul>
+  </nav>
 
-  <div class="jumbotron text-center">
-    <h1>My First Bootstrap Page</h1>
-  <p>Resize this responsive page to see the effect!</p> 
-</div>
+  <div class="tab-content" id="dataTabContent">
+    <div class="tab-pane fade show active" id="trace" role="tabpanel" aria-labelledby="trace-tab">
 
-<div class="container">
-  <div class="row">
-    <div class="col-sm-4">
-      <h3>Column 1</h3>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
-      <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
+      <div class="jumbotron text-center">
+        <h1>Trace 数据查询</h1>
+        <p>按filter筛选数据!</p>
+      </div>
+
+      <div class="container form-group">
+        <div class="row">
+          <div class="col-md-7">
+            <input id="input_trace_search" class="form-control mr-sm-2" type="text" placeholder="Filter">
+          </div>
+          <div class="col-md-4">
+            <button id="btn_trace_search" class="btn btn-outline-success my-2 my-sm-0">Search</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="container">
+        <div class="row">
+          <div class="col-md-5 mb-3">
+
+            <ul id="list_trace_simple" class="list-group">
+              <!-- <li class="list-group-item">Dapibus ac facilisis in</li>
+              <li class="list-group-item list-group-item-primary">This is a primary list group item</li>
+              <li class="list-group-item list-group-item-secondary">This is a secondary list group item</li>
+              <li class="list-group-item list-group-item-success">This is a success list group item</li>
+              <li class="list-group-item list-group-item-danger">This is a danger list group item</li>
+              <li class="list-group-item list-group-item-warning">This is a warning list group item</li>
+              <li class="list-group-item list-group-item-info">This is a info list group item</li>
+              <li class="list-group-item list-group-item-light">This is a light list group item</li>
+              <li class="list-group-item list-group-item-dark">This is a dark list group item</li> -->
+            </ul>
+
+
+            <!--
+              <div class="list-group list-group-item-action">
+                <div id="list_trace_simple" class="container flex-column d-flex justify-content-between">
+                  <div class="row">
+                    <div class="col-md-7">
+                      2017-02-05 18:23:00:1234
+                    </div>
+                    <div class="col-md-5">
+                      List group item heading
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="list-group list-group-item-action flex-column d-flex">
+                      2017-02-05 18:23:00:1234
+                      192.3.0.3 => 192.4.0.4
+              </div>
+            -->
+          </div>
+          <div id="trace_detail" class="col-md-7">
+
+            <!-- 
+            <div class="row">
+              <div class="col-5">
+                产生时间: 2018-04-05 19:00:23
+                <br>
+                协议类型: TCP协议
+                <br>
+                 是否环路: 是
+                <br>
+                 是否丢包: 否
+                <br>
+                 是否探针: 否
+                <br>
+              </div>
+              <div class="col-5">
+                源IP: 192.168.1.0
+                <br> 目的IP: 192.168.1.0
+                <br>
+              </div>
+              <div class="col-9">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th scope="col">交换机ID</th>
+                      <th scope="col">接受到的报文数</th>
+                      <th scope="col">偏移时间</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Mark</td>
+                      <td>Otto</td>
+                      <td>@mdo</td>
+                    </tr>
+                    <tr>
+                      <td>Jacob</td>
+                      <td>Thornton</td>
+                      <td>@fat</td>
+                    </tr>
+                    <tr>
+                      <td>@twitter</td>
+                    </tr>
+                  </tbody>
+                </table>
+
+              </div>
+            </div>
+-->
+
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="col-sm-4">
-      <h3>Column 2</h3>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
-      <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
+    <div class="tab-pane fade" id="counter" role="tabpanel" aria-labelledby="counter-tab">
+
+      <div class="jumbotron text-center">
+        <h1>Counter 数据查询</h1>
+        <p>按规则查看计数器信息!</p>
+      </div>
+
+      <div class="container">
+        <div class="row">
+          <div class="col-md-5">
+            <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
+            <div id="counter_charts" style="width: 600px;height:400px;"></div>
+          </div>
+          <div class="col-md-3">
+          </div>
+
+          <div class="col-md-4">
+              <div class="form-inline">
+                  <label class="my-1 mr-2" for="inlineFormCustomSelectPref">Preference</label>
+                  <select class="custom-select my-1 mr-sm-2" id="counter_select_rule_id">
+                    <!-- <option value="1">One</option>
+                    <option value="2">Two</option>
+                    <option value="3">Three</option> -->
+                  </select>
+                
+                  <button id="counter_btn_submit" class="btn btn-primary my-1">Submit</button>
+                </div>
+          </div>
+        </div>
+      </div>
+
     </div>
-    <div class="col-sm-4">
-      <h3>Column 3</h3>
-      <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
-      <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
+    <div class="tab-pane fade" id="probe" role="tabpanel" aria-labelledby="probe-tab">
+
+      <div class="jumbotron text-center">
+        <h1>my first bootstrap page</h1>
+        <p>resize this responsive page to see the effect!</p>
+      </div>
+
+      <div class="container">
+        <div class="row">
+          <div class="col-sm-4">
+            <h3>column 1</h3>
+            <p>lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
+            <p>ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
+          </div>
+          <div class="col-sm-4">
+            <h3>column 2</h3>
+            <p>lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
+            <p>ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
+          </div>
+          <div class="col-sm-4">
+            <h3>column 3</h3>
+            <p>lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
+            <p>ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
+          </div>
+        </div>
+      </div>
+
+
     </div>
   </div>
-</div>
-</body>
 
+</body>
 </html>
