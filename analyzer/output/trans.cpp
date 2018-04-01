@@ -13,7 +13,7 @@
 
 #define INSERT_TRACE_SAMPLE  "INSERT INTO            \
     `tbl_trace_data`                                 \
-    (`s_ip`, `d_ip`, `generate_time`, `protocal`,    \
+    (`s_ip`, `d_ip`, `generate_time`, `protocol`,    \
      `trace_data`, `is_loop`, `is_drop`, `is_probe`) \
      VALUES                                          \
      (?, ?, ?, ?, ?, ?, ?, ?)"
