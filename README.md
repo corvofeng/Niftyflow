@@ -27,6 +27,15 @@
 
 所有文档采用`Markdown`编写, 使用`pandoc`转换为`tex`文件后编译, 模板会在之后附上.
 
+
+
+## 致谢
+
+- 感谢提出`Everflow`的微软团队
+- 感谢各位老师的指导
+- 感谢实验室师兄师姐的配合
+- 感谢许多开源工具GCC, GDB, CMake, VIM, NodeJS...
+
 ## LICENSE
 
 Copyright © 2016 corvo.
