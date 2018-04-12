@@ -24,12 +24,14 @@
 #include <cstdarg>
 #include <sys/syscall.h>   /* For SYS_xxx definitions */
 #include <iomanip>      // std::setw
+#include <stdexcept>    // for std::runtime_error
 
 
 
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 enum Level { ERROR, INFO, WARNING, DEBUG };
+using std::runtime_error;
 
 /**
  * https://stackoverflow.com/questions/3165563/flexible-logger-class-using-standard-streams-in-c

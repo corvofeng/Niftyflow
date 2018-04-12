@@ -1,10 +1,11 @@
 # Analyzer
 
 > 项目使用CMake进行构建, 使用到以下几个库
-> * MySQL    : MySQL 连接
-> * HiResdis : Redis 连接
-> * LibPacp  : 解析pcap文件
-> * cJSON    : JSON的读写
+> * MySQL    : MySQL 连接 sudo apt-get install libmysqlclient-dev
+> * HiResdis : Redis 连接 sudo apt-get install libhiredis-dev
+> * LibPacp  : 解析pcap文件 sudo apt-get install libpcap-dev
+> * cJSON    : JSON的读写 随项目附带
+> * Libevent : 仅在测试时使用 sudo apt-get install libevent-dev
 
 
 本程序中用到一些代码片段[gist][3], 可以直接运行. 有关详细的开发文档, 其实大家看
