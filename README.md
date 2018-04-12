@@ -1,15 +1,21 @@
-## 毕业设计
+## Niftyflow
 
+
+本程序为商业程序, 如果简单的部署使用, 可以随意.
+如果需要技术支持, 将按照部署的服务器数量和咨询时间收费.
+需要新的功能请单独咨询.
+
+## 文件结构
 
 ```
 .
-├── doc
-├── analyzer
-├── frontend
-├── controler
+├── doc         # 项目中的文档: 交互接口以及环境配置
+├── analyzer    # 分析器
+├── controler   # 控制器
+├── frontend    # 前端页面
 └── README.md
 
-2 directories, 3 files
+4 directories, 1 files
 ```
 
 ## 使用apidoc生成文档
@@ -21,10 +27,7 @@
 > apidoc -i ./controler/ -o ./doc/apidoc # 生成的文档保存在doc/apidoc中
 ```
 
-
 所有文档采用`Markdown`编写, 使用`pandoc`转换为`tex`文件后编译, 模板会在之后附上.
-
-
 
 ## 致谢
 
