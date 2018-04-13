@@ -124,6 +124,10 @@ public:
             _counter_map(NULL), stop(false),
             is_pause(true), pause(true), mode(M_PCAP) {}
 
+    void set_mode(int _m) {
+        this->mode = _m;
+    }
+
     void bind_queue_vec(vector<shared_ptr<PKT_QUEUE>>* queue_vec) {
         this->_queue_vec = queue_vec;
     }
@@ -151,6 +155,10 @@ public:
 
     void bind_pcap(pcap_t *pcap){
         this->_pcap = pcap;
+    }
+
+    void bind_dpdk(lcore_queue_conf *lcore_queue_conf){
+        this->_lcore_queue = lcore_queue_conf;
     }
 
     // 暂停与重新启动, 主要是在更新删除计数器规则时使用

@@ -317,8 +317,6 @@ int main(int argc, char** argv) {
     port_conf.rxmode.offloads = DEV_RX_OFFLOAD_CRC_STRIP;
     port_conf.txmode.mq_mode = ETH_MQ_TX_NONE;
 
-
-
     struct lcore_queue_conf *qconf;
     uint16_t nb_ports;
 

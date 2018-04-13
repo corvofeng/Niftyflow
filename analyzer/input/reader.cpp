@@ -30,7 +30,6 @@ static int hash_func(shared_ptr<PARSE_PKT> pkt);
 void Reader::_inner_dpdk_read_and_push() {
     LOG_D("_inner_dpdk_read_and_push");
 
-
 }
 
 

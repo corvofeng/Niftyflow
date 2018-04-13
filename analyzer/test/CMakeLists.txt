@@ -8,7 +8,7 @@ INCLUDE_DIRECTORIES(${PROJECT_SOURCE_DIR}/input
                     ${PROJECT_BINARY_DIR}
                     ${DPDK_INCLUDE_DIR}
                     ${CHECK_INCLUDE_DIRS}
-                    )
+)
 
 # 链接库目录    gcc -L
 LINK_DIRECTORIES(${PROJECT_BINARY_DIR}/input
@@ -17,34 +17,14 @@ LINK_DIRECTORIES(${PROJECT_BINARY_DIR}/input
                  ${PROJECT_BINARY_DIR}/common
                  ${PROJECT_BINARY_DIR}/libs
                  $ENV{DPDK_DIR}/lib
-                 )
+)
 
-# TARGET_LINK_LIBRARIES(analyzer reader trans process common)
-
-# TARGET_LINK_LIBRARIES(analyzer ${PCAP_LIBRARY})
-# TARGET_LINK_LIBRARIES(lex_rel lex)
-# TARGET_LINK_LIBRARIES(yacc_rel yacc)
-
-include(CTest)
+INCLUDE(CTest)
 
 SET(CTEST_OUTPUT_ON_FAILURE ON)
 
-# ProtobufTest; 后来决定不用protobuf了
-# set(MY_TEST_LIST    LoggerTest;
-#                     PcapTest;
-#                     MySQLTest;
-#                     RedisTest;
-#                     ConfTest;
-#                     ExampleTest;
-#                     DPDKTest;
-#                     )
-
-# 添加所有可能使用到的库
-SET(LIBRARYS reader trans process common cJSON ${DPDK_LIBRARIES})
-
-
-set(MY_TEST_LIST
-#  测试名称    ; 输入文件       ; 使用类库
+SET(MY_TEST_LIST
+#  测试名称    ; 输入文件       ; 使用的类库
   "LoggerTest \; LoggerTest.cpp \; common"
   "PcapTest   \; PcapTest.cpp   \; pcaps"
   "DPDKTest   \; DPDKTest.cpp   \; dpdks"
@@ -67,16 +47,11 @@ FOREACH(TEST_ITEM ${MY_TEST_LIST})
     LIST(GET TEST_ITEM 2 TEST_LIB)
     STRING(STRIP ${TEST_LIB} TEST_LIB)
 
-    message(STATUS "name: '${TEST_NAME}' file: '${TEST_FILE}' lib: '${TEST_LIB}'")
-    # 设置编译输出文件
+    MESSAGE(STATUS "name: '${TEST_NAME}' file: '${TEST_FILE}' lib: '${TEST_LIB}'")
 
-    add_executable(${TEST_NAME} ./${TEST_FILE})
-    add_test(${TEST_NAME}_tester ${PROJECT_BINARY_DIR}/test/${TEST_NAME})
+    # 设置编译输出文件
+    ADD_EXECUTABLE(${TEST_NAME} ./${TEST_FILE})
+    ADD_TEST(${TEST_NAME}_tester ${PROJECT_BINARY_DIR}/test/${TEST_NAME})
     TARGET_LINK_LIBRARIES(${TEST_NAME} ${TEST_LIB})
 ENDFOREACH()
-
-#add_executable (MySQLTest MySQLTest.cpp)
-#add_executable (RedisTest RedisTest.cpp)
-#
-
 

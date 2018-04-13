@@ -5,10 +5,27 @@
 #include "watcher.h"
 #include "log.h"
 #include "conf.h"
+#include <rte_eal.h>
 
+
+int force_quit;
+
+static void
+signal_handler(int signum)
+{
+    if (signum == SIGINT || signum == SIGTERM) {
+        printf("\n\nSignal %d received, preparing to exit...\n",
+                signum);
+        force_quit = true;
+    }
+}
 
 int main(int argc, char *argv[])
 {
+    rte_eal_init(argc, argv);
+    signal(SIGINT, signal_handler);
+    signal(SIGTERM, signal_handler);
+
     //  Init log
     Logger::instance()->init(&std::cout, Level::DEBUG);
 

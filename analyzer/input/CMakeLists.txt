@@ -1,5 +1,7 @@
 
-include_directories(${PROJECT_SOURCE_DIR}/common ${DPDK_INCLUDE_DIR})
+include_directories(${PROJECT_SOURCE_DIR}/common
+                    ${DPDK_INCLUDE_DIR}
+                    ${PROJECT_SOURCE_DIR}/libs)
 
 MESSAGE(STATUS "GET DPDK include  ${DPDK_INCLUDE_DIR}")
 

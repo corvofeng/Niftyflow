@@ -24,7 +24,8 @@
 #include <rte_atomic.h>
 #include <rte_cycles.h>
 #include <rte_lcore.h>
-
+#include <rte_ether.h>
+#include <rte_ethdev.h>
 
 /**
  * 2018-04-13: 创建DPDK初始化函数, 允许使用Conf进行初始化.
@@ -52,6 +53,7 @@ struct l2fwd_port_statistics {
 } __rte_cache_aligned;
 
 // DPDK的连接初始化工具
-void dpdk_initer(lcore_queue_conf* lcore_vec, Conf* conf);
+// 为当前的核添加队列
+void dpdk_initer(lcore_queue_conf* lcore_conf, Conf* conf);
 
 #endif /* end of include guard: DPDK_ADAPTER_H_2EAD61OS */

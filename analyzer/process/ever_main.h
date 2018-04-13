@@ -20,7 +20,6 @@
 #include "con_queue.h"
 #include "on_process.h"
 #include "packet.h"
-// #include "reader.h"
 #include "atom_counter.h"
 #include "cnt_rule.h"
 #include <unordered_set>
@@ -80,7 +79,7 @@ private:
 
     // 下面两个为reader监听的函数.
     vector<pcap_t*> pcap_vec;
-    vector<lcore_queue_conf> lcore_vec;
+    vector<lcore_queue_conf*> lcore_vec;
 
     vector<shared_ptr<Reader>> reader_vec;  /**< 可以多个线程进行读取,
                                                每个线程可以向多个队列中写入 */

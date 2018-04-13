@@ -1,5 +1,7 @@
 #include "ever_main.h"
 #include "reader.h"
+#include "dpdk_adapter.h"
+#include "conf.h"
 
 EverflowMain::EverflowMain() {
     LOG_D("EverflowMain Init\n");
@@ -21,12 +23,31 @@ EverflowMain::EverflowMain() {
         queue_vec.push_back(q);
     }
 
+    // Use pcap
+    // for(int i = 0; i < reader_cnt && i < pcap_vec.size(); i++) {
+    //     auto r = shared_ptr<Reader>(new Reader());
+
+    //     r->bind_queue_vec(&this->queue_vec);
+    //     r->bind_pcap(pcap_vec[i]);
+    //     r->bind_counter_map(&this->counter_map);
+    //     reader_vec.push_back(r);
+    // }
+
+    // Use DPDK
     for(int i = 0; i < reader_cnt && i < pcap_vec.size(); i++) {
         auto r = shared_ptr<Reader>(new Reader());
+        lcore_queue_conf* lcore_conf = new lcore_queue_conf();
+
+        r->set_mode(M_DPDK);
+
         r->bind_queue_vec(&this->queue_vec);
-        r->bind_pcap(pcap_vec[i]);
+
+        dpdk_initer(lcore_conf, Conf::instance());
+
+        r->bind_dpdk(lcore_conf);
         r->bind_counter_map(&this->counter_map);
-        reader_vec.push_back(r);
+
+        lcore_vec.push_back(lcore_conf);
     }
 }
 
@@ -48,6 +69,9 @@ void EverflowMain::join() {
 EverflowMain::~EverflowMain() {
     for(auto p: pcap_vec) {
         pcap_close(p);
+    }
+    for(auto l: lcore_vec) {
+        delete l;
     }
 }
 
