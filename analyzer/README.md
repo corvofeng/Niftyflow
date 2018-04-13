@@ -17,6 +17,7 @@
 QtCreater打开, 它对CMake支持良好, 尤其是cmake到了3.8之后, 可以使用cmake server.
 
 ```bash
+> export DPDK_DIR=/home/corvo/dpdk/x86_64-native-linuxapp-gcc # 指定DPDK的目录
 > cp conf/conf-example.json conf/conf.json   # 添加配置文件
 > mkdir build
 > cd build
@@ -53,6 +54,8 @@ DPDK的使用, 可以帮助我们快速获得数据包. 但是也有一点不好
   作者手头上没有可以使用的大型服务器进行测试, 只是简单的利用`VirtualBox`搭建了
 测试环境, 理论上`DPDK`的使用能够将接受效率提高8~10倍. 希望以后接手其他工作时,
 能有机器来进行性能测试吧.
+
+  DPDK测试时, 请在testpmd成功的情况下, 使用`sudo ./test/DPDKTest`.
 
   DPDK的环境配置, 请查看整个项目`doc`文件夹中的相关文档.
 

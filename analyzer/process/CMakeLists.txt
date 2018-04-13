@@ -11,6 +11,6 @@ set(SOURCE_FILES ./on_process.cpp ./on_process.h
             ./watcher.h ./watcher.cpp
             ./ever_main.h ./ever_main.cpp)
 
-add_library(process ${SOURCE_FILES})
+add_library(process STATIC ${SOURCE_FILES})
 
 TARGET_LINK_LIBRARIES(process pthread reader trans)
