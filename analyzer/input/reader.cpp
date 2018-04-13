@@ -15,22 +15,6 @@
 using namespace std;
 
 /**
- * 2018-03-26: 在解析数据包完成后, 立刻进行计数器累加操作
- * 2018-03-23: 初次将break去掉, 使用valgrind检测, 程序运行正常, 检测出几个丢包
- *              问题
- *
- * 2018-03-22: 使用valgrind检测, 一直发现内存错误, 原因是分配内存时使用了
- *              `pkt->_data = new u_char[pkt->header.len];`
- *              这里的pkt->header还没有进行赋值, 所以其len是0的. 之后想要读
- *              内存就会发生错误. 改为
- *                  `pkt->_data = new u_char[>header->len];`之后使用valgrind
- *              测试, 已经可以通过.
- *
- * 2018-03-21: 添加hash函数, 进过解析后的数据包将会进行hash操作, 而后将其放在
- *              相应的队列中
- */
-
-/**
  * @brief 根据p->_data构建完整的数据包p, static表示仅在该文件中使用, 下面两个
  *        并不想提供给别人使用, 仅仅作为Reader功能的一部分, 单独来维护.
  */
@@ -43,11 +27,18 @@ static void pkt_init(shared_ptr<PARSE_PKT> p);
  */
 static int hash_func(shared_ptr<PARSE_PKT> pkt);
 
-void Reader::_inner_read_and_push() {
+void Reader::_inner_dpdk_read_and_push() {
+    LOG_D("_inner_dpdk_read_and_push");
+
+
+}
+
+
+void Reader::_inner_pcap_read_and_push() {
     struct pcap_pkthdr *header;
 
     const u_char *data;
-    LOG_D("_inner_read_and_push\n");
+    LOG_D("_inner_pacp_read_and_push\n");
 
     u_int packetCount = 0;
     while (int returnValue = pcap_next_ex(this->_pcap, &header, &data) >= 0) {

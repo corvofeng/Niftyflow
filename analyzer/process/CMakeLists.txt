@@ -4,6 +4,7 @@ INCLUDE_DIRECTORIES(
         ${PROJECT_SOURCE_DIR}/output
         ${PROJECT_SOURCE_DIR}/libs
         ${PROJECT_SOURCE_DIR}/common
+        ${DPDK_INCLUDE_DIR}
         )
 
 # 设置源码文件

@@ -1,4 +1,5 @@
 #include "ever_main.h"
+#include "reader.h"
 
 EverflowMain::EverflowMain() {
     LOG_D("EverflowMain Init\n");
@@ -12,7 +13,6 @@ EverflowMain::EverflowMain() {
     pcap_vec.push_back(p);
 
     for(int i = 0; i < this->processer_cnt; i++) {
-
         auto p = shared_ptr<Processer>(new Processer());
         shared_ptr<PKT_QUEUE> q = shared_ptr<PKT_QUEUE>(new PKT_QUEUE);
 

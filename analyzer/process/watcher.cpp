@@ -1,11 +1,14 @@
 #include "watcher.h"
 #include "log.h"
-#include "trans.h"
 #include "ever_main.h"
+#include "trans.h"
+#include <vector>
 #include <unistd.h>
 #include <hiredis/hiredis.h>
 #include "cJSON/cJSON.h"
 
+
+using std::vector;
 
 void Watcher::_inner_pubsub() {
     LOG_D("In watcher pubsub\n");

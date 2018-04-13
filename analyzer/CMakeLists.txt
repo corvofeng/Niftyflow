@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 
+ADD_DEFINITIONS(-mssse3 -D__STDC_LIMIT_MACROS)   # FOR DPDK
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror ")
 
@@ -36,6 +37,7 @@ include_directories(
                     ${PROJECT_SOURCE_DIR}/process
                     ${PROJECT_SOURCE_DIR}/common
                     ${PROJECT_SOURCE_DIR}/libs
+                    ${DPDK_INCLUDE_DIR}
                     ${PROJECT_BINARY_DIR}   # for protobuf
                     )
 

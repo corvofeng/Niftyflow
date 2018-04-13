@@ -20,7 +20,7 @@
 #include "con_queue.h"
 #include "on_process.h"
 #include "packet.h"
-#include "reader.h"
+// #include "reader.h"
 #include "atom_counter.h"
 #include "cnt_rule.h"
 #include <unordered_set>
@@ -30,6 +30,9 @@ using std::vector;
 using std::map;
 using std::shared_ptr;
 using std::unordered_set;
+
+class lcore_queue_conf;
+class Reader;
 
 /**
  * 2018-03-27: 添加了函数用来增加和删除规则
@@ -75,7 +78,10 @@ private:
     unordered_set<int> out_switch_set;      /**< 出口交换机的id */
 
 
+    // 下面两个为reader监听的函数.
     vector<pcap_t*> pcap_vec;
+    vector<lcore_queue_conf> lcore_vec;
+
     vector<shared_ptr<Reader>> reader_vec;  /**< 可以多个线程进行读取,
                                                每个线程可以向多个队列中写入 */
 
