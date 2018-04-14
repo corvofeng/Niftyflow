@@ -8,9 +8,10 @@ MESSAGE(STATUS "GET DPDK include  ${DPDK_INCLUDE_DIR}")
 # 设置源码文件
 set(SOURCE_FILES ./reader.cpp ./reader.h)
 set(DPDK_SOURCE_FILES ./dpdk_adapter.h ./dpdk_adapter.cpp)
+set(PCAP_SOURCE_FILES ./pcap_adapter.h ./pcap_adapter.cpp)
 
-add_library(reader)
-add_library(pcaps STATIC ${SOURCE_FILES})
+add_library(reader ${SOURCE_FILES})
+add_library(pcaps STATIC ${PCAP_SOURCE_FILES})
 add_library(dpdks STATIC ${DPDK_SOURCE_FILES})
 
 TARGET_LINK_LIBRARIES(reader pcaps dpdks)

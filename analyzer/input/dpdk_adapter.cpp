@@ -1,7 +1,6 @@
 #include "dpdk_adapter.h"
 #include "conf.h"
 
-extern int force_quit;
 /**
  * 初始化每个给定的端口, 这个函数从一开始就很容易出错, 如果启动不成功,
  * 十之八九要进行调试, 没什么更好的办法, 多打断点, 多调试吧
@@ -153,19 +152,19 @@ void dpdk_initer(lcore_queue_conf* lcore_vec, Conf* conf) {
         }
 
         /* init port */
-        printf("Initializing port %u... done\n", portid);
+        LOG_I(FMT("Initializing port %u... done\n", portid));
 
         lcore_vec->rx_port_list[lcore_vec->n_rx_port] = portid;
         lcore_vec->n_rx_port ++;
 
-        printf("ADD RX port %u\n", portid);
+        LOG_I(FMT("ADD RX port %u\n", portid));
     }
     cur_lcore = portid;
 }
 
 /* Check the link status of all ports in up to 9s, and print them finally */
-static void
-check_all_ports_link_status(uint16_t port_num, uint32_t port_mask)
+void
+check_all_ports_link_status(Conf *conf)
 {
 #define CHECK_INTERVAL 100 /* 100ms */
 #define MAX_CHECK_TIME 90 /* 9s (90 * 100ms) in total */
@@ -173,29 +172,30 @@ check_all_ports_link_status(uint16_t port_num, uint32_t port_mask)
     uint8_t count, all_ports_up, print_flag = 0;
     struct rte_eth_link link;
 
-    printf("\nChecking link status");
-    fflush(stdout);
+    uint16_t port_num = rte_eth_dev_count();
+    if (port_num == 0) {
+        LOG_E("No Ethernet ports - bye\n");
+        exit(-1);
+    }
+
+    LOG_I("Checking link status\n");
     for (count = 0; count <= MAX_CHECK_TIME; count++) {
-        if (force_quit)
-            return;
         all_ports_up = 1;
         for (portid = 0; portid < port_num; portid++) {
-            if (force_quit)
-                return;
-            if ((port_mask & (1 << portid)) == 0)
+            if ((conf->dpdk_port_mask & (1 << portid)) == 0)
                 continue;
             memset(&link, 0, sizeof(link));
             rte_eth_link_get_nowait(portid, &link);
             /* print link status if flag set */
             if (print_flag == 1) {
                 if (link.link_status)
-                    printf(
+                    LOG_D( FMT(
                             "Port%d Link Up. Speed %u Mbps - %s\n",
                             portid, link.link_speed,
                             (link.link_duplex == ETH_LINK_FULL_DUPLEX) ?
-                            ("full-duplex") : ("half-duplex\n"));
+                            ("full-duplex") : ("half-duplex\n")));
                 else
-                    printf("Port %d Link Down\n", portid);
+                    LOG_D(FMT("Port %d Link Down\n", portid));
                 continue;
             }
             /* clear all_ports_up flag if any link down */
@@ -209,18 +209,39 @@ check_all_ports_link_status(uint16_t port_num, uint32_t port_mask)
             break;
 
         if (all_ports_up == 0) {
-            printf(".");
-            fflush(stdout);
+            LOG_I(".");
             rte_delay_ms(CHECK_INTERVAL);
         }
 
         /* set the print_flag if all ports up or timeout */
         if (all_ports_up == 1 || count == (MAX_CHECK_TIME - 1)) {
             print_flag = 1;
-            printf("done\n");
+            LOG_D("Checking link done\n");
         }
     }
 }
 
+void close_all_port(Conf* conf)
+{
+    uint16_t nb_ports;  /**< 总共有的端口数 */
+    uint16_t portid;
+
+    nb_ports = rte_eth_dev_count();
+    if (nb_ports == 0) {
+        LOG_E("No Ethernet ports - bye\n");
+        exit(-1);
+    }
+
+    for (portid = 0; portid < nb_ports; portid++) {
+        if ((conf->dpdk_port_mask & (1 << portid)) == 0)
+            continue;
+
+        LOG_I(FMT("Closing port %d...\n", portid));
+        rte_eth_dev_stop(portid);
+        rte_eth_dev_close(portid);
+        LOG_I("Done\n");
+    }
+    LOG_I("Bye...\n");
+}
 
 

@@ -24,6 +24,9 @@ void Watcher::_inner_pubsub() {
     }
     freeReplyObject(reply);
 
+    // 必须在开始监听频道后才能发送初始化信息
+    this->send_init();
+
     while(!stop) {
         int rp;
         if ( (rp = redisGetReply(this->c_redis_pubsub,
@@ -166,7 +169,6 @@ void Watcher::on_update_counter_rule(vector<CounterRule>& rules, int act) {
     }
     _main->reader_active();
 }
-
 
 /**
  * 初始化

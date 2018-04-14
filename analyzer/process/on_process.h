@@ -81,7 +81,6 @@ private:
     }  _bkts[BKT_SIZE];                 /**<  三个hash桶  */
 
     std::atomic_bool is_slow_over;
-    pthread_mutex_t is_over_mtx;
 
     shared_ptr<PKT_QUEUE> q_;   /**< USE shared_ptr Pointer */
     MYSQL* conn;                /**< MySQL连接对象          */

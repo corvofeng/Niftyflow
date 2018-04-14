@@ -23,7 +23,6 @@
 #include <map>
 #include <atomic>
 
-int pcap_read();
 using std::vector;
 using std::map;
 using std::shared_ptr;
@@ -94,8 +93,8 @@ private:
 
     std::atomic_bool _force_quit;
 
-    volatile bool is_pause;  /**< 返回暂停成功, 初始时认为程序处于暂停状态 */
-    volatile bool pause;     /**< 外部控制变量, 置位为1表示我们需要程序暂停 */
+    std::atomic_bool is_pause;  /**< 返回暂停成功, 初始时认为程序处于暂停状态 */
+    std::atomic_bool pause;     /**< 外部控制变量, 置位为1表示我们需要程序暂停 */
 
     int mode;       /**< 表示该程序属于DPDK或是PCAP模式 */
 
@@ -103,6 +102,7 @@ private:
     // 接下来的两个分别代表不同的获取数据的方式
     pcap_t                  *_pcap;     /**< pcap句柄, 不断访问句柄以获得数据 */
     struct lcore_queue_conf *_lcore_queue; /**< 每个Reader监听的多个队列 */
+    unsigned lcore_id;                  /**< 标示当前的线程ID */
 
     void _inner_pcap_read_and_push();
     void _inner_dpdk_read_and_push();
@@ -144,13 +144,19 @@ public:
         if(M_PCAP == mode) {    // PCAP模式
             LOG_I("In PCAP mode start!!!\n");
             if(!_pcap || !_queue_vec || !_counter_map) {
-                throw std::runtime_error("Must bind queue and pcap");
                 LOG_D("Must bind queue vec and pcap, then called run\n");
+                throw std::runtime_error("Must bind queue and pcap");
                 return ;
             }
             pthread_create(&t_reader, NULL, &Reader::pcap_read_and_push, this);
         } else if(M_DPDK == mode) { // DPDK 模式
             LOG_I("In DPDK mode start!!!\n");
+            if(!_lcore_queue) {
+                LOG_D("Must bind lcore_queue , then called run\n");
+                throw std::runtime_error("Must bind lcore_queue");
+            }
+            rte_eal_mp_remote_launch(&Reader::dpdk_read_and_push,
+                                this, CALL_MASTER);
         }
     }
 
@@ -158,12 +164,14 @@ public:
         this->_pcap = pcap;
     }
 
-    void bind_dpdk(lcore_queue_conf *lcore_queue_conf){
+    void bind_dpdk(lcore_queue_conf *lcore_queue_conf, unsigned lcore_id){
         this->_lcore_queue = lcore_queue_conf;
+        this->lcore_id = lcore_id;
     }
 
     // 强制当前的Reader停止
     void make_quit() {
+        LOG_D("READER STOP\n");
         this->_force_quit = true;
     }
 
@@ -184,9 +192,14 @@ public:
 
     void join() {
         if(M_PCAP == mode) {
-            LOG_I("In PCAP mode stop!!!\n");
             (void) pthread_join(t_reader, NULL);
+            LOG_I("In PCAP mode stop!!!\n");
+
         } else if (M_DPDK == mode) {
+            unsigned lcore_id;
+            if (rte_eal_wait_lcore(lcore_id) < 0) {
+                LOG_E("DPDK wait close error\n");
+            }
             LOG_I("In DPDK mode stop!!!\n");
 
         }
@@ -197,7 +210,7 @@ public:
         r->_inner_pcap_read_and_push();
     }
 
-    static void* dpdk_read_and_push(void *context) {
+    static int dpdk_read_and_push(void *context) {
         Reader* r = (Reader*)context;
         r->_inner_dpdk_read_and_push();
     }

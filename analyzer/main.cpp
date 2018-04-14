@@ -44,7 +44,6 @@ int main(int argc, char *argv[])
     // Init connect and read config
     watcher->init(Conf::instance(), eMain);
     watcher->init_connect();
-    watcher->send_init();
 
     watcher->run();
 
