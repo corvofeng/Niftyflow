@@ -21,6 +21,7 @@
 #include <pthread.h>
 #include <vector>
 #include <map>
+#include <atomic>
 
 int pcap_read();
 using std::vector;
@@ -90,10 +91,11 @@ private:
      *      删除.
      */
     map<CounterRule, shared_ptr<Counter>> *_counter_map;
-    bool stop;
 
-    bool is_pause;  /**< 返回暂停成功, 初始时认为程序处于暂停状态 */
-    bool pause;     /**< 外部控制变量, 置位为1表示我们需要程序暂停 */
+    std::atomic_bool _force_quit;
+
+    volatile bool is_pause;  /**< 返回暂停成功, 初始时认为程序处于暂停状态 */
+    volatile bool pause;     /**< 外部控制变量, 置位为1表示我们需要程序暂停 */
 
     int mode;       /**< 表示该程序属于DPDK或是PCAP模式 */
 
@@ -120,8 +122,9 @@ private:
     void _push_to_queue(shared_ptr<PARSE_PKT> pkt);
 
 public:
-    Reader(): _queue_vec(NULL), _pcap(NULL), _lcore_queue(NULL),
-            _counter_map(NULL), stop(false),
+    explicit Reader():
+            _queue_vec(NULL), _pcap(NULL), _lcore_queue(NULL),
+            _counter_map(NULL), _force_quit(false),
             is_pause(true), pause(true), mode(M_PCAP) {}
 
     void set_mode(int _m) {
@@ -137,6 +140,7 @@ public:
     }
 
     void run() {
+        LOG_D("Creat Reader process\n");
         if(M_PCAP == mode) {    // PCAP模式
             LOG_I("In PCAP mode start!!!\n");
             if(!_pcap || !_queue_vec || !_counter_map) {
@@ -144,12 +148,9 @@ public:
                 LOG_D("Must bind queue vec and pcap, then called run\n");
                 return ;
             }
-            LOG_D("Creat Reader process\n");
-            pthread_create(&t_reader, NULL, &Reader::dpdk_read_and_push, this);
-
+            pthread_create(&t_reader, NULL, &Reader::pcap_read_and_push, this);
         } else if(M_DPDK == mode) { // DPDK 模式
             LOG_I("In DPDK mode start!!!\n");
-
         }
     }
 
@@ -159,6 +160,11 @@ public:
 
     void bind_dpdk(lcore_queue_conf *lcore_queue_conf){
         this->_lcore_queue = lcore_queue_conf;
+    }
+
+    // 强制当前的Reader停止
+    void make_quit() {
+        this->_force_quit = true;
     }
 
     // 暂停与重新启动, 主要是在更新删除计数器规则时使用

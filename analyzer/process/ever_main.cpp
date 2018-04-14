@@ -3,12 +3,13 @@
 #include "dpdk_adapter.h"
 #include "conf.h"
 
+
 EverflowMain::EverflowMain() {
     LOG_D("EverflowMain Init\n");
     this->processer_cnt = 3;
     this->reader_cnt = 1;   // 目前为单线程读入
 
-    std::string file = "/home/corvo/Dropbox/课程文件/毕业设计/grecap.cap";
+    std::string file = "/home/corvo/grecap.cap";
     char errbuff[PCAP_ERRBUF_SIZE];
 
     pcap_t * p = pcap_open_offline(file.c_str(), errbuff);
@@ -24,31 +25,31 @@ EverflowMain::EverflowMain() {
     }
 
     // Use pcap
-    // for(int i = 0; i < reader_cnt && i < pcap_vec.size(); i++) {
-    //     auto r = shared_ptr<Reader>(new Reader());
-
-    //     r->bind_queue_vec(&this->queue_vec);
-    //     r->bind_pcap(pcap_vec[i]);
-    //     r->bind_counter_map(&this->counter_map);
-    //     reader_vec.push_back(r);
-    // }
-
-    // Use DPDK
     for(int i = 0; i < reader_cnt && i < pcap_vec.size(); i++) {
         auto r = shared_ptr<Reader>(new Reader());
-        lcore_queue_conf* lcore_conf = new lcore_queue_conf();
-
-        r->set_mode(M_DPDK);
-
+        r->set_mode(M_PCAP);
         r->bind_queue_vec(&this->queue_vec);
-
-        dpdk_initer(lcore_conf, Conf::instance());
-
-        r->bind_dpdk(lcore_conf);
+        r->bind_pcap(pcap_vec[i]);
         r->bind_counter_map(&this->counter_map);
-
-        lcore_vec.push_back(lcore_conf);
+        reader_vec.push_back(r);
     }
+
+    // Use DPDK
+    // for(int i = 0; i < reader_cnt && i < pcap_vec.size(); i++) {
+    //     auto r = shared_ptr<Reader>(new Reader());
+    //     lcore_queue_conf* lcore_conf = new lcore_queue_conf();
+
+    //     r->set_mode(M_DPDK);
+
+    //     r->bind_queue_vec(&this->queue_vec);
+
+    //     dpdk_initer(lcore_conf, Conf::instance());
+
+    //     r->bind_dpdk(lcore_conf);
+    //     r->bind_counter_map(&this->counter_map);
+
+    //     lcore_vec.push_back(lcore_conf);
+    // }
 }
 
 void EverflowMain::run() {
@@ -64,6 +65,32 @@ void EverflowMain::join() {
 
     for(auto r: reader_vec)
         r->join();
+}
+
+void EverflowMain::make_quit() {
+
+
+    LOG_I("MAKE READER QUIT\n");
+    for(auto r: reader_vec) {
+        r->make_quit();
+    }
+
+    bool allPause = false;
+
+    while(!allPause) {  // 确保每个读入线程均暂停
+        allPause = true;
+        for(auto r: reader_vec) {
+           if(!r->is_pause_ok()) // 只要有一个线程没有暂停成功, 程序就会一直循环
+               allPause = false;
+        }
+    }
+
+    LOG_I("ALL READER QUIT\n");
+
+    // 向所有队列发送NULL来停止消费者
+    for(auto q: queue_vec) {
+        q->push(NULL);
+    }
 }
 
 EverflowMain::~EverflowMain() {
@@ -99,7 +126,7 @@ void EverflowMain::reader_pause() {
     while(!allPause) {  // 确保每个读入线程均暂停
         allPause = true;
         for(auto r: reader_vec) {
-           if(!r->is_pause_ok())	// 只要有一个线程没有暂停成功, 程序就会一直循环
+           if(!r->is_pause_ok()) // 只要有一个线程没有暂停成功, 程序就会一直循环
                allPause = false;
         }
     }

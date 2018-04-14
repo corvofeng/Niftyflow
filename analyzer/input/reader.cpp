@@ -32,17 +32,21 @@ void Reader::_inner_dpdk_read_and_push() {
 
 }
 
-
 void Reader::_inner_pcap_read_and_push() {
     struct pcap_pkthdr *header;
 
     const u_char *data;
-    LOG_D("_inner_pacp_read_and_push\n");
+    LOG_I("_inner_pacp_read_and_push\n");
 
     u_int packetCount = 0;
-    while (int returnValue = pcap_next_ex(this->_pcap, &header, &data) >= 0) {
+    int returnValue;
+    while (returnValue = pcap_next_ex(this->_pcap, &header, &data) >= 0) {
+
         while(this->pause)  // 程序启动时首先检查
             this->is_pause = true;
+
+        if(this->_force_quit) // 强制退出
+            break;
 
         if (header->len != header->caplen)
            LOG_W(FMT("Capture size different than packet size: %ld bytes\n",
@@ -54,6 +58,8 @@ void Reader::_inner_pcap_read_and_push() {
             _push_to_queue(pkt);
         }
     }
+    this->is_pause = true;
+    LOG_I("Pcap read over\n");
 }
 
 void Reader::run_counter(shared_ptr<PARSE_PKT> pkt) {

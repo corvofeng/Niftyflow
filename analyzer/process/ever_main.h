@@ -24,6 +24,7 @@
 #include "cnt_rule.h"
 #include <unordered_set>
 #include "message.h"
+#include <atomic>
 
 using std::vector;
 using std::map;
@@ -32,6 +33,7 @@ using std::unordered_set;
 
 class lcore_queue_conf;
 class Reader;
+
 
 /**
  * 2018-03-27: 添加了函数用来增加和删除规则
@@ -43,8 +45,19 @@ class EverflowMain
 {
 public:
 
-    EverflowMain();
+    static EverflowMain* instance() {
+        static EverflowMain eMain;
+        return &eMain;
+    }
+
     ~EverflowMain ();
+
+    /**
+     * 强制退出: 对于生产者, 消费者, 退出是分别进行的, 首先, 我们停止生产者
+     *       生产者停止后, 向所有队列中发送NULL, 表示此时已经没有生产者进行生产,
+     *       消费者收到最后一个为NULL的数据包时, 自动停止.
+     */
+    void make_quit();
 
     // 在调用reader_pause之后才可以调用增加删除规则, 暂停功能一定要慎用.
     // 会导致所有reader均暂停
@@ -65,6 +78,8 @@ public:
     void run();
     void join();
 private:
+    EverflowMain();
+
     int processer_cnt;    /**< 记录同时处理的processor个数 */
     int reader_cnt;       /**< 记录同时处理的reader个数 */
 

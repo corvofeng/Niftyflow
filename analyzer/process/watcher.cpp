@@ -7,11 +7,10 @@
 #include <hiredis/hiredis.h>
 #include "cJSON/cJSON.h"
 
-
 using std::vector;
 
 void Watcher::_inner_pubsub() {
-    LOG_D("In watcher pubsub\n");
+    LOG_I("In watcher pubsub\n");
 
     redisReply *reply;
     const char* _chanel_str = conf->redis_chanel;
@@ -46,7 +45,10 @@ void Watcher::_inner_pubsub() {
         } else {
             LOG_E("Reply with pubsub: " << rp << "\n");
         }
+        LOG_D("GET FORCE QUIT" << _force_quit << "\n");
+        if(_force_quit) break;
     }
+    LOG_I("Pubsub exit\n");
 }
 
 
@@ -186,13 +188,31 @@ void Watcher::send_init() {
     cJSON_Delete(jMsg);
 }
 
+void Watcher::make_quit() {
+    this->_force_quit = true;
+
+    cJSON *jMsg = cJSON_CreateObject();
+    cJSON_AddStringToObject(jMsg, "ACTION", "QUIT");
+    cJSON_AddNumberToObject(jMsg, "ANALYZER_ID", conf->analyzer_id);
+
+    char* s = cJSON_PrintUnformatted(jMsg);
+
+    Message m(s);
+    free(s);    // 使用cJSON_Print时会调用malloc, 需要进行释放
+    cJSON_Delete(jMsg);
+
+    this->_msg_queue->push(m);
+}
+
 void Watcher::_inner_push() {
-    LOG_D("In watcher push\n");
+    LOG_I("In watcher push\n");
     const char *_queue_str = conf->redis_queue;
 
     redisReply *reply;
     while(!stop) {
         Message m = _msg_queue->pop();
+        LOG_D("GET FORCE QUIT" << _force_quit << "\n");
+
         LOG_D("In queue: " << m.msg << "\n");
         reply = (redisReply*)redisCommand(this->c_redis_queue,
                             "LPUSH %s %s", _queue_str, m.msg.c_str());
@@ -203,7 +223,9 @@ void Watcher::_inner_push() {
         }
 
         freeReplyObject(reply);
+        if(_force_quit) break;
     }
+    LOG_I("Push queue over\n");
 }
 
 void Watcher::_inner_save_counter() {

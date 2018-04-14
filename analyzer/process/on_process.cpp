@@ -7,8 +7,8 @@
 #include "conf.h"       // for Conf::instance
 #include "trans.h"
 
-
-Processer::Processer(): _stop(false){
+Processer::Processer():
+    _stop(false), _force_quit(false), is_slow_over(true){
     conn = mysql_connection_setup(Conf::instance());
     for(int i = 0; i < BKT_SIZE; i++) {
         _bkts[i].b = new PKT_TRACE_T*[ROW_SIZE];
@@ -93,11 +93,10 @@ void Processer::_inner_slow_path() {
             memset(_bkt[i], 0, sizeof(PKT_TRACE_T) * COL_SIZE);
         }
 
-        {
-            Lock l(&is_over_mtx);
-            is_slow_over = true;
-        }
+        is_slow_over = true;
+        if(this->_force_quit) break;
     }
+    LOG_D("Inner slow path over\n");
 }
 
 void Processer::_inner_fast_path() {
@@ -107,6 +106,12 @@ void Processer::_inner_fast_path() {
     while(!_stop) {
         start = clock();
         shared_ptr<PARSE_PKT> pkt = this->q_->pop();
+
+        if(pkt == NULL) {   // 收到NULL, 表明生产者以停止生产, 退出.
+            LOG_I("Processer will quit\n");
+            break;
+        }
+
         LOG_D("src: " << inet_ntoa(pkt->ip_inner->ip_src) << "\n");
 
         // 确定桶中的索引
@@ -152,13 +157,14 @@ void Processer::_inner_fast_path() {
             _bkts[1].b = _bkts[2].b;
             _bkts[2].b = TMP;
 
-            {
-                Lock l(&is_over_mtx);
-                is_slow_over = false;
-            }
+            is_slow_over = false;
             start = clock();    // 重置时间
         }
     }
+    this->_force_quit = true;   // 停止慢路径
+    is_slow_over = false;       // 防止慢路径阻塞
+
+    LOG_D("Inner fast path over\n");
 }
 
 PKT_TRACE_T* Processer::find_trace_in_bkt(PKT_TRACE_T* bkt_slot,
