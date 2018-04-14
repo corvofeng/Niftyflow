@@ -16,6 +16,12 @@ from settings import mysql_close
 
 class BaseHandler(tornado.web.RequestHandler):
 
+    def write_error(self, status_code, **kwargs):
+        if status_code == 404:
+            self.render("404.html")
+        else:
+            self.render("error.html")
+
     def set_default_headers(self):
         """ 目前允许跨域访问
         """
@@ -49,3 +55,6 @@ class BaseHandler(tornado.web.RequestHandler):
             app_log.debug('free db')
             mysql_close(self.db)
 
+class My404Handler(BaseHandler):
+    def prepare(self):
+        raise tornado.web.HTTPError(404)

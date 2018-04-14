@@ -7,6 +7,8 @@
 > * cJSON    : JSON的读写 随项目附带
 > * Libevent : 仅在测试时使用 sudo apt-get install libevent-dev
 
+程序虽为C++写成, 但其中并没有包含任何的继承关系. 仅利用C++中的一些简单特性,
+是`C With Class`.
 
 本程序中用到一些代码片段[gist][3], 可以直接运行. 有关详细的开发文档, 其实大家看
 代码基本就很全了, 另外, 分析器的架构请查看doc文件夹.
@@ -212,9 +214,10 @@ PubSub可以简化控制器的逻辑.
 1. Logger
 2. Conf
 3. Watcher
+4. EverflowMain
 
-如果你最后发现EverflowMain也需要的话, 也可以添加. 这几个单例全部在main函数中
-初始化, 这个时候没有创建任何线程, 不存在需要加锁来保证唯一性.
+这几个单例全部在main函数中初始化, 这个时候没有创建任何线程,
+不存在需要加锁来保证唯一性.
 
 
 ## 程序中内存泄露问题
@@ -232,12 +235,12 @@ PubSub可以简化控制器的逻辑.
 
   其实, `DPDK`数据包不进行释放也是可以的, 这样可以省一步拷贝的操作. 由于程序中
 使用了智能指针, 可以在`trace`数据构造完成后进行释放. 是不是很美好.
-醒醒吧少年, 你很可能会忘记释放的. 如果想要减少这一次拷贝操作, 那么,
-请一定要使用`valgrind`进行充分的测试. 图便宜也是要付出代价的.
+
+  醒醒吧少年, 你很可能会忘记释放的. 如果想要减少这一次拷贝操作, 那么,
+请一定要为`valgrind`打补丁编译后进行充分的测试. 图便宜也是要付出代价的.
 
 
 [1]: https://stackoverflow.com/questions/5875318/is-there-anyway-to-pass-arguments-to-a-signal-handler
 [2]: http://www.cplusplus.com/forum/unices/66284/
 [3]: https://gist.github.com/corvofeng
-
 

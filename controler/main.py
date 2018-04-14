@@ -12,7 +12,9 @@ vim: set ts=4 sw=4 tw=99 et:
 import settings
 import tornado.ioloop
 import tornado.web
+from  tornado import web
 from tornado.log import app_log
+from handlers.base_handler import My404Handler
 from tornado.options import define, options
 from handlers.test_handler import TeshHandler
 from handlers.trace_filter_handler import TraceFilterHandler
@@ -31,10 +33,12 @@ class Application(tornado.web.Application):
             (r'/v1/tracce_filter', TraceFilterHandler, dict(with_db=True)),
             (r'/v1/counter_filter', CounterFilterHandler, dict(with_db=True)),
             (r'/v1/probe_construct', ProbeConstructHandler, dict(with_db=False)),
+            (r"/api/(.*)", web.StaticFileHandler, {"path":"../doc/apidoc", "default_filename": "index.html"}),
         ]
         settings = dict(
             debug=options.debug,
             autoreload=options.autoreload,
+            default_handler_class=My404Handler,
         )
 
         super(Application, self).__init__(handlers, **settings)
