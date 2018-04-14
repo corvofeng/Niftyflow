@@ -40,6 +40,11 @@ def parse_request(msg):
     except json.decoder.JSONDecodeError as e:
         app_log.error("Get wrong msg {}".format(msg))
 
+def deal_quit(msg):
+    """有客户端请求退出
+    """
+
+    pass
 
 def deal_alert(msg):
     """处理预警
@@ -59,9 +64,17 @@ def deal_request(msg):
         ret_msg['ANALYZER_ID'] = ret_analyzer_id
         ret_msg['MESSAGE'] = init_msg
         generate_sub(json.dumps(ret_msg))
+    elif msg.get('ACTION') == 'QUIT':
+        ret_msg = {}
+        quit_msg = {'COMMAND': 'QUIT'}
+
+        ret_msg['ANALYZER_ID'] = ret_analyzer_id
+        ret_msg['MESSAGE'] = quit_msg
+
+        generate_sub(json.dumps(ret_msg))
 
     else:
-        app_log.error("Unknow action")
+        app_log.error('Unknow action {}'.format(msg.get('ACTION')))
 
 
 def on_init():
@@ -70,6 +83,7 @@ def on_init():
     ret_msg = {}
 
     ret_msg['COUNTER'] = get_counter_rules(db)
+    app_log.debug(['COUNTER'])
     ret_msg['SWH_ID'] = None   # TODO: 添加出口交换机的数组
 
     return ret_msg
@@ -83,7 +97,7 @@ def get_counter_rules(conn):
             sql = "SELECT * FROM counter_rule WHERE is_valid = 1"
             cursor.execute(sql)
             rules = cursor.fetchall()
-            print(rules)
+            app_log.info(rules)
 
             # [{'id': 1, 'rule_name': '""',
             #  'ip_src': '192.3.2.3', 'ip_dst': '',
@@ -100,7 +114,9 @@ def get_counter_rules(conn):
         app_log.debug('Get rule err {}'.format(e))
 
     finally:
-        mysql_close(db)
+        mysql_close(conn)
+
+    return counter_rules
 
 
 def generate_sub(msg):
