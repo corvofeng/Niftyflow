@@ -18,6 +18,7 @@
 #include "con_queue.h"
 #include <memory>
 #include "packet.h"
+#include <atomic>
 
 /**
  *  快慢路径中的切换使用了自旋锁, 真正的处理过程中, 执行较慢的一个线程将会拖慢
@@ -69,7 +70,9 @@ private:
     Processer(Processer&); // 禁止拷贝
 
     int proc_id;
-    bool _stop;
+    bool _stop;         // 自己主动退出
+
+    std::atomic_bool _force_quit;  // 强制退出
     pthread_t t_fast;
     pthread_t t_slow;
 
@@ -77,8 +80,7 @@ private:
         PKT_TRACE_T **b;                /**< 二维数组, 在构造函数中初始化 */
     }  _bkts[BKT_SIZE];                 /**<  三个hash桶  */
 
-    bool is_slow_over;
-    pthread_mutex_t is_over_mtx;
+    std::atomic_bool is_slow_over;
 
     shared_ptr<PKT_QUEUE> q_;   /**< USE shared_ptr Pointer */
     MYSQL* conn;                /**< MySQL连接对象          */
@@ -94,7 +96,7 @@ private:
                                     const PARSE_PKT* pkt);
 
 public:
-    Processer();
+    explicit Processer();
     ~Processer();
     void run() {
         pthread_create(&t_fast, NULL, &Processer::fast_path_process, this);

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 2.8)
 
 project(Analyzer)
 
@@ -8,13 +8,15 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11 ")
+ADD_DEFINITIONS(-mssse3 -D__STDC_LIMIT_MACROS)   # FOR DPDK
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -std=c++11")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Werror ")
 
 
 include(cmake/FindPCAP.cmake)     # 需要pcap库解析pcap文件
 include(cmake/FindMySQL.cmake)    # 结果存储至MySQL
 include(cmake/FindRedis.cmake)    # 从控制器中读取配置, 上传预警信息
+include(cmake/Finddpdk.cmake)    # 从控制器中读取配置, 上传预警信息
 # include(cmake/FindLibEvent.cmake)
 
 add_subdirectory(input)
@@ -35,6 +37,7 @@ include_directories(
                     ${PROJECT_SOURCE_DIR}/process
                     ${PROJECT_SOURCE_DIR}/common
                     ${PROJECT_SOURCE_DIR}/libs
+                    ${DPDK_INCLUDE_DIR}
                     ${PROJECT_BINARY_DIR}   # for protobuf
                     )
 
@@ -55,4 +58,3 @@ add_executable(analyzer ${SOURCE_FILES})
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_BINARY_DIR}/bin)
 
 TARGET_LINK_LIBRARIES(analyzer reader trans process common cJSON event)
-

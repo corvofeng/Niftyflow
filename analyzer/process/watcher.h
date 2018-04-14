@@ -54,6 +54,7 @@
 #include <signal.h>
 #include <sys/time.h>
 #include <unistd.h>
+#include <atomic>
 
 using std::map;
 using std::shared_ptr;
@@ -71,8 +72,8 @@ class Conf;
 class Watcher
 {
 private:
-    Watcher():_counter_map(NULL), _main(NULL),
-                stop(false), is_command_init_ok(false)
+    explicit Watcher():_counter_map(NULL), _main(NULL),
+                stop(false), is_command_init_ok(false), _force_quit(false)
     {
         /* zero interval means no reset of timer */
         timerclear(&counter_tval.it_interval);
@@ -141,12 +142,14 @@ private:
     redisContext *c_redis_pubsub; /**< redis连接 */
     redisContext *c_redis_queue;  /**< redis连接 */
 
-    bool stop;
+    bool stop;                    /**< 内部退出 */
+    std::atomic_bool _force_quit;            /**< 外部强制退出 */
     bool is_command_init_ok;      /**< 标记是否第一次获取初始化的请求结果 */
 
     struct itimerval counter_tval; /**< 计数器间隔时间差 */
 
 public:
+    void make_quit();
     void try_free() {
         if(c_mysql)
             mysql_close(c_mysql);
@@ -167,7 +170,10 @@ public:
         }
 
         Watcher* w = Watcher::instance();
+        if(w->_force_quit) return;
+
         w->_inner_save_counter();
+
 
         // 重复设置定时器
         (void) setitimer(ITIMER_REAL, &w->counter_tval, NULL);
@@ -177,8 +183,8 @@ public:
     // 开始run时, 马上进行计数
     void run() {
         (void) setitimer(ITIMER_REAL, &this->counter_tval, NULL);
-        pthread_create(&t_pubsub_chanel , NULL , &Watcher::pubsub_process     , this);
-        pthread_create(&t_push_queue    , NULL , &Watcher::push_queue_process , this);
+        pthread_create(&t_pubsub_chanel, NULL, &Watcher::pubsub_process    , this);
+        pthread_create(&t_push_queue   , NULL, &Watcher::push_queue_process, this);
     }
 
     void join() {

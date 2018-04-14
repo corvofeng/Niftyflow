@@ -1,10 +1,11 @@
 # Analyzer
 
 > 项目使用CMake进行构建, 使用到以下几个库
-> * MySQL    : MySQL 连接
-> * HiResdis : Redis 连接
-> * LibPacp  : 解析pcap文件
-> * cJSON    : JSON的读写
+> * MySQL    : MySQL 连接 sudo apt-get install libmysqlclient-dev
+> * HiResdis : Redis 连接 sudo apt-get install libhiredis-dev
+> * LibPacp  : 解析pcap文件 sudo apt-get install libpcap-dev
+> * cJSON    : JSON的读写 随项目附带
+> * Libevent : 仅在测试时使用 sudo apt-get install libevent-dev
 
 
 本程序中用到一些代码片段[gist][3], 可以直接运行. 有关详细的开发文档, 其实大家看
@@ -16,6 +17,7 @@
 QtCreater打开, 它对CMake支持良好, 尤其是cmake到了3.8之后, 可以使用cmake server.
 
 ```bash
+> export DPDK_DIR=/home/corvo/dpdk/x86_64-native-linuxapp-gcc # 指定DPDK的目录
 > cp conf/conf-example.json conf/conf.json   # 添加配置文件
 > mkdir build
 > cd build
@@ -52,6 +54,8 @@ DPDK的使用, 可以帮助我们快速获得数据包. 但是也有一点不好
   作者手头上没有可以使用的大型服务器进行测试, 只是简单的利用`VirtualBox`搭建了
 测试环境, 理论上`DPDK`的使用能够将接受效率提高8~10倍. 希望以后接手其他工作时,
 能有机器来进行性能测试吧.
+
+  DPDK测试时, 请在testpmd成功的情况下, 使用`sudo ./test/DPDKTest`.
 
   DPDK的环境配置, 请查看整个项目`doc`文件夹中的相关文档.
 

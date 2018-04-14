@@ -7,4 +7,6 @@ set(SOURCE_FILES ./common.cpp ./log.h ./packet.h
                 ./con_queue.h
                 ./trace.h)
 
-add_library(common ${SOURCE_FILES})
+add_library(common STATIC ${SOURCE_FILES})
+
+TARGET_LINK_LIBRARIES(common cJSON)

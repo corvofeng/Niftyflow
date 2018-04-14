@@ -46,7 +46,9 @@ private:
             redis_host(NULL),
             redis_auth(NULL),
             redis_chanel(NULL),
-            redis_queue(NULL) {}
+            redis_queue(NULL),
+            dpdk_port_mask(0)
+    {}
 public:
     int   analyzer_id;
     char* mysql_host;
@@ -61,6 +63,8 @@ public:
     char* redis_chanel;
     char* redis_queue;
 
+    int   dpdk_port_mask;
+
     static Conf* instance() {
         static Conf c;
         return &c;
@@ -73,6 +77,7 @@ public:
         }
 
         cJSON *jAnalyzer = cJSON_GetObjectItem(jConf, "id");
+        cJSON *jDPDK_port_mask = cJSON_GetObjectItem(jConf, "dpdk_port_mask");
 
         cJSON *jMysql = cJSON_GetObjectItem(jConf, "mysql");
         cJSON *host = cJSON_GetObjectItem(jMysql, "host");
@@ -90,56 +95,60 @@ public:
 
         bool parse_ok = false;
         do {
-            if(jAnalyzer->type == cJSON_Number) {
+            if(jAnalyzer && jAnalyzer->type == cJSON_Number) {
                 this->analyzer_id = jAnalyzer->valueint;
             } else break;
 
-            if(host->type==cJSON_String) {
+            if(host && host->type==cJSON_String) {
                 this->mysql_host = (char*)malloc(strlen(host->valuestring) + 1);
                 strcpy(this->mysql_host, host->valuestring);
             } else break;
 
-            if(port->type==cJSON_Number) {
+            if(port && port->type==cJSON_Number) {
                 this->mysql_port = port->valueint;
             } else break;
 
-            if(user->type==cJSON_String) {
+            if(user && user->type==cJSON_String) {
                 this->mysql_user = (char*)malloc(strlen(user->valuestring) + 1);
                 strcpy(this->mysql_user, user->valuestring);
             } else break;
 
-            if(password->type==cJSON_String) {
+            if(password && password->type==cJSON_String) {
                 this->mysql_password = (char*)malloc(strlen(password->valuestring)+1);
                 strcpy(this->mysql_password, password->valuestring);
             } else break;
 
-            if(database->type==cJSON_String) {
+            if(database && database->type==cJSON_String) {
                 this->mysql_database = (char*)malloc(strlen(database->valuestring) + 1);
                 strcpy(this->mysql_database, database->valuestring);
             } else break;
 
-            if(jhost->type==cJSON_String) {
+            if(jhost && jhost->type==cJSON_String) {
                 this->redis_host = (char*)malloc(strlen(jhost->valuestring) + 1);
                 strcpy(this->redis_host, jhost->valuestring);
             } else break;
 
-            if(jauth->type==cJSON_String) {
+            if(jauth && jauth->type==cJSON_String) {
                 this->redis_auth = (char*)malloc(strlen(jauth->valuestring) + 1);
                 strcpy(this->redis_auth, jauth->valuestring);
             } else break;
 
-            if(jport->type==cJSON_Number) {
+            if(jport && jport->type==cJSON_Number) {
                 this->redis_port = jport->valueint;
             } else break;
 
-            if(jchanel->type==cJSON_String) {
+            if(jchanel && jchanel->type==cJSON_String) {
                 this->redis_chanel = (char*)malloc(strlen(jchanel->valuestring) + 1);
                 strcpy(this->redis_chanel, jchanel->valuestring);
             } else break;
 
-            if(jqueue->type==cJSON_String) {
+            if(jqueue && jqueue->type==cJSON_String) {
                 this->redis_queue = (char*)malloc(strlen(jqueue->valuestring) + 1);
                 strcpy(this->redis_queue, jqueue->valuestring);
+            } else break;
+
+            if(jDPDK_port_mask && jDPDK_port_mask->type == cJSON_Number) {
+                this->dpdk_port_mask = jDPDK_port_mask->valueint;
             } else break;
 
             parse_ok = true;

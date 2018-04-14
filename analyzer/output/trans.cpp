@@ -181,7 +181,8 @@ void save_counter(MYSQL* conn, int rule_id, int analyzer_id, int cnt) {
 bool redis_test(const Conf* conf) {
     redisContext *c = redisConnect(conf->redis_host, conf->redis_port);
     if (c != NULL && c->err) {
-        LOG_E("Error: "<< c->errstr << "\n");
+        LOG_E("Error: " << c->errstr << "\n"
+             << "Please check the connect with telnet or redis-cli\n");
         // handle error
         return false;
     } else {
