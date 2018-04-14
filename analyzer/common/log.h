@@ -33,6 +33,12 @@
 enum Level { ERROR, INFO, WARNING, DEBUG };
 using std::runtime_error;
 
+#define C_RED   "\033[31m"
+#define C_GREEN "\033[32m"
+#define C_BLUE  "\033[34m"
+#define C_PINK  "\033[35m"
+#define C_CLEAR "\033[0m"
+
 /**
  * https://stackoverflow.com/questions/3165563/flexible-logger-class-using-standard-streams-in-c
  */
@@ -57,19 +63,36 @@ public:
         switch (l) {
             case Level::ERROR:
                 return "[ ERROR ]";
-                break;
             case Level::WARNING:
                 return "[WARNING]";
-                break;
             case Level::INFO:
                 return "[  INFO ]";
-                break;
             case Level::DEBUG:
                 return "[ DEBUG ]";
-                break;
             default:
                 return "[ ERROR ]";
         }
+    }
+
+    const char* lColorStart(Level l) {
+        if(this->m_out != &std::cout) return "";
+        switch (l) {
+            case Level::ERROR:
+                return C_RED;
+            case Level::WARNING:
+                return C_PINK;
+            case Level::INFO:
+                return C_GREEN;
+            case Level::DEBUG:
+                return C_BLUE;
+            default:
+                return C_PINK;
+        }
+    }
+
+    const char* lColorStop(Level l) {
+        if(this->m_out != &std::cout) return "";
+        return C_CLEAR;
     }
 
     // constructor is trivial (and ommited)
@@ -126,6 +149,8 @@ public:
  * logger << "This will be appended to myfile.log" << std::endl;
  */
 
+
+
 /**
  * 线程首先获取锁, 之后调用单例对象进行. 这是线程安全的日志记录方式
  * 修改前请了解你的所作所为. 修改后几乎需要重新编译所有的库
@@ -134,10 +159,13 @@ public:
     if(Logger::instance()->isLvlValid(lvl)) {                                  \
         Lock l(&(Logger::instance()->mtx));                                    \
         ((*Logger::instance())                                                 \
+            << Logger::instance()->lColorStart(lvl)                            \
             << Logger::lName(lvl)                                              \
             << "[" <<  __FILENAME__  << ":" << std::setw(3) << __LINE__ << "] " \
             << syscall(SYS_gettid) << " "                                      \
-            <<  msg);                                                          \
+            <<  msg                                                            \
+            << Logger::instance()->lColorStop(lvl)                             \
+        );                                                                     \
     }                                                                          \
   } while(0)
 

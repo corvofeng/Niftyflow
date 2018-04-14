@@ -63,14 +63,14 @@ cmdline
 reorder
 sched
 kni
-common_octeontx
+# common_octeontx
 bus_pci
 bus_vdev
-bus_dpaa
-bus_fslmc
+# bus_dpaa
+# bus_fslmc
 mempool_stack
-mempool_dpaa
-mempool_dpaa2
+#mempool_dpaa
+#mempool_dpaa2
 pmd_af_packet
 pmd_ark
 pmd_avf
@@ -78,8 +78,8 @@ pmd_avp
 pmd_bnxt
 pmd_bond
 pmd_cxgbe
-pmd_dpaa
-pmd_dpaa2
+# pmd_dpaa
+# pmd_dpaa2
 pmd_e1000
 pmd_ena
 pmd_enic
@@ -104,13 +104,13 @@ pmd_vmxnet3_uio
 pmd_bbdev_null
 pmd_null_crypto
 pmd_crypto_scheduler
-pmd_dpaa2_sec
-pmd_dpaa_sec
+# pmd_dpaa2_sec
+# pmd_dpaa_sec
 pmd_skeleton_event
 pmd_sw_event
 pmd_octeontx_ssovf
-pmd_dpaa_event
-pmd_dpaa2_event
+# pmd_dpaa_event
+# pmd_dpaa2_event
 mempool_octeontx
 pmd_octeontx
 pmd_opdl_event
@@ -141,6 +141,7 @@ find_package_handle_standard_args(dpdk DEFAULT_MSG
   DPDK_INCLUDE_DIR
   check_LIBRARIES)
 
+MESSAGE(STATUS "${check_LIBRARIES}")
 if(DPDK_FOUND)
   if(EXISTS ${WITH_DPDK_MLX5})
     list(APPEND check_LIBRARIES -libverbs)

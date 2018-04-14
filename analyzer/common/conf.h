@@ -163,7 +163,7 @@ public:
     }
 
     void try_clean() {
-        LOG_D("In conf delete\n");
+        LOG_D("In conf delete" << "\n");
         if(mysql_host)     free(mysql_host);
         if(mysql_user)     free(mysql_user);
         if(mysql_password) free(mysql_password);
@@ -176,6 +176,7 @@ public:
 
     ~Conf() {
         try_clean();
+        LOG_D("Conf delete success\n");
     }
 
 };

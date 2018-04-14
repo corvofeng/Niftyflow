@@ -13,5 +13,6 @@
     "auth": "...",
     "subscribe_chanel": "ever_chanel",
     "alert_queue": "ever_queue"
-  }
+  },
+  "dpdk_port_mask" : 1 
 }
