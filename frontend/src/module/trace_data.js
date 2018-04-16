@@ -122,8 +122,8 @@ var trace_data = {
       type: "POST",
       url: Conf.Conf['url_prefix'] + '/v1/tracce_filter',
       data: {
-        'start_time': '2018-03-30 03:00:00',
-        'end_time': '2018-03-30 23:00:00'
+        'start_time': '2018-04-14 11:30:00',
+        'end_time': '2018-04-14 11:50:00'
       },
       dataType: "text",
       success: function (resultData) {
