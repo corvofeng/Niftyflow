@@ -122,7 +122,8 @@ class TraceFilterHandler(BaseHandler):
 
             ret_rlts.append(r)
 
-        self.write_json(rlts)
+        access_log.debug('Old has {}, and after filter has {}'.format(len(rlts), len(ret_rlts)))
+        self.write_json(ret_rlts)
 
 """
 @api {post} /tracce_filter 请求Trace数据信息
