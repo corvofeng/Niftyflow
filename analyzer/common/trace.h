@@ -13,6 +13,8 @@
 #define TRACE_H_PAJBWR5N
 
 /**
+ * 2018-04-19: 修改了时间戳的计算方式, 再次感谢细心的师姐.
+ *
  * 2018-03-24: trace数据结构中的src_ip 与dst_ip数据结构进行了修改. 天啊!!!
  *
  * 2018-03-22: 添加了毫秒数的换算工具. int是32位的时间戳, 大概有$$21*10^{8}$$
@@ -113,7 +115,7 @@ uint32_t get_time_shift(const struct timeval& tv,
 
 // tv_sec % (24 * 3600)  计算当天偏移的秒数
 #define GET_TIMESTAMP_OF_DAY(tv)            \
-            ( ((tv.tv_sec) % (24 * 3600)) * 1000 + (tv.tv_usec))
+            ( (((tv.tv_sec) % (24 * 3600)) + 28800) * 1000 + (tv.tv_usec) / 1000)
 
 #define GET_CUR_DAY(tv) ((tv.tv_sec) - (tv.tv_sec)%(24 * 3600))
 
