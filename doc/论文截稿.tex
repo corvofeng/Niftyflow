@@ -114,7 +114,8 @@ Everflow提供的信息去调试网络错误. 控制器负责协调其它组件�
 
 \section{分析器功能概述}
 
-分析器读入产生的数据包后, 进行初步的处理, 而后存入存储器中供控制器使用.
+  分析器是一群分布式的服务器, 且每个服务器处理一部分的追踪流量.
+  分析器读入产生的数据包后, 进行初步的处理, 而后存入存储器中供控制器使用.
 在分析器中, 我们可以获得整条的数据包路径, 通过路径,
 我们可以得知是否有环, 或是有丢包现象. 以及对于特定的模式进行统计,
 对于探针来说也可以粗略的衡量延迟.
@@ -125,14 +126,25 @@ Everflow提供的信息去调试网络错误. 控制器负责协调其它组件�
 \section{存储器功能概述}
 
 存储器中, 主要存储分析器产生的结果, 包括网络流数据与相应规则的统计数据.
-同时, 存储器中, 也存储了全部的统计规则.
+使用MySQL进行数据存储, 具体的表格见\ref{chap:数据库设计}.
+
+  网络流数据表格中, 每一行对应给一个追踪记录. 包括数据包的每一跳信息, 以及
+数据包的元信息, 是否为探针, 是否有环, 是否丢包, 它们可以在查询时指定规则
+来进行过滤.
+
+  我们也在表格中存储了所有分析器产生的计数器, 表中的每一行代表着从分析器取得的
+计数器的ID以及, 记录时间, 分析器ID.
+
+  同时, 存储器中, 也存储了全部的统计规则.
+
 
 \section{控制器功能概述}
 
 控制器最重要的功能就是向外提供API接口. 除此之外, 控制器可以对分析器配置,
 向交换机中发送探针, 分析器对于探针会单独提供支持.
 目前我们能够提供的API包括 按时间查找数据流, 查询计数器的值, 添加探针,
-以及重大事件的预警功能.
+以及发生错误后的预警功能.
+
 
 \section{访问页面功能概述}
 
@@ -245,11 +257,13 @@ Reader与Processer均可以自行配置个数.
 \section{访问页面}
 
 下图\ref{fig:traffic_data_show}, \ref{fig:counter_data_show}
-分别展示了数据流量的显示以及 计数器结果的显示, 目前主要列出信息模块,
-搜索功能会接着完善.
+
+
+% 分别展示了数据流量的显示以及 计数器结果的显示, 目前主要列出信息模块,
+% 搜索功能会接着完善.
 
 \begin{figure}[htbp!]
-  \centering 
+  \centering
   \includegraphics[width=0.9\textwidth]{../img/traffic_data_show.png}
   \caption{Traffic data}
   \label{fig:traffic_data_show}
@@ -337,11 +351,11 @@ Reader与Processer均可以自行配置个数.
     \caption{控制器命令}
     \label{tbl:message}
     \begin{tabular}{lllll}
-    COMMAND      & 解释                                   & 具体报文                            \\ \hline
-    ADD\_RULE    & 增加规则                                 & "COUNTER": {[}\{"ID":1\} .. {]}  \\
-    DEL\_RULE    & 删除规则                                 & "COUNTER": {[}1, 2,3{]}          \\
-    ADD\_SWH\_ID & 增加交换机ID | "SWH\_ID" : {[}13, 4, 4{]} &                                 \\
-    DEL\_SWH\_ID & 删除交换机ID | "SWH\_ID" : {[}23,{]}      &                                \\ \hline
+    COMMAND      & 解释         & 具体报文                         \\ \hline
+    ADD\_RULE    & 增加规则     & "COUNTER": {[}\{"ID":1\} .. {]}  \\
+    DEL\_RULE    & 删除规则     & "COUNTER": {[}1, 2,3{]}          \\
+    ADD\_SWH\_ID & 增加交换机ID & "SWH\_ID" : {[}13, 4, 4{]}       \\
+    DEL\_SWH\_ID & 删除交换机ID & "SWH\_ID" : {[}23,{]}            \\ \hline
     \end{tabular}
 \end{table}
 
@@ -640,9 +654,11 @@ MySQL主要支持百万级别的数据, 因此, 在正式投入使用时,
 
 我建议数据保存时间最好不要超过1个月, 有了问题需要尽快解决.
 
-\chapter{主要数据结构及算法}\label{chap:主要数据结构及算法}
+\chapter{主要数据结构及算法}
+\label{chap:主要数据结构及算法}
 
 \section{算法}
+\label{chap:主要算法说明}
 
 \textbf{检测环路算法}: 检测环路应该是几个算法中最为简单的一个,
 只需要遍历数据流的所有节点, 如果不存在相同的节点,
@@ -702,7 +718,6 @@ MySQL主要支持百万级别的数据, 因此, 在正式投入使用时,
 的结果, 之后可能会增加统计功能, 用以确定和解决程序的瓶颈.
 
 \begin{lstlisting}[caption=数据结构,frame=tlrb]{Name}
-
 hash_backet* H0, H1, H2;    // 三个hash数据桶
 bool is_slow_over = true;   // 标示慢路径是否完成处理
 Mutex lock;                 // 互斥锁, 防止快慢路径同时对数据进行修改
@@ -711,7 +726,6 @@ Mutex lock;                 // 互斥锁, 防止快慢路径同时对数据进�
 
 \noindent\begin{minipage}{.55\textwidth}
 \begin{lstlisting}[caption=快路径线程,frame=tlrb]{Name}
-
 clock_t start = clock();
 while(!stop) {
   p = GetPacket();
@@ -834,6 +848,7 @@ typedef struct{
 进入慢路径.
 
 \section{数据库设计}
+\label(chap:数据库设计)
 
 存储器中的结构: 使用关系型数据库进行存储.
 
