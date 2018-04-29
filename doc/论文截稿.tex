@@ -8,11 +8,11 @@
 服务器与服务器之间几乎完全是通过现代网络所连接.
 用户对网络性能的要求日益扩大, 一些微小故障, 很可能会造成用户体验的下降,
 特别是在某些交互敏感的场合. 服务的质量必须得到保证. 可是对于庞大的系统,
-各种问题的发生是无法避免的. 我们 只能更快, 更精准的解决问题,
+各种问题的发生是无法避免的. 我们只能更快, 更精准的解决问题,
 以此将故障的危害降到最低. 这也是对新时代的检测调试 工具的挑战.
 
 面对大型复杂数据中心的调试以及错误, 如果仍然使用简陋的单机调试手段,
-例如ping, tracerout, 也许可以解决问题, 但其代价与耗时,
+例如\texttt{ping}, \texttt{tracerout}, 也许可以解决问题, 但其代价与耗时,
 是无法满足运营要求的. 进而, 许多公司提出了自己的方案,
 甚至为自己搭建的集群开发出一套相匹配的网络调试工具.
 
@@ -25,9 +25,8 @@
 本课题参照微软提出的Everflow故障检测方案,
 设计实现一款面向数据中心网络的流量分析与故障检测工具.
 
-为了解决现实存在的数据中心的网络异常问题, 利用现有交换机的\textbf{Match and
-Mirror} 机制, 将特定的数据包进行镜像. 分析镜像后的数据包,
-以达到对网络中存在问题的检测.
+为了解决现实存在的数据中心的网络异常问题, 利用现有交换机的\textbf{Match and Mirror}
+机制, 将特定的数据包进行镜像. 分析镜像后的数据包, 以达到对网络中存在问题的检测.
 
 本次设计中, 将会基于通用的处理器平台, 关注于DCN中环路的检测, 结果保存,
 预警, 数据展示, 探针构造几个方面. 初步实现Everflow功能的基础上,
@@ -211,22 +210,15 @@ Reader与Processer均可以自行配置个数.
 这里只列出问题的名称. 在程序中的问题及解决\ref{chap:程序中的问题及解决}中详细列出.
 
 \begin{itemize}
-\item
-  毫秒级时间戳的使用
-\item
-  与控制器的交互问题
-\item
-  热重启与容灾问题
-\item
-  Counter计数器表格的设计问题
-\item
-  程序中内存泄露问题
-\item
-  定时器与signal
-\item
-  与控制器的交互问题
+  \item 毫秒级时间戳的使用
+  \item 与控制器的交互问题
+  \item Counter计数器表格的设计问题
+  \item 程序中内存泄露问题
+  \item 定时器与signal
+  \item 分析器的启动过程
+  \item 与控制器的交互问题
+  \item 热重启与容灾问题
 \end{itemize}
-
 \section{控制器}
 
 控制器采用\texttt{Python}实现. 使用了\texttt{Tornado}进行实现. 它向下控制分析器
@@ -241,8 +233,9 @@ Reader与Processer均可以自行配置个数.
   \label{fig:contoler_arch}
 \end{figure}
 
-控制器中, 涉及到两个方面, 一是与存储器的交互, 这里,我们的存储器使用\texttt{MySQL};
-二是与分析器进行交互, 但通过\texttt{Redis}进行解耦.
+控制器中, 涉及到两个方面:
+一是与存储器的交互, 这里, 我们的存储器使用\texttt{MySQL};
+二是与分析器进行交互, 通过\texttt{Redis}进行解耦.
 
 
 \textbf{与存储器交互}: 允许用户读取Trace记录, 读取统计信息. 允许用户读写统计规则,
@@ -282,6 +275,7 @@ Reader与Processer均可以自行配置个数.
 \chapter{接口设计}\label{chap:接口设计}
 
 \section{分析器, 控制器接口设计}
+\label{sec:分析器, 控制器接口设计}
 
 \subsection{启动过程}
 
@@ -516,7 +510,7 @@ $$ \frac{2 \times 10^{9} ms }{24 \times 3600 \times 1000} = 23 Days$$
 日期字段可以通过MySQL的trigger进行设置.
 
 
-\begin{lstlisting} [caption=Triger设置]{Name}
+\begin{lstlisting} [caption=Triger设置]{SQL}
 CREATE TRIGGER `fdate_set` BEFORE INSERT ON `tbl_trace_data`
 FOR EACH ROW BEGIN
   SET NEW.fdate = CAST( DATE_FORMAT(NOW(),'%Y%m%d') AS UNSIGNED);
@@ -581,10 +575,26 @@ PubSub可以简化控制器的逻辑.
 > (integer) 1
 \end{lstlisting}
 
+
+\section{分析器启动过程}
+\label{sec:分析器启动过程}
+
+  每台分析器启动时, 首先向控制器发送请求. 获取计数器规则, 以及出口交换机ID,
+
+  但是如何使控制器得知是哪一台分析器呢? 在控制器处理请求后, 又如何传回给分析器.
+
+ 在程序中是这样解决的: 在向控制器发请求时, 分析器必须带上自己的ID作为请求标识.
+在控制器处理结束后, 返回的报文中也会携带有分析器的ID, 所有的分析器获取到广播后,
+对比收到的信息中的分析器ID与自己的ID. 如果ID相同, 则说明是对自己的操作, 否则
+丢弃该报文.
+
+  另外, 对于返回报文中ID为0的情况, 这是一种广播的形式, 所有的分析器必须按照广播
+报文进行应答.
+
 \section{热重启与容灾问题}
 
 在考虑到控制器与分析器的交互后,
-直接启动分析器的情况已经在@Analyer初始化及通信 过程中提到这个问题,
+直接启动分析器的情况已经在分析器启动过程\ref{sec:分析器启动过程}中提到这个问题,
 但是控制器的热重启与容灾也成为了一个问题.
 
 \subsection{热重启}
@@ -639,6 +649,7 @@ PubSub可以简化控制器的逻辑.
 但是在写程序的过程中, 你很可能会忘记释放的. 如果想要减少这一次拷贝操作, 那么,
 请一定要为\texttt{valgrind}打补丁编译后进行充分的测试.
 图便宜也是要付出代价的.
+
 
 \section{Counter计数器表格的设计问题}
 
@@ -776,7 +787,7 @@ while(!stop) {
 \textbf{GRE数据包}
 
 \begin{figure}[htbp!]
-  \centering 
+  \centering
   \includegraphics[width=0.6\textwidth]{../img/format_gre.png}
   \caption{GRE packet}
   \label{fig:gre_packet}
@@ -865,6 +876,7 @@ typedef struct{
 
 
 \begin{table}[]
+    \centering
     \caption{tbl\_traffic\_data}   % \caption{} 改为 \captionof{table}{}
     \begin{tabular}{llll}   \hline
     Field          & Type          & Comment                   \\ \hline
@@ -885,6 +897,7 @@ typedef struct{
 存储计数器的数据表相对简单, 主要记录分析器ID, 计数值以及产生时间.
 
 \begin{table}[]
+    \centering
     \caption{tbl\_counter}
     \label{tbl_counter}
     \begin{tabular}{lll} \hline
@@ -955,10 +968,55 @@ typedef struct{
 但请知悉所有用户均是在一个线程中进行轮转, 如果某个用户请求时间过久,
 将会严重影响其他用户的查询体验.
 
-% \chapter{程序部署}
+\section{有关预警方式的选择}
+
+  预警也是本程序应有的功能, 为了开发以及未来其他接入功能的开发, 我采用了\texttt{PushBear}
+服务, 用户可以直接扫描二维码关注预警频道. 而后将会收到预警信息. 也可以在任意
+时刻取消订阅.
+
+\begin{figure}[htbp]
+
+
+\centering
+\begin{minipage}{0.76\textwidth}
+
+    \includegraphics[width=1\textwidth]{../img/pushbear.png}
+    \caption{PushBear官网}
+    \label{fig:pushbear}
+
+\end{minipage} \hfill
+\begin{minipage}{0.22\textwidth}
+
+\centering
+    \includegraphics[width=1\textwidth]{../img/push_example.jpg}
+    \caption{推送样例}
+    \label{fig:push_example}
+\end{minipage}
+
+\end{figure}
+
+如图\ref{fig:pushbear}为官网, 右侧\ref{fig:push_example}为推送样例.
+
+%  https://pushbear.ftqq.com/admin/#/
+
+
+\chapter{程序部署}
+
+  本次的程序设计主要分为三个部分, 分析器, 存储器以及控制器, 展示页面由控制器
+负责加载. 承接上文分析器控制接口设计\ref{sec:分析器, 控制器接口设计}, 分析器, 
+控制器, 与存储器之间是不存在耦合的, 均可进行单独的部署.
+
+  它们之间唯一需要的只有TCP连接. 另外, 有关Redis服务器, 我选择与存储器放置在一台
+服务器上. 最主要的原因就是Redis以及MySQL的存在, 就是为了连接分析器与控制器,
+放置在一台服务器上符合它们的作用.
+
+  另外, 分析器可以在多台PC进行部署, 这是由于一条路径上的所有数据包都会根据hash操作
+分配至同一个分析器中. 可以利用这一特性, 进行横向扩展来提高系统的吞吐量.
+
+  有关详细的部署操作, 在代码的文档中均有记录, 在此不进行赘述.
 
 % \chapter{性能测试情况}
 
 % \chapter{扩展}
 
-% \chapter{致谢}
+
