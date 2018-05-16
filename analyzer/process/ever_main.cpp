@@ -22,36 +22,36 @@ EverflowMain::EverflowMain() {
     }
 
     // Use pcap
-    // pcap_t * p = pcap_open_offline(file.c_str(), errbuff);
-    // std::string file = "/home/corvo/grecap.cap";
-    // pcap_vec.push_back(p);
-    // for(int i = 0; i < reader_cnt && i < pcap_vec.size(); i++) {
-    //     auto r = shared_ptr<Reader>(new Reader());
-    //     r->set_mode(M_PCAP);
-    //     r->bind_queue_vec(&this->queue_vec);
-    //     r->bind_pcap(pcap_vec[i]);
-    //     r->bind_counter_map(&this->counter_map);
-    //     reader_vec.push_back(r);
-    // }
-
-    // Use DPDK
-    for(int i = 0; i < reader_cnt; i++) {
+    std::string file = "/home/corvo/out.pcap";
+    pcap_t * p = pcap_open_offline(file.c_str(), errbuff);
+    pcap_vec.push_back(p);
+    for(int i = 0; i < reader_cnt && i < pcap_vec.size(); i++) {
         auto r = shared_ptr<Reader>(new Reader());
-        lcore_queue_conf* lcore_conf = new lcore_queue_conf();
-
-        unsigned lcore_id = rte_lcore_id();
-        r->set_mode(M_DPDK);
-
+        r->set_mode(M_PCAP);
         r->bind_queue_vec(&this->queue_vec);
-        dpdk_initer(lcore_conf, Conf::instance());  // dpdk 初始化port信息
-
-        r->bind_dpdk(lcore_conf, lcore_id);
+        r->bind_pcap(pcap_vec[i]);
         r->bind_counter_map(&this->counter_map);
-
-        lcore_vec.push_back(lcore_conf);
         reader_vec.push_back(r);
     }
-    check_all_ports_link_status(Conf::instance());
+
+    // Use DPDK
+    // for(int i = 0; i < reader_cnt; i++) {
+    //     auto r = shared_ptr<Reader>(new Reader());
+    //     lcore_queue_conf* lcore_conf = new lcore_queue_conf();
+
+    //     unsigned lcore_id = rte_lcore_id();
+    //     r->set_mode(M_DPDK);
+
+    //     r->bind_queue_vec(&this->queue_vec);
+    //     dpdk_initer(lcore_conf, Conf::instance());  // dpdk 初始化port信息
+
+    //     r->bind_dpdk(lcore_conf, lcore_id);
+    //     r->bind_counter_map(&this->counter_map);
+
+    //     lcore_vec.push_back(lcore_conf);
+    //     reader_vec.push_back(r);
+    // }
+    // check_all_ports_link_status(Conf::instance());
 }
 
 void EverflowMain::run() {

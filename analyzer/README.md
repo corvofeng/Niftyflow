@@ -89,11 +89,14 @@ DPDK的使用, 可以帮助我们快速获得数据包. 但是也有一点不好
 > 有这么一种解决方式: 可以通过判断time_start的偏移, 如果偏移过大, 则认为它是
 > 第一天的数据, 也就是03-22的数据. 下面只是列了最简单的Trigger设置.
 
+
 ```sql
+DELIMITER $$
 CREATE TRIGGER `fdate_set` BEFORE INSERT ON `tbl_trace_data`
 FOR EACH ROW BEGIN
   SET NEW.fdate = CAST( DATE_FORMAT(NOW(),'%Y%m%d') AS UNSIGNED);
-END
+END$$
+DELIMITER ;
 ```
 
 ### Counter计数器表格的设计问题
