@@ -143,6 +143,10 @@ public:
         LOG_D("Creat Reader process\n");
         if(M_PCAP == mode) {    // PCAP模式
             LOG_I("In PCAP mode start!!!\n");
+            LOG_D(FMT("pcap       : %d\n", !(_pcap == NULL)));
+            LOG_D(FMT("queue_vec  : %d\n", !(_queue_vec == NULL)));
+            LOG_D(FMT("counter_map: %d\n", !(_counter_map == NULL)));
+
             if(!_pcap || !_queue_vec || !_counter_map) {
                 LOG_D("Must bind queue vec and pcap, then called run\n");
                 throw std::runtime_error("Must bind queue and pcap");

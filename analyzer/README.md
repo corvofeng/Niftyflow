@@ -102,6 +102,15 @@ FOR EACH ROW BEGIN
   SET NEW.fdate = CAST( DATE_FORMAT(NOW(),'%Y%m%d') AS UNSIGNED);
 END$$
 DELIMITER ;
+
+DELIMITER $$
+CREATE TRIGGER `fdate_set_counter` BEFORE INSERT ON  `tbl_counter` 
+FOR EACH
+ROW BEGIN 
+SET NEW.fdate = CAST( DATE_FORMAT( NOW( ) ,  '%Y%m%d' ) AS UNSIGNED ) ;
+END$$
+DELIMITER ;
+
 ```
 
 ### Counter计数器表格的设计问题
