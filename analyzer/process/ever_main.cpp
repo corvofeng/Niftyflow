@@ -21,10 +21,22 @@ EverflowMain::EverflowMain() {
         queue_vec.push_back(q);
     }
 
-    // Use pcap
-    std::string file = "/home/corvo/out.pcap";
-    pcap_t * p = pcap_open_offline(file.c_str(), errbuff);
+    // Use pcap offline
+    // std::string file = "/home/corvo/out.pcap";
+    // pcap_t * p = pcap_open_offline(file.c_str(), errbuff);
+
+    // Use pcap live
+    std::string dev = "lo";
+    // pcap_t *pcap_open_live(const char *device, int snaplen,
+    //           int promisc, int to_ms, char *errbuf);
+    pcap_t *p = pcap_open_live(dev.c_str(), BUFSIZ, 1, -1, errbuff);
+
+    if(p == NULL) {
+        LOG_E(FMT("pcap_open_live(): %s\n", errbuff));
+        exit(-1);
+    }
     pcap_vec.push_back(p);
+
     for(int i = 0; i < reader_cnt && i < pcap_vec.size(); i++) {
         auto r = shared_ptr<Reader>(new Reader());
         r->set_mode(M_PCAP);

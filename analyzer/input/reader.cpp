@@ -130,7 +130,7 @@ void Reader::_inner_pcap_read_and_push() {
                      header->len));
 
         shared_ptr<PARSE_PKT> pkt = _pkt_generater(header, data);
-        if(pkt) {
+        if(pkt) {   // 非GRE数据包, 默认丢弃
             run_counter(pkt);
             _push_to_queue(pkt);
         }
@@ -243,7 +243,7 @@ static int pkt_init(shared_ptr<PARSE_PKT> p) {
             LOG_D("   Protocol: GRE\n");
             break;
         default:
-            LOG_E("   Protocol: unknown\n");
+            LOG_W("   Protocol: unknown\n");
             return -1;
     }
     p->gre = (struct sniff_std_gre*)(p->_data + SIZE_ETHERNET + size_ip_outer);

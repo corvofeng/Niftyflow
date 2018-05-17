@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     signal(SIGTERM, signal_handler);
 
     //  Init log
-    Logger::instance()->init(&std::cout, Level::DEBUG);
+    Logger::instance()->init(&std::cout, Level::INFO);
 
     // Init config
     std::ifstream input("../conf/conf.json");

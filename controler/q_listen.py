@@ -23,6 +23,7 @@ from settings import options
 def q_listen():
     while True:
         msg = yield tornado.gen.Task(redis_client_queue.blpop, options.redis_queue)
+        app_log.info("Get msg {}".format(msg))
         parse_request(msg)
 
 

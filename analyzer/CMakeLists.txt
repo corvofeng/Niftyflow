@@ -17,7 +17,7 @@ include(cmake/FindPCAP.cmake)     # 需要pcap库解析pcap文件
 include(cmake/FindMySQL.cmake)    # 结果存储至MySQL
 include(cmake/FindRedis.cmake)    # 从控制器中读取配置, 上传预警信息
 include(cmake/Finddpdk.cmake)    # 从控制器中读取配置, 上传预警信息
-# include(cmake/FindLibEvent.cmake)
+include(cmake/FindLibEvent.cmake)
 
 add_subdirectory(input)
 add_subdirectory(process)
