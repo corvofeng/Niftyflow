@@ -61,6 +61,11 @@ DPDK的使用, 可以帮助我们快速获得数据包. 但是也有一点不好
 
   DPDK的环境配置, 请查看整个项目`doc`文件夹中的相关文档.
 
+```bash
+> wget http://dpdk.org/browse/dpdk-stable/snapshot/dpdk-stable-18.02.tar.xz
+> make install T=x86_64-native-linuxapp-gcc -j8
+```
+
 
 ## 数据库问题
 
