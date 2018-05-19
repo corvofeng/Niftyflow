@@ -13,6 +13,8 @@
 #define WATCHER_H_2RGQCSXG
 
 /**
+ * 2018-05-19: 修改了定时器函数, 每20s将会打印当前所有队列中的全部数据包数目.
+ *
  * 2018-03-30: 其实是29号的工作, 但我觉得29号写的太多了, 决定预先使用一天.
  *              主要是将Watcher改为了单例模式, 主要是为了能在信号处理函数中被
  *              截获并调用相关函数.
@@ -62,6 +64,8 @@ using std::unordered_set;
 class EverflowMain;
 class Conf;
 
+#define TIME_VAL 20   /* 20 second timeout */
+
 /**
  * @brief 这是个类中包含了两个独立于主程序的线程, 一个负责向队列中推送信息,
  *       另一个线程用于读取Pubsub下, 控制器发送的控制指令, 初始化以及更新
@@ -79,7 +83,7 @@ private:
         timerclear(&counter_tval.it_interval);
         timerclear(&counter_tval.it_value);
 
-        counter_tval.it_value.tv_sec = 20;  /* 20 second timeout */
+        counter_tval.it_value.tv_sec = TIME_VAL;
         pthread_mutex_init(&_counter_map_mtx, NULL);
     }
 
@@ -163,7 +167,7 @@ public:
     }
 
     // 此函数是不能被主动调用的, 并且只能被SIGALRM激活
-    static void timely_save_counter(int signo) {
+    static void timely_func(int signo) {
         if(signo != SIGALRM) {
             LOG_E("This function can't be called\n");
             return ;
@@ -173,11 +177,14 @@ public:
         if(w->_force_quit) return;
 
         w->_inner_save_counter();
-
+        w->_inner_calculte_pcaket();
 
         // 重复设置定时器
         (void) setitimer(ITIMER_REAL, &w->counter_tval, NULL);
     }
+
+    // 统计所有队列中现有的数据包数目
+    void _inner_calculte_pcaket();
 
     // 以下几个函数均是线程相关的定义函数, 与真正的逻辑关系不大
     // 开始run时, 马上进行计数

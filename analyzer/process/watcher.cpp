@@ -128,10 +128,10 @@ void Watcher::command_parse(char *commands) {
 
             int flag;
             flag = inet_aton(jIp_src->valuestring, &r.ip_src);
-            if(flag == 0) LOG_E("Parse ip failed\n");
+            if(flag == 0) LOG_E("Parse SRC ip failed\n");
 
             flag = inet_aton(jIp_dst->valuestring, &r.ip_dst);
-            if(flag == 0) LOG_E("Parse ip failed\n");
+            if(flag == 0) LOG_E("Parse DST ip failed\n");
 
             r.switch_id = jSwh_id->valueint;
             r.protocol = jPtl->valueint;
@@ -263,7 +263,16 @@ void Watcher::init(Conf* conf, EverflowMain* main) {
     this->_counter_map = main->get_counter_map();
 
     // 添加定时器
-    (void) signal(SIGALRM, Watcher::timely_save_counter);
+    (void) signal(SIGALRM, Watcher::timely_func);
+}
+
+void Watcher::_inner_calculte_pcaket() {
+    vector<shared_ptr<PKT_QUEUE>> * p_vec = this->_main->get_queue_vec();
+    int pkt_cnt = 0;
+    for(int i = 0; i < p_vec->size(); i++) {
+        pkt_cnt += (*p_vec)[i]->size();
+    }
+    LOG_I(FMT("After %ds. we has %d packets\n", TIME_VAL, pkt_cnt));
 }
 
 void Watcher::init_connect() {

@@ -103,9 +103,12 @@ void Processer::_inner_fast_path() {
     LOG_D("Inner fast path\n");
 
     clock_t start = clock();
+    int pkt_cnt = 0;
+
     while(!_stop) {
         start = clock();
         shared_ptr<PARSE_PKT> pkt = this->q_->pop();
+        pkt_cnt += 1;
 
         if(pkt == NULL) {   // 收到NULL, 表明生产者以停止生产, 退出.
             LOG_I("Processer will quit\n");
@@ -156,6 +159,9 @@ void Processer::_inner_fast_path() {
             _bkts[0].b = _bkts[1].b;
             _bkts[1].b = _bkts[2].b;
             _bkts[2].b = TMP;
+
+            LOG_I(FMT("Now we process %d\n", pkt_cnt));
+            pkt_cnt = 0;
 
             is_slow_over = false;
             start = clock();    // 重置时间

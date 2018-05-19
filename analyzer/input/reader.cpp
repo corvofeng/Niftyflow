@@ -243,7 +243,8 @@ static int pkt_init(shared_ptr<PARSE_PKT> p) {
             LOG_D("   Protocol: GRE\n");
             break;
         default:
-            LOG_W("   Protocol: unknown\n");
+            // TOO LONG
+            // TODO: LOG_W("   Protocol: unknown\n");
             return -1;
     }
     p->gre = (struct sniff_std_gre*)(p->_data + SIZE_ETHERNET + size_ip_outer);
