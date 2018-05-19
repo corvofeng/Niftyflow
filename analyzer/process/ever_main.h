@@ -73,6 +73,7 @@ public:
     Queue<Message>* get_message_queue() {return &message_queue;}
     map<CounterRule, shared_ptr<Counter>>* get_counter_map() {return &counter_map;}
     unordered_set<int>* get_out_switch_set() {return &out_switch_set;}
+    vector<shared_ptr<PKT_QUEUE>> * get_queue_vec() {return &this->queue_vec;}
 
     // 线程相关的函数, 启动输入和解析线程.
     void run();

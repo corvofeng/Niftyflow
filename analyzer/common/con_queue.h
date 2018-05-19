@@ -72,6 +72,10 @@ class Queue
             pthread_cond_signal(&cond_); /** 解除休眠状态 */
         }
 
+        int size() {
+            return queue_.size();
+        }
+
         Queue() {
             pthread_mutex_init(&mutex_, NULL);
             pthread_cond_init(&cond_, NULL);

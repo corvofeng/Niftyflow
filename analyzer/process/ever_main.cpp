@@ -6,7 +6,7 @@
 
 EverflowMain::EverflowMain() {
     LOG_D("EverflowMain Init\n");
-    this->processer_cnt = 3;
+    this->processer_cnt = 8;
     this->reader_cnt = 1;   // 目前为单线程读入
 
     char errbuff[PCAP_ERRBUF_SIZE];
@@ -22,13 +22,15 @@ EverflowMain::EverflowMain() {
     }
 
     // Use pcap offline
-    // std::string file = "/home/corvo/out.pcap";
+    //
+    // std::string file = "/home/pp/fyh_test/out.pcap";
     // pcap_t * p = pcap_open_offline(file.c_str(), errbuff);
 
     // Use pcap live
-    std::string dev = "lo";
     // pcap_t *pcap_open_live(const char *device, int snaplen,
     //           int promisc, int to_ms, char *errbuf);
+
+    std::string dev = "lo";
     pcap_t *p = pcap_open_live(dev.c_str(), BUFSIZ, 1, -1, errbuff);
 
     if(p == NULL) {
