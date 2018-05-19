@@ -81,6 +81,7 @@ var counter_data = {
 
   // 请求所有的计数器规则
   init_couter_id: function () {
+    console.log("init counter id");
     let self = this;
     $.ajax({
       type: "GET",
@@ -92,7 +93,6 @@ var counter_data = {
           alert(jData['msg']);
           return;
         }
-        
         self._rule_arr = jData.data;
         self.refresh_counter_id();
       }
