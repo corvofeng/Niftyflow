@@ -190,7 +190,7 @@ var performance = {
         console.log("Run chats");
 
         // 队列中的详细信息
-        var queue_vec = queue_data.queue_data_debug;
+        var queue_vec = queue_data.queue_data_info;
 
         var xAxis_vec = [];
         for (var i = 0; i < queue_vec.length; i++) {
