@@ -982,7 +982,6 @@ typedef struct{
 
 \begin{figure}[htbp]
 
-
 \centering
 \begin{minipage}{0.76\textwidth}
 
@@ -1059,39 +1058,41 @@ typedef struct{
 
 \begin{itemize}
     \item 首先启动分析器程序
-    \item tcpreplay进行大量的数据包发送, 评测时的输入8000pps(packets per second).
-    \item 程序的内存占用率一直上升, 我便在一段时间后将发包程序关闭.
-        图\ref{fig:queue_pic} 中的最高点即关闭发包程序的时刻, 此时队列中
-        不再增加数据的状态, 图\ref{fig:process_pic}中为线程的处理情况.
+    \item tcpreplay进行大量的数据包发送, 评测时的输入3000000pps(packets per second).
+    \item 评测大概进行了5分钟, 而后我将程序关闭并退出.
 \end{itemize}
 
 \section{结果概述}
 
  下面两张图对应的均为日志记录为\texttt{INFO}的情况. 对于日志记录为\texttt{DEBUG}
-的情况, 生成的日志过于庞大, IO占了很大一部分性能, 大概要比INFO时的性能损失4-5倍,
-同时, 内存也未能充分利用.
+的情况, 生成的日志过于庞大, IO占了很大一部分性能, 大概要比INFO时的性能损失一些.
 
 \begin{figure}[htbp!]
   \centering
-  \includegraphics[width=0.8\textwidth]{../img/队列情况-info.png}
+  \includegraphics[width=0.8\textwidth]{../img/队列情况-faster.png}
   \caption{队列中数据变化}
   \label{fig:queue_pic}
 \end{figure}
 
 \begin{figure}[htbp!]
   \centering
-  \includegraphics[width=0.8\textwidth]{../img/每个线程处理情况-info.png}
+  \includegraphics[width=0.8\textwidth]{../img/每个线程处理情况-faster.png}
   \caption{各个线程处理情况}
   \label{fig:process_pic}
 \end{figure}
 
-其中, 我取了队列变化过程中的两个点(160s, 89376014), (2900s, 31841057), 计算得到
-$$ \frac{89376014 - 31841057}{2900 - 160} = 20998 pps $$
-20000多的pps, 是比较正常的吞吐量了.
 
+通过观察\ref{fig:queue_pic}, 可以看得出, 使用lo进行数据接收时, 队列中的数据量
+根本不会上升.这也就说明了一点, 当前程序的瓶颈是在\texttt{pcap\_open\_live}阶段. 这里我只测试了pacp库, 或许改用'dpdk'能达到更好的效果.
+如果未来硬件支持, 我会考虑测试的.
 
-具体的评测请查看\texttt{analyzer/README.md}中的性能评测部分, 我介绍了相对详细的
-评测过程以及结果分析.
+通过观察\ref{fig:process_pic}, 所有process线程的处理速度基本是稳定的,
+处理速度上的不同,更多的是hash函数选择的问题. 某些线程被分到了比较多的数据包.
+也可以看的出, 当前的处理速率大概是88万pps, 也就是平均每个线程有10万pps.
+这里并不是说单个线程的处理只有10万pps, 只能说明, 我们每秒到达的数据包只有这么多.
+
+具体的评测过程以及日志分析脚本请查看\texttt{analyzer/README.md}中的性能评测部分, 
+我介绍了相对详细的评测过程以及结果分析.
 
 % \chapter{扩展}
 
