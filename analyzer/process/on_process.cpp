@@ -102,11 +102,15 @@ void Processer::_inner_slow_path() {
 void Processer::_inner_fast_path() {
     LOG_D("Inner fast path\n");
 
-    clock_t start = clock();
+    // clock_t start = clock();
     int pkt_cnt = 0;
 
+    struct timespec t_start, t_finish;
+
+    clock_gettime(CLOCK_MONOTONIC, &t_start);
+    // start = clock();
     while(!_stop) {
-        start = clock();
+
         shared_ptr<PARSE_PKT> pkt = this->q_->pop();
         pkt_cnt += 1;
 
@@ -150,7 +154,10 @@ void Processer::_inner_fast_path() {
 
         trace_add_pkt(saved_trace, pkt.get());
 
-        if(clock() - start > 1000) {
+        clock_gettime(CLOCK_MONOTONIC, &t_finish);
+        int elapsed = (t_finish.tv_sec - t_start.tv_sec);
+        //if(clock() - start > 1000) {
+        if(elapsed > 1) {   // 定时1s
             int wait_times = 0;
             while(!is_slow_over) wait_times++ ;  // spinlock, 检查慢路径是否结束
             if(wait_times > PROCESS_THRESHOLD) LOG_W("SLOW PROCESS IS TOO SLOW\n");
@@ -164,7 +171,8 @@ void Processer::_inner_fast_path() {
             pkt_cnt = 0;
 
             is_slow_over = false;
-            start = clock();    // 重置时间
+            // start = clock();    // 重置时间
+            clock_gettime(CLOCK_MONOTONIC, &t_start);
         }
     }
     this->_force_quit = true;   // 停止慢路径
