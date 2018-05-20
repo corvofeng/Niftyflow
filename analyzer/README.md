@@ -301,7 +301,10 @@ cat process_1s.log | awk '{printf("[%d, %d],\n"), $1, $2}' > process_format.log
 
 ```bash
 PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
-14402 root      20   0 1455148  13672   2720 S 993.0  0.0  13:02.91 analyzer    
+14402 root      20   0 1455148  13672   2720 S 993.0  0.0  13:02.91 analyzer
+
+25798 root      20   0 2842400 1.335g  10764 S 711.0  4.3  71:54.03 analyzer
+
 ```
 
 通过观察第一张图片, 可以看得出, 使用lo进行数据接收时, 队列中的数据量根本不会上升.
@@ -319,7 +322,13 @@ PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
 
 ### 程序目前的瓶颈分析
 
-  目前主要是网卡的读取速率不够, 造成了程序性能的损失.
+  目前主要是网卡的读取速率不够, 造成了程序性能的损失. 而后, 我使用3个网卡进行
+数据读入. 发现只要生产速度提高, processor达到百万pps是很容易的. 这里请看下图.
+
+![多网卡读入][7]
+
+在125s - 130s为处理峰值, 能达到400万pps这样的吞吐量,
+平均每个processor能够有50万pps的处理能力.
 
 
 [1]: https://stackoverflow.com/questions/5875318/is-there-anyway-to-pass-arguments-to-a-signal-handler
@@ -327,3 +336,5 @@ PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
 [3]: https://gist.github.com/corvofeng
 [4]: ../doc/img/队列情况-faster.png
 [5]: ../doc/img/每个线程处理情况-faster.png
+[6]: ../doc/img/队列情况-faster-trpile.png
+[7]: ../doc/img/每个线程处理情况-faster-triple.png

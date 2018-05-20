@@ -179,8 +179,8 @@ var performance = {
 
         this._div_performance_show = arguments[0];
         this._performance_chart = echarts.init(this._div_performance_show);
-        this.run_queue_charts();
-        //this.run_process_charts();
+        // this.run_queue_charts();
+        this.run_process_charts();
     },
 
     refresh: function () {
@@ -190,7 +190,7 @@ var performance = {
         console.log("Run chats");
 
         // 队列中的详细信息
-        var queue_vec = queue_data.queue_data_faster;
+        var queue_vec = queue_data.queue_data_faster_triple;
 
         var xAxis_vec = [];
         for (var i = 0; i < queue_vec.length; i++) {
@@ -212,8 +212,8 @@ var performance = {
     run_process_charts: function() {
         let process_dict = {};
 
-        let orig_arr = process_data.process_data_faster;
-        let GAP = 2;
+        let orig_arr = process_data.process_data_faster_triple;
+        let GAP = 5;
 
         // 构造process_dict
         for(var i = 0; i < orig_arr.length; i++) {
