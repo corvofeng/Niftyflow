@@ -22,6 +22,9 @@
       <li class="nav-item">
         <a class="nav-link" id="probe-tab" data-toggle="tab" href="#probe" role="tab" aria-selected="false">Probe构造</a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" id="performance-tab" data-toggle="tab" href="#performance" role="tab" aria-selected="false">性能查看</a>
+      </li>
     </ul>
   </nav>
 
@@ -148,7 +151,7 @@
         <div class="row">
           <div class="col-md-5">
             <!-- 为ECharts准备一个具备大小（宽高）的Dom -->
-            <div id="counter_charts" style="width: 600px;height:400px;"></div>
+            <div id="counter_charts" style="width:600px;height:400px;"></div>
           </div>
           <div class="col-md-3">
           </div>
@@ -195,9 +198,12 @@
           </div>
         </div>
       </div>
-
-
     </div>
+
+    <div class="tab-pane fade" id="performance" role="tabpanel" aria-labelledby="performance-tab">
+      <div id="performance_chart" style="width:1000px;height:800px;"></div>
+    </div>
+
   </div>
 
 </body>

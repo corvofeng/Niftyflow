@@ -61,6 +61,11 @@ DPDK的使用, 可以帮助我们快速获得数据包. 但是也有一点不好
 
   DPDK的环境配置, 请查看整个项目`doc`文件夹中的相关文档.
 
+```bash
+> wget http://dpdk.org/browse/dpdk-stable/snapshot/dpdk-stable-18.02.tar.xz
+> make install T=x86_64-native-linuxapp-gcc -j8
+```
+
 
 ## 数据库问题
 
@@ -251,8 +256,103 @@ PubSub可以简化控制器的逻辑.
   醒醒吧少年, 你很可能会忘记释放的. 如果想要减少这一次拷贝操作, 那么,
 请一定要为`valgrind`打补丁编译后进行充分的测试. 图便宜也是要付出代价的.
 
+## 性能测试(未使用DPDK)
+
+  本程序的性能测试, 我将测试单台PC上的分析器性能, 分为如下几个部分:
+
+服务器配置如下:
+
+CPU: Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz
+内存: 32G
+监听的网卡为lo, 采用tcpreplay指定测试数据以及发送速率.
+
+
+
+目前程序中有一个线程用于读取, 另外8个线程进行数据处理.
+
+```bash
+# 评测命令
+sudo tcpreplay -K -p 8000 -l 0 -i lo out.pcap   # 指定参数8000pps
+sudo ./bin/analyzer | tee  xx.log               # 使用tee同时输出到文件
+
+# 日志处理
+cat xx.log | grep -v 'Read a new' | grep -e  'packet' -e  'Now we process' | head -n 10
+
+# 获取每隔20s的队列数据信息
+cat xx.log | grep  'watch' | grep 'After 20s' | awk '{print $9}' > queue_20s.log
+
+# 获取所有线程的处理信息, 每隔1s进行打印
+cat xx.log |grep -v 'Read a new' |\
+            grep 'Now we process' |\
+            awk '{printf("%d %d\n"), $4, $8}' > process_1s.log
+
+# 生成echarts图表数据, 可供js程序进行读取.
+cat queue_20s.log  | awk '{printf("%d, "), $0}'            > queue_format.log
+cat process_1s.log | awk '{printf("[%d, %d],\n"), $1, $2}' > process_format.log
+```
+
+
+首先, 我是在DEBUG模式下运行的, 即日志输出为DEBUG的状态, 以下两张为具体的运行
+状态, 第一张为全部队列中的数据包变化情况, 第二张为所有的processor处理的数据包
+情况.
+
+![队列处理情况][4]
+![每个线程处理情况][6]
+
+通过计算得出, 使用lo进行数据接收时, 接受数据包的数目远大于发包速率. 其中第一次
+收包速率大约为16000pps, 第二次的收包速率达到了50000pps, 这里我认为tcpreplay在
+对lo这个设备发包时, 出现了问题, 这个问题tcpreplay在运行时已经提醒了我.
+
+
+由于到来的流量大于处理速度, 所以队列一直呈上升趋势, 在最高点时刻, 我将`tcpreplay`
+关闭, 不再继续产生流量, 以此来衡量程序性能.
+
+为此, 我取了两个点, 分别为(220s, 3609662), (900s, 1429682), 通过计算
+
+$$ \frac{3609662 - 1429682}{900 - 220} = 3205 pps $$
+3000多的pps有些太低了, 我想无论是谁也无法接受这样的吞吐量.
+反观程序运行时的内存占用率, 并不是很高, 而且最后生成的日志文件庞大,
+10多分钟大概生成了1.6G, 这样读写磁盘占了很大一部分性能.
+
+
+而后改用INFO模式, 在50分钟左右的检测中, 程序内存占用最高达到22G, 最终生成的日志
+文件只有14M, 这样的输出才是相对正常的. 下面两张图为测试结果.
+
+![队列处理情况][5]
+![每个线程处理情况][7]
+
+
+通过取点(160s, 89376014), (2900s, 31841057), 计算得到
+
+$$ \frac{89376014 - 31841057}{2900 - 160} = 20998pps $$
+
+20000多的pps, 大概是正常的吞吐量了.
+
+
+### 网卡数据读取能力
+
+  目前采用的是`pcap_open_live`的形式, 
+
+```bash
+PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+
+# DEBUG模式
+10820 root      20   0 2373948 967752   6880 S 909.0  3.0  97:25.27 analyzer
+
+# INFO模式
+23295 root      20   0 23.864g 0.022t   2636 S 905.0 72.9  37:10.57 analyzer
+```
+
+### 程序每秒钟处理的Trace数量
+
+上述的计算已经指出性能情况, 在正常使用时, 请不要开启DEBUG模式, 会造成6-7倍的
+性能损失
+
 
 [1]: https://stackoverflow.com/questions/5875318/is-there-anyway-to-pass-arguments-to-a-signal-handler
 [2]: http://www.cplusplus.com/forum/unices/66284/
 [3]: https://gist.github.com/corvofeng
-
+[4]: ../doc/img/队列情况-debug.png
+[5]: ../doc/img/队列情况-info.png
+[6]: ../doc/img/每个线程处理情况-debug.png
+[7]: ../doc/img/每个线程处理情况-info.png

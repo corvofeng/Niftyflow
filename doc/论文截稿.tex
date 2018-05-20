@@ -442,6 +442,7 @@ Reader与Processer均可以自行配置个数.
 
 % }}} 接口设计
 
+% {{{ 程序中的问题及解决
 \chapter{程序中的问题及解决}\label{chap:程序中的问题及解决}
 
 \section{毫秒级时间戳的使用}
@@ -664,7 +665,9 @@ MySQL主要支持百万级别的数据, 因此, 在正式投入使用时,
 如果有可能我们将粒度设置为20s是不是可以呢?
 
 我建议数据保存时间最好不要超过1个月, 有了问题需要尽快解决.
+% 程序中的问题及解决 }}}
 
+% {{{ 主要数据结构及算法
 \chapter{主要数据结构及算法}
 \label{chap:主要数据结构及算法}
 
@@ -910,7 +913,9 @@ typedef struct{
     fdate          & int(11)       & 数据产生日期  \\ \hline
     \end{tabular}
 \end{table}
+% 主要数据结构及算法 }}}
 
+% {{{ 设计中的一些抉择
 \chapter{设计中的一些抉择}
 \label{chap:设计中的一些抉择}
 
@@ -960,6 +965,7 @@ typedef struct{
 鉴于此, 我放弃了内存占用量较小的\texttt{Protobuf},
 转而使用易于读取理解的\texttt{JSON}.
 
+
 \section{有关程序性能的问题(控制器)}
 
   对于\texttt{CPython}来说, 由于全局中断锁也就是\texttt{GIL}的存在, \texttt{CPython}
@@ -998,8 +1004,9 @@ typedef struct{
 如图\ref{fig:pushbear}为官网, 右侧\ref{fig:push_example}为推送样例.
 
 %  https://pushbear.ftqq.com/admin/#/
+%  设计中的一些抉择  }}}
 
-
+%  {{{ 程序部署
 \chapter{程序部署}
 
   本次的程序设计主要分为三个部分, 分析器, 存储器以及控制器, 展示页面由控制器
@@ -1014,9 +1021,77 @@ typedef struct{
 分配至同一个分析器中. 可以利用这一特性, 进行横向扩展来提高系统的吞吐量.
 
   有关详细的部署操作, 在代码的文档中均有记录, 在此不进行赘述.
+% 程序部署 }}}
 
-% \chapter{性能测试情况}
+\chapter{性能测试情况}
+
+  程序中, 实现的功能有下面这些:
+
+\begin{itemize}
+    \item 对分析器: 包括有网卡数据读取, 快慢路径处理数据, 有问题的Trace数据入库,
+计数器报告, 报警信息发送.
+    \item 对存储器: 读写有问题的Trace, 读写计数值.
+    \item 对控制器: 分析器的初始化, 提供数据访问接口, 添加删除规则, 探针的发送.
+\end{itemize}
+
+  对于存储器来说, 只负责存储异常的数据包信息以及提供访问能力, 建立合适的索引之后,
+数据库可以保持较好的性能, 而控制器只负责控制分析器与提供接口, 数据量并不大.
+其中性能存在瓶颈部分的主要在于分析器中,
+
+\section{评测环境}
+
+服务器配置如下:
+
+\begin{table}[]
+    \centering
+    \caption{服务器配置}
+    \label{server_config}
+    \begin{tabular}{ll} \hline
+    Field    & Type          \\ \hline
+    CPU:     & Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz \\
+    内存:      & 32G                                       \\
+    监听的网卡为lo & 采用tcpreplay指定测试数据以及发送速率. \\ \hline
+    \end{tabular}
+\end{table}
+
+
+\section{评测过程}
+
+\begin{itemize}
+    \item 首先启动分析器程序
+    \item tcpreplay进行大量的数据包发送, 评测时的输入8000pps(packets per second).
+    \item 程序的内存占用率一直上升, 我便在一段时间后将发包程序关闭.
+        图\ref{fig:queue_pic} 中的最高点即关闭发包程序的时刻, 此时队列中
+        不再增加数据的状态, 图\ref{fig:process_pic}中为线程的处理情况.
+\end{itemize}
+
+\section{结果概述}
+
+ 下面两张图对应的均为日志记录为\texttt{INFO}的情况. 对于日志记录为\texttt{DEBUG}
+的情况, 生成的日志过于庞大, IO占了很大一部分性能, 大概要比INFO时的性能损失4-5倍,
+同时, 内存也未能充分利用.
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../img/队列情况-info.png}
+  \caption{队列中数据变化}
+  \label{fig:queue_pic}
+\end{figure}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.8\textwidth]{../img/每个线程处理情况-info.png}
+  \caption{各个线程处理情况}
+  \label{fig:process_pic}
+\end{figure}
+
+其中, 我取了队列变化过程中的两个点(160s, 89376014), (2900s, 31841057), 计算得到
+$$ \frac{89376014 - 31841057}{2900 - 160} = 20998 pps $$
+20000多的pps, 是比较正常的吞吐量了.
+
+
+具体的评测请查看\texttt{analyzer/README.md}中的性能评测部分, 我介绍了相对详细的
+评测过程以及结果分析.
 
 % \chapter{扩展}
-
 
