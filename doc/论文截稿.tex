@@ -1,15 +1,16 @@
 % vim: foldmethod=marker foldcolumn=3
 
-% {{{ 选题
-\chapter{选题依据及意义}
+% {{{ 绪论
+\chapter{绪论}
+\section{选题依据及意义}
 
 数据中心被目前的企业中所广泛采用,
-大型的数据中心甚至承载着公司的服务系统. 其中
+大型的数据中心甚至承载着公司的服务系统. 其中,
 服务器与服务器之间几乎完全是通过现代网络所连接.
-用户对网络性能的要求日益扩大, 一些微小故障, 很可能会造成用户体验的下降,
+用户对网络性能的要求日益扩大, 一些微小故障很可能会造成用户体验的下降,
 特别是在某些交互敏感的场合. 服务的质量必须得到保证. 可是对于庞大的系统,
 各种问题的发生是无法避免的. 我们只能更快, 更精准的解决问题,
-以此将故障的危害降到最低. 这也是对新时代的检测调试 工具的挑战.
+以此将故障的损失降到最低. 这也是对新时代的检测调试工具的挑战.
 
 面对大型复杂数据中心的调试以及错误, 如果仍然使用简陋的单机调试手段,
 例如\texttt{ping}, \texttt{tracerout}, 也许可以解决问题, 但其代价与耗时,
@@ -17,8 +18,7 @@
 甚至为自己搭建的集群开发出一套相匹配的网络调试工具.
 
 
-
-\chapter{研究目标和主要内容(含论文提纲)}
+\section{研究目标和主要内容}
 
 在数据中心网络(DCN)中, 众多网络设备运行过程中的故障在所难免,
 及时发现故障并确定 故障位置成为DCN网络运维的重要组成部分.
@@ -46,11 +46,114 @@
 \item
   采用B/S架构, 管理员通过浏览器即可进行操作
 \end{itemize}
-
 % }}}
 
-% {{{ Everflow简介
-\chapter{Everflow简介}
+% {{{ 国内外研究现状
+\chapter{国内外研究现状}
+\section{数据中心网络故障检测方案}
+
+不论是学校还是企业, 许多都设立了自己的数据中心,
+有关数据中心的网络故障检测, 都提出了自己的 见解与考量. 对于更为大型的数据中心网络,
+更是有人提出了集学校公司之力, 共同开发系统, 不断的部署与完善.
+
+经过对国内外近期文献的查阅, 我发现,
+这些系统或是工具可以按照不同角度进行分类. 在主动性方面,
+有主动探测故障的, 有被动触发, 还有使用日志记录来查看的; 在网络层次方面,
+有些在数据包层面, 有些 则专注于数据流层面; 根据部署位置不同,
+也可以分为在交换机部署, 在终端部署, 两者均进行部署; 在 使用范围上,
+有些适合于通用平台, 有些只能适用于某个特定厂商; 在处理上,
+有些拥有流水线来处理结果, 有些则是简单的排除错误; 按工具性质来看,
+有些属于调试小工具, 专注于某个方面, 也不需要一直在线,
+有些则是属于系统级别的服务工具, 为整个DCN所使用的服务, 需要一直在线;
+而后在错误处理上, 有些 可以借助控制设备自动进行处理,
+而有些则需要向管理员预警, 手动进行处理. 以下为各个方案的一些特点 介绍.
+
+Planck: \cite{rasley2014planck} SDN的出现使得自己调节的网络得以实现, 这样
+的网络可以实时监控, 并能立即对重要的事件例如拥塞做出迅速反应.
+但是目前的监控机制 需要数百毫秒来重新探测全局网络, 对于实时的错误,
+这样的延迟是很致命的, 这篇2014年 的论文提出了新颖的网络测量架构,
+使用端口镜像的机制来提取网络信息. 但是可以在相当
+短的时间内对网络信息进行获取. 而且不会对网络造成太大的影响.
+
+LossRadar: \cite{li2016lossradar} 属于有针对性的工具,
+着重介绍有关丢包的抓取 问题. 虽然只是检测丢包,
+但是这也足够成为一个检测系统了, 这个工具可以在较快的时间
+内抓取单独的丢包以及他们的详细信息. 他需要在交换机上部署,
+但是并不需要很多的流量 和带宽. 也基于它开发了一些应用程序.
+
+Cherrypick: \cite{tammana2015cherrypick} 一个可扩展的简单的轨迹追踪技术
+目前的数据轨迹追踪需要负担大量数据积累的开销,
+或是在数据平面大量资源的消耗, 交换机规则或是数据包头部的探查.
+核心思想是挑选链接, 这些链接是表示数据包端到端 路径的关键,
+并在到达目的地的路上将其嵌入数据包头部. 通过使用最新的头部标示技术,
+它只需要很少的交换机规则即可,
+
+SDN traceroute: \cite{agarwal2014sdn} 使用具有了SDN功能的设备, 不过只要
+支持OpenFlow1.0的设备即可.
+他可以通过SDN支持的网络中的任意数据包来确定路径,
+这个路径使用SDN支持的转发机制, 而且并不需要修改转发规则.
+可以探测任意的以太网 数据包的转发行为,
+以及交换机和控制器逻辑中的调试问题.
+
+PathDump: \cite{tammana2016simplifying}使用了较为不同的方法,
+仔细划分了边缘 设备与网络元素之间的调试任务.
+利用边缘设备的资源进行网络调试的简约工具. 并且可以 支持大量网路调试问题.
+需要的资源较少, 而且在较细的时间粒度调试.
+
+Pingmesh: \cite{guo2015pingmesh}
+这个系统已经在微软的数据中心部署了超过4年, 他的理念很简单,
+就是想要在任意时刻获取任意两台服务器的延迟信息. 因此, 他的目标就是
+去定义一个网络延迟检测和分析系统, 他也需要为所有的服务器产生延迟信息,
+因为延迟数据 属于基础信息, 能够帮助我们更好的管理网络,
+以及解决网络中的问题. 这项服务也必须 长期在线, 并保证稳定性.
+他可能是最不需要关心路由器等设备的一个方案了, 对于整个系统 来说,
+知道延迟就是目标, 在实现时, 主要借助了ping的思想,
+所有服务器要从中心控制器 下载文件, 进行延迟探测后传回中心服务器.
+他借助了微软自己开发了存储系统, 也实现了 数据处理流水线.
+相比于之后提出的Everflow, 他更像是微软的第一代产品, 稳定而强大.
+
+NetSight: \cite{handigol2014know}, 这是一个完全记录网络历史的工具.
+在文章中, 介绍了如何使用packet
+histories(每个包的整条记录)来简化网络的调试.
+为了展示\texttt{packet\ histories}的作用, 以及实现上的可行性,
+创造了\texttt{NetSight}, 一个可扩展的平台,
+允许程序简便的检索网络的历史状况. 在\texttt{NetSight}上, 有4个程序:
+可交互的网络调试器, 实时的监视器, 一个历史记录器, 一个分级分析器.
+在一个现代的多核服务器上,
+\texttt{NetSight}可以处理历史包在10G/s的链接中. 对于更大的 网络,
+它可以通过增加服务器或是硬件 或是交换机的数量来扩展. 需要借助SDN,
+支持Openflow的交换机才能配合工作, 由于其记录了数据包的历史, 所以
+能最大程度还原当初的网络模型, 也因此会给网络带来高负荷, 性能也会损失,
+当然也可以 通过增加硬件来进行提升. 这是一个与Everflow较为相似的产品,
+Everflow中对其一个 重要的改进就是增加了匹配模式, 对特定的历史包生成记录,
+能有效减少网络负载, 以及处理 难度.
+
+Netography: \cite{zhao2016netography} 这也是一种基于软件定义网络(SDN)的
+一个工具, 之前的工作关注于静态检查, 被动监控, 以及活动探针,
+这些依赖于控制设备以及网络 设备的抓取规则. 他定义了一个数据包行为的概念,
+用以描述数据包的真实变化, 并强调对故障排除的重要性. 基于通过
+由主动发送的探测器触发的副本导出分组行为和流规则的新颖方法,
+提出了Netography系统, 并说明了 关于转发错误时的排除任务过程,
+以及由非租户争用造成的性能下降问题.
+
+Dissecting RTT(round trip time): \cite{marchetta2014dissecting} 与其说他
+是工具, 不如认为这一种技术, 利用单个数据包探测延迟的技术. 研究人员
+与操作者经常会在监控, 故障排除, 或是其他方式访问网络路径时 测量往返时间,
+因为它结合 了所有跳的过程以及转发和反向路径, 很难去衡量特定网络元素的
+延迟. 在这项工作中, 我们提出了一种新的方法: 在区块中, 映射特定路径后
+基于单个数据包探测往返 延迟. 使用针对中间路由器的IP Prespecified
+Timestamp选项, 它可以提供慢速路径部分的往返时间 估计.
+这个技术在Everflow中也被用到了, 用于探针方法测量时延.
+
+Passive Realtime Datacenter: \cite{roy2017passive} 这是在Facebook的数据
+中心上进行测试的一种方案, 他不去简单的观察异常现象,
+而是考虑异常对整个系统的性能 所造成的影响. 虽然是基于这么一种简单的设想.
+但其实现需要深深结合数据中心的架构. 他们开发了轻量级的包标记技术,
+仅仅使用转发规则(交换机支持). 作为路径中唯一标示. 文章中对于数据包头部,
+现有IPv6头部还很难寻求一份区域用于调试.
+
+
+\section{Everflow简介}
 
   Everflow \cite{greenberg2016packet} 这是微软在2015年发表的论文. 与部署
 运行超过了4年的Pingmesh \cite{guo2015pingmesh}不同, 它并没有特别关注
@@ -96,583 +199,91 @@ Everflow提供的信息去调试网络错误. 控制器负责协调其它组件�
 通过部署在微软的DCN上, Everflow证明了其作为诊断DCN错误不可或缺的工具的实用性.
 % }}} Everflow简介
 
-% {{{ 功能概述
-\chapter{功能概述}
+% {{{ 流量分析与故障检测总体方案
+\chapter{流量分析与故障检测总体方案}
+
+%\chapter{功能概述}
 
 本次的设计分为三大部分. 分析器, 控制器, 以展示页面, 以下分别进行概述,
-更加详细的 实现细节请查看实现方案\ref{chap:实现方案}.
+更加详细的实现细节请查看接下来三章的设计方案.
 
 \begin{figure}
   \centering
-  \includegraphics[width=0.7\textwidth]{../img/user_flow.png}
-  \caption{architecture}
+  \includegraphics[width=0.55\textwidth]{../img/user_flow.png}
+  \caption{架构设计}
   \label{fig:arch}
 \end{figure}
 
 图\ref{fig:arch}中介绍了整个系统的结构.
 
-\section{分析器功能概述}
+\section{分析器功能设计}
 
-  分析器是一群分布式的服务器, 且每个服务器处理一部分的追踪流量.
+  分析器是分布式的服务器, 且每个服务器处理一部分的追踪流量.
   分析器读入产生的数据包后, 进行初步的处理, 而后存入存储器中供控制器使用.
 在分析器中, 我们可以获得整条的数据包路径, 通过路径,
-我们可以得知是否有环, 或是有丢包现象. 以及对于特定的模式进行统计,
+我们可以得知是否有环, 或是有丢包现象. 以及对于特定的模式的数据包进行统计,
 对于探针来说也可以粗略的衡量延迟.
 
 分析结束后, 并不是所有的结果都要存入存储器, 只有异常行为数据流,
 有debug标志的数据流, 重要协议(BGP, PFC等)会被记录到存储器中.
 
-\section{存储器功能概述}
+\section{存储器功能设计}
 
 存储器中, 主要存储分析器产生的结果, 包括网络流数据与相应规则的统计数据.
-使用MySQL进行数据存储, 具体的表格见\ref{chap:数据库设计}.
+使用MySQL进行数据存储, 具体的表格见\ref{sec:数据库设计}.
 
-  网络流数据表格中, 每一行对应给一个追踪记录. 包括数据包的每一跳信息, 以及
+网络流数据表格中, 每一行对应给一个追踪记录. 包括数据包的每一跳信息, 以及
 数据包的元信息, 是否为探针, 是否有环, 是否丢包, 它们可以在查询时指定规则
 来进行过滤.
 
-  我们也在表格中存储了所有分析器产生的计数器, 表中的每一行代表着从分析器取得的
+我们也在表格中存储了所有分析器产生的计数器, 表中的每一行代表着从分析器取得的
 计数器的ID以及, 记录时间, 分析器ID.
 
-  同时, 存储器中, 也存储了全部的统计规则.
+同时, 存储器中, 也存储了全部的统计规则.
 
+\section{控制器功能设计}
 
-\section{控制器功能概述}
-
-控制器最重要的功能就是向外提供API接口. 除此之外, 控制器可以对分析器配置,
-向交换机中发送探针, 分析器对于探针会单独提供支持.
+控制器有几大功能: 控制器可以对分析器配置, 向外提供API接口, 除此之外,
+还可以向交换机中发送探针, 分析器对于探针会单独提供支持.
 目前我们能够提供的API包括 按时间查找数据流, 查询计数器的值, 添加探针,
 以及发生错误后的预警功能.
 
-
-\section{访问页面功能概述}
+\section{访问页面功能设计}
 
 此部分主要展示存储器中的数据, 包括网络流数据, 不同的规则下的统计数据;
 以及提供用户与程序的交互能力, 包括增加删除统计规则, 探针的构造及发送.
 
-% }}}功能概述
+\section{技术选型}
+
+此次系统设计, 技术选型主要包括分析器, 存储器, 以及控制器,
+上层应用程序的设计.
+
+根据对性能的不同要求, 结合开发进度做以下讨论. 在分析器中,
+需要考虑大量的流量 涌来, 必须充分利用系统资源进行数据的接受和处理,
+使用偏向底层的C/C++语言, 在控制器中, 只涉及简单的数据库查找与用户交互,
+对性能要求不高, 故使用Python, 以实现迅速而敏捷的开发.
+
+对于本次的系统设计, 分工如下:
+
+\begin{itemize}
+\item
+  分析器采用C/C++完成
+\item
+  存储器可能选择MySQL作为存储
+\item
+  控制器主要通过Python实现, 期间某些静态库的编写使用C/C++完成.
+  控制器的API接口采用HTTP协议交互, 最终的展示页面,
+  功能配置也将在网页上进行操作, 其中, 图表展示打算使用开源的echarts.
+\end{itemize}
+% }}}流量分析与故障检测总体方案
+
 
 % {{{ 实现方案
-\chapter{实现方案}
-\label{chap:实现方案}
-
-\section{分析器}
-
-下图\ref{fig:analyzer_process}是具体处理过程. 首先进行
-对GRE数据包的解封操作, 解封后, 使用多线程并发分析. 解封后,
-具有相同标示的数据包 需要进入相同的线程中.
-
-分析中, 如果某一跳交换机在1s内, 没有收到接下来的报文,
-即认为此次数据包已经结束, 因此, 我们需要增加定时功能.
-相关算法请查看主要算法说明\ref{chap:主要算法说明}中定时器的实现.
-
-\begin{figure}
-  \centering
-  \includegraphics[width=0.9\textwidth]{../img/analyze_process.png}
-  \caption{Analyezr process}
-  \label{fig:analyzer_process}
-\end{figure}
-
-上述的流程图可能并不直观, 以下\ref{fig:analyzer_arch}为程序实际的处理流程,
-其中的英文关键字为程序中确切的类名. 其中,
-Reader与Processer均可以自行配置个数.
-
-\begin{figure}
-  \centering
-  \includegraphics[width=0.9\textwidth]{../img/analyzer_structure.png}
-  \caption{Analyezr Architecture}
-  \label{fig:analyzer_arch}
-\end{figure}
-
-\subsection{程序启动流程}
-
-启动时, 首先初始化\texttt{Watcher}, 继而向控制器发送\texttt{INIT}信息,
-请求出口交换机信息 与最新的统计规则. 收到控制器的回复后,
-启动\texttt{Processer}, 而后启动\texttt{Reader}, 这
-时的\texttt{Reader}开始获取\texttt{GRE}数据包, 并根据内层的五元组(源IP,
-目的IP, 源端口, 目的端口 协议类型)进行hash操作,
-按照不同的结果存入到相应的队列中, 供\texttt{Processer}使用.
-
-\subsection{程序退出流程}
-
-程序停止时, \texttt{Watcher}首先向控制器发送\texttt{QUIT}信号,
-通知控制器, 当前的分析器准备 停止了, 而后, 控制器做出回应.
-每个控制器下监管许多分析器, 他有权也应当知道所有分析器的 状态.
-
-程序中多次使用了队列进行解耦, 如果队列为空, 那么所有的消费者将会被阻塞.
-程序 收到退出信号时, 一定是先将生产者全部停止, 待生产者全部停止后.
-依次向队列中发送截止数据包, 向消费者表明生产者已经不再继续生产了.
-可以停下来了.
-
-\subsection{分析器实现中遇到的问题及解决方案}
-
-分析器是本次设计的核心, 分析器遇到的问题是最多的, 篇幅很大,
-这里只列出问题的名称. 在程序中的问题及解决\ref{chap:程序中的问题及解决}中详细列出.
-
-\begin{itemize}
-  \item 毫秒级时间戳的使用
-  \item 与控制器的交互问题
-  \item Counter计数器表格的设计问题
-  \item 程序中内存泄露问题
-  \item 定时器与signal
-  \item 分析器的启动过程
-  \item 与控制器的交互问题
-  \item 热重启与容灾问题
-\end{itemize}
-\section{控制器}
-
-控制器采用\texttt{Python}实现. 使用了\texttt{Tornado}进行实现. 它向下控制分析器
-向上为应用程序提供接口. (技术选型请查看设计中的一些抉择
-\ref{chap:设计中的一些抉择})
-
-
-\begin{figure}[htbp!]
-  \centering
-  \includegraphics[width=0.9\textwidth]{../img/controler_arch.png}
-  \caption{Controler Architecture}
-  \label{fig:contoler_arch}
-\end{figure}
-
-控制器中, 涉及到两个方面:
-一是与存储器的交互, 这里, 我们的存储器使用\texttt{MySQL};
-二是与分析器进行交互, 通过\texttt{Redis}进行解耦.
-
-
-\textbf{与存储器交互}: 允许用户读取Trace记录, 读取统计信息. 允许用户读写统计规则,
-以及构造探针
-
-\textbf{与分析器交互}: 每个分析器启动时, 需要首先向控制器发送请求, 获得控制器的
-允许后, 才能启动. 并且, 如果用户更新了统计规则, 控制器也会立刻下发到所有的的
-分析器中. 在分析器准备结束时, 也同样需要请求控制器. 未来的控制器可能还需要添加
-对于每个分析器的管理功能.
-
-
-\section{访问页面}
-
-下图\ref{fig:traffic_data_show}, \ref{fig:counter_data_show}
-
-
-% 分别展示了数据流量的显示以及 计数器结果的显示, 目前主要列出信息模块,
-% 搜索功能会接着完善.
-
-\begin{figure}[htbp!]
-  \centering
-  \includegraphics[width=0.9\textwidth]{../img/traffic_data_show.png}
-  \caption{Traffic data}
-  \label{fig:traffic_data_show}
-\end{figure}
-
-\begin{figure}[htbp!]
-  \centering
-  \includegraphics[width=0.9\textwidth]{../img/counter_data_show.png}
-  \caption{Counter data}
-  \label{fig:counter_data_show}
-\end{figure}
-
-% }}} 实现方案
-
-% {{{ 接口设计
-\chapter{接口设计}\label{chap:接口设计}
-
-\section{分析器, 控制器接口设计}
-\label{sec:分析器, 控制器接口设计}
-
-\subsection{启动过程}
-
-每台分析器启动时, 首先向控制器发送请求. 获取计数器规则, 以及出口交换机ID,
-这里是向控制器监听的队列中发送.
-
-\begin{lstlisting}
-{
-  "ACTION": "INIT",
-  "ANALYZER_ID": 124         // 分析器ID, 由分析器的配置文件进行配置
-}
-\end{lstlisting}
-
-控制器收到报文后, 寻找可用的ID, 进行返回, 同时带上出口交换机的ID, 以及计数器信息
-通过控制器进行配置, 可以简化分析器的操作.
-
-\begin{lstlisting}
-{
-  "ANALYZER_ID": 124,           // ID为0, 表示这是一种广播操作.
-  "MESSAGE": {                  // 报文主体
-    "COMMOND": "INIT",          // 初始化
-    "SWH_ID": [
-        14, 23, 19, 40
-    ],
-    "COUNTER": [                // 计数器的filter
-        {
-            "CNT_ID" : 10,
-            "SRC_IP": "192.118.0.2",
-            "DST_IP": "192.119.0.1",
-            ...
-        }
-    ]
-  }
-}
-\end{lstlisting}
-
-\subsection{更新出口交换机与计数器信息}
-
-由控制器主动进行发送指令包重载过程, 重载会导致分析速率下降,
-在@热重启部分有讨论该问题
-
-\begin{lstlisting}
-{
-  "ANALYZER_ID": 13,        // ID为0, 表示这是一种广播操作.
-  "MESSAGE": {              // 报文主体
-    "COMMOND": "RELOAD",    // 重载过程, 这里就认为是热重启
-    "SWH_ID": [
-        14, 23, 19, 40
-    ],
-    "COUNTER": [            // 计数器的filter
-        {
-            "CNT_ID" : 1
-            "SRC_IP": "192.118.0.2",
-            "DST_IP": "192.119.0.1"
-        }
-    ]
-  }
-}
-\end{lstlisting}
-
-增加删除Counter规则, 以及出口交换机ID, 这一操作应该是对每个分析器进行, 以下为
-具体的命令.
-
-
-\begin{table}[]
-    \centering
-    \caption{控制器命令}
-    \label{tbl:message}
-    \begin{tabular}{lllll}
-    COMMAND      & 解释         & 具体报文                         \\ \hline
-    ADD\_RULE    & 增加规则     & "COUNTER": {[}\{"ID":1\} .. {]}  \\
-    DEL\_RULE    & 删除规则     & "COUNTER": {[}1, 2,3{]}          \\
-    ADD\_SWH\_ID & 增加交换机ID & "SWH\_ID" : {[}13, 4, 4{]}       \\
-    DEL\_SWH\_ID & 删除交换机ID & "SWH\_ID" : {[}23,{]}            \\ \hline
-    \end{tabular}
-\end{table}
-
-\begin{lstlisting}
-{
-  "ANALYZER_ID": 0,         // ID为0, 表示这是一种广播操作.
-  "MESSAGE": {              // 报文主体
-    "COMMOND": "ADD_RULE",  // 重载过程, 这里就认为是热重启
-    "SWH_ID": [
-        14, 23, 19, 40
-    ],
-    "COUNTER": [           // 计数器的filter
-        {
-            "CNT_ID" : 1
-            "SRC_IP": "192.118.0.2",
-            "DST_IP": "192.119.0.1"
-        }
-    ]
-  }
-}
-\end{lstlisting}
-
-\section{控制器, 展示页面接口设计}
-
-\subsection{添加删除规则}
-
-\url{https://127.0.0.1:9999/v1/rules}
-
-请求参数
-
-\begin{table}[]
-    \centering
-    \caption{添加删除规则参数}
-    \label{tbl:add_del_rule}
-    \begin{tabular}{lll}
-    Field              & Type   & Description                 \\ \hline
-    act                & String & 只能使用 'ADD|DEL'              \\
-    rule\_id           & Number & 在DEL操作时必须填写                 \\
-    rule\_name         & String & 在ADD操作时必须填写                 \\
-    ip\_srcoptional    & String & Default value: 0.0.0.0      \\
-    ip\_dstoptional    & String & Default value: 0.0.0.0      \\
-    protocoloptional   & Number & 报文中的协议类型Default value: -1   \\
-    switch\_idoptional & Number & 镜像报文的交换机IDDefault value: -1 \\ \hline
-    \end{tabular}
-\end{table}
-
-\subsection{请求Trace数据信息}
-
-\url{https://127.0.0.1:9999/v1/tracce_filter}
-
-\begin{table}[]
-    \centering
-    \caption{请求Trace数据}
-    \label{tbl:get_trace}
-    \begin{tabular}{lll}
-    Field             & Type   & Description            \\ \hline
-    start\_time       & String &                        \\
-    end\_time         & String &                        \\
-    ip\_srcoptional   & String & Default value: 0.0.0.0 \\
-    ip\_dstoptional   & String & Default value: 0.0.0.0 \\
-    protocoloptional  & Number & Default value: -1      \\
-    is\_loopoptional  & Number & Default value: -1      \\
-    is\_dropoptional  & Number & Default value: -1      \\
-    is\_probeoptional & Number & Default value: -1      \\ \hline
-    \end{tabular}
-\end{table}
-
-\subsection{请求counter数据信息}
-
-\url{https://127.0.0.1:9999/v1/counter_filter}
-
-\begin{table}[]
-    \centering
-    \caption{请求Counter数据}
-    \label{tbl:get_counter}
-    \begin{tabular}{lll}
-    Field       & Type   & Description      \\ \hline
-    start\_time & String &                  \\
-    end\_time   & String &                  \\
-    rule\_id    & Number & Default value: 0 \\ \hline
-    \end{tabular}
-\end{table}
-
-\subsection{请求所有规则}
-
-\url{https://127.0.0.1:9999/v1/rules}
-
-这是一个\texttt{GET}请求, 查询所有的规则, 所有的rule在初始化时就应该被获取到,
-而后通过 \texttt{rule\_id}查找counter数据.
-
-% }}} 接口设计
-
-% {{{ 程序中的问题及解决
-\chapter{程序中的问题及解决}\label{chap:程序中的问题及解决}
-
-\section{毫秒级时间戳的使用}
-
-我们通常所说的时间戳,
-是指1970年01月01日00时00分00秒(北京时间1970年01月01日08时00分00秒)起至现在的总秒数.
-是以秒为计数单位的.
-
-在我们原始的数据结构中, 也采用了原始的32位整数作为时间戳,
-但是用秒的话根本无法满足需求.
-
-\subsection{可能的方案}
-
-考虑过之后, 有以下两种方案:
-
-\begin{itemize}
-\item
-  再来32位, 表示毫秒.
-\item
-  将原始的方案中时间戳的含义更改,
-  使其表示从一个特定时间开始经过的总毫秒.
-\end{itemize}
-
-第一种方案, 需要修改原先的数据结构了, 向其中增加4个byte,
-虽然我们目前的程序 不是针对嵌入式的设备, 但是需要克勤克俭用CPU缓存,
-具体的数据结构这里不进行列出. 根据我们目前的定义情况,
-假如每个对象增加了4个字节, 原始的128byte的CPU缓存就不够 存放了,
-会造成性能下降.
-
-第二种方案, 程序级别重新定义时间戳的含义, 假如之后的用户不了解程序设计,
-很有 很有可能会对时间戳进行误用. 而且, 从特定时间开始,
-到底是什么时间开始, 特定时间 开始后, 一个32位的时间戳又能表示多久呢.
-我们都知道原始的32位时间戳只能表示到 2037年,
-我们自定义的时间戳能达到怎样的效果.
-
-这里我进行了简单计算, \texttt{int}能表示20亿的数目.
-
-我们首先计算他能表示多少天,
-
-$$ \frac{2 \times 10^{9} ms }{24 \times 3600 \times 1000} = 23 Days$$
-
-粗略的计算表明, 如果使用ms表示时间戳, 最多也就只能表示23天,
-如果你使用\texttt{unsigned\ int} 那么翻倍也就是46天,
-这样的结果有点太少了, 完全达不到我们的要求.
-
-\subsection{最终方案}
-
-\begin{quote}
-使用32位时间戳表示当天偏移的毫秒数, 再加一个字段保存日期.
-但这个字段不放在程序的内存中, 而是放置在数据库中.
-\end{quote}
-
-采用这个方案的原因有以下两点:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  32位的时间戳已经足够表示1天内偏移的毫秒数.
-\item
-  整个系统的实时性很强, 误差也不会超过10s, 存入数据库时,
-  将数据库当天的日期作为 日志日期写入到字段中, 这样,
-  可以保证我们在搜索时获得正确的时间戳, 也不需要考虑 空间占用问题, 并且,
-  这个新增的日期字段可以作为索引来使用.
-\end{enumerate}
-
-日期字段可以通过MySQL的trigger进行设置.
-
-
-\begin{lstlisting} [caption=Triger设置]{SQL}
-CREATE TRIGGER `fdate_set` BEFORE INSERT ON `tbl_trace_data`
-FOR EACH ROW BEGIN
-  SET NEW.fdate = CAST( DATE_FORMAT(NOW(),'%Y%m%d') AS UNSIGNED);
-END
-\end{lstlisting}
-
-
-不过这样存储会有一个问题:
-
-\begin{quote}
-如果出现了快到第二天0点时存入了数据, 而设置日期时已经到了第二天 例如:
-2018-03-22 23:59:55 时准备存入数据库,
-之后数据库中的fdate被设置为了2018-03-23, 这是一种不匹配,
-\end{quote}
-
-有这么一种解决方式: 可以通过判断时间戳的偏移, 如果偏移过大, 则认为它是
-第一天的数据, 也就是03-22的数据. 上面只是列了最简单的Trigger设置.
-
-\section{与控制器的交互问题}
-
-与控制器的交互分为两个部分, 发送和接受. 这两个部分均在watcher中编写.
-
-\textbf{发送}: 我们向控制器监听的消息队列中发送消息
-
-使用消息队列主要是因为可能有多个分析器, 队列是一个比较简单的方式.
-
-\textbf{接受}: 从频道中读取, 如果是属于自己的命令信息, 则进行相应操作.
-
-如果控制器采取一对多的连接方式,
-其实是没多少必要的(经常进行交互的操作主要就是 增加删除规则,
-增加删除出口交换机ID), 这样的操作基本是对所有分析器进行的. 使用
-PubSub可以简化控制器的逻辑.
-
-与控制器的交互部分全部采用\texttt{Redis}解耦,
-其中使用了\texttt{Redis}的\texttt{消息队列}和\texttt{Pubsub} 两种接口.
-两种接口的使用如下
-
-\textbf{消息队列}: 由 分析器 =\textgreater{} 控制器
-
-\begin{lstlisting} [caption=分析器推送]{Name}
-> 127.0.0.1:6379> LPUSH foo 1234 # 分析器PUSH
-> (integer) 1
-
-> 127.0.0.1:6379> LPOP foo  # 控制器接受
-> "1234"
-\end{lstlisting}
-
-\textbf{Pubsub}: 由控制器发送广播, 许多分析器监听相同的频道
-
-
-\begin{lstlisting} [caption=控制器下发]{Name}
-> 127.0.0.1:6379> SUBSCRIBE foo        # 首先启动监听foo频道 
-> Reading messages... (press Ctrl-C to quit)
-> 1) "subscribe"
-> 2) "foo"
-> 3) (integer) 1
-> 1) "message"
-> 2) "foo"
-> 3) "12334"
-
-> 127.0.0.1:6379> PUBLISH foo 12334   # 控制器向foo频道中发送
-> (integer) 1
-\end{lstlisting}
-
-
-\section{分析器启动过程}
-\label{sec:分析器启动过程}
-
-  每台分析器启动时, 首先向控制器发送请求. 获取计数器规则, 以及出口交换机ID,
-
-  但是如何使控制器得知是哪一台分析器呢? 在控制器处理请求后, 又如何传回给分析器.
-
- 在程序中是这样解决的: 在向控制器发请求时, 分析器必须带上自己的ID作为请求标识.
-在控制器处理结束后, 返回的报文中也会携带有分析器的ID, 所有的分析器获取到广播后,
-对比收到的信息中的分析器ID与自己的ID. 如果ID相同, 则说明是对自己的操作, 否则
-丢弃该报文.
-
-  另外, 对于返回报文中ID为0的情况, 这是一种广播的形式, 所有的分析器必须按照广播
-报文进行应答.
-
-\section{热重启与容灾问题}
-
-在考虑到控制器与分析器的交互后,
-直接启动分析器的情况已经在分析器启动过程\ref{sec:分析器启动过程}中提到这个问题,
-但是控制器的热重启与容灾也成为了一个问题.
-
-\subsection{热重启}
-
-重启过程是一个分析短暂暂停的过程, 即使我们想要使其接受流量来分析,
-我们也要做好 分析速率变得很慢的情况.
-
-目前, 我的打算是线上分为三台分析器, 另有两台分析器进行容灾.
-
-进行重启操作时, 采用分批重启的形式. 假如我们需要热重启分析器1,
-首先配置交换机, 将网络流量导入到另外两台分析器中, 重启分析器1完成后,
-再将流量导入 到分析器1,3中, 依次类推, 如果容灾机器空闲,
-可以考虑导入先导入到容灾机器中.
-
-\subsection{容灾}
-
-当分析器遇到了故障, 需要检测时, 首先启动容灾服务器, 继而修改交换机配置,
-将故障 分析器的流量全部切换到容灾分析器中, 而后停机检测.
-
-\section{定时器与signal}
-
-在当前的程序中, 我不打算再添加一个线程来做定时上传计数器的功能.
-这样的轮询 太过单调了, 而且定时上传功能可能只需要10s, 或是20s才上传一次,
-单独开线程显得 很浪费.
-
-最终, 我决定使用Linux中的定时器功能,
-使用程序定时发送\texttt{SIGALRM}信号, 这样, 我们 将信号处理函数完善即可.
-但是, 这样做会造成一个问题, 信号处理函数只接受一个参数
-我们需要使用全局变量才可以在信号函数中访问.
-
-关于能不能传递其他参数, 我也找了许多的相关材料, 以失败而告终,
-最后只得放弃, 开始着手全局变量的规划.
-
-\section{程序中内存泄露问题}
-
-程序中主要使用\texttt{valgrind}进行内存问题检测,
-\texttt{valgrind}的功能远不止此, 如果未来 需要进行缓存优化,
-也可以利用\texttt{valgrind}进行操作.
-
-在未使用DPDK时, 程序中的内存泄露问题已经完全解决.
-但是之后针对DPDK程序进行 内存泄露检测时,
-\texttt{valgrind}需要打补丁进行编译, 所以DPDK程序的内存安全性不能保证.
-
-其实我也想为自己辩解一下, \texttt{DPDK}只是作为入口使用.
-并且\texttt{DPDK}所有的数据包会 经过一轮拷贝, 拷贝过之后,
-立刻进行原数据包的释放. 这样, \texttt{DPDK}完全不会有 内存泄露.
-
-其实, \texttt{DPDK}数据包不进行释放也是可以的, 这样可以省一步拷贝的操作.
-由于程序中 使用了智能指针, 可以在\texttt{trace}数据构造完成后进行释放.
-是不是很美好.
-
-但是在写程序的过程中, 你很可能会忘记释放的. 如果想要减少这一次拷贝操作, 那么,
-请一定要为\texttt{valgrind}打补丁编译后进行充分的测试.
-图便宜也是要付出代价的.
-
-
-\section{Counter计数器表格的设计问题}
-
-目前的分析器中, 想要定时10s进行发送计数器信息, 所以一天的数据大约有
-$$\frac{24 \times 3600 s}{10s} = 8640 Rows $$
-
-如果我们有3台交换机的话, 10个计数规则的话, 每天将会有250,000条记录,
-每个月大约有7,500,000条.
-
-MySQL主要支持百万级别的数据, 因此, 在正式投入使用时,
-整个程序需要使用分区表(按月分区).
-如果有可能我们将粒度设置为20s是不是可以呢?
-
-我建议数据保存时间最好不要超过1个月, 有了问题需要尽快解决.
-% 程序中的问题及解决 }}}
-
-% {{{ 主要数据结构及算法
-\chapter{主要数据结构及算法}
-\label{chap:主要数据结构及算法}
-
-\section{算法}
-\label{chap:主要算法说明}
+% {{{ 分析器实现方案
+\chapter{分析器的设计与实现}
+
+\section{算法设计}
+\label{sec:分析器主要算法说明}
 
 \textbf{检测环路算法}: 检测环路应该是几个算法中最为简单的一个,
 只需要遍历数据流的所有节点, 如果不存在相同的节点,
@@ -706,7 +317,6 @@ MySQL主要支持百万级别的数据, 因此, 在正式投入使用时,
 我们只能得到到达分析器的时间, 因为认为\(S_{1}\)到分析器来回路径是一致的,
 因此可以 简单的使用分析器获得的两个时间相减得到粗略的往返延迟.
 
-
 \textbf{定时器功能的实现}:
 
 图\ref{fig:hash_backet}介绍了定时功能的实现, 每经过1s三个数据桶进行一次状态转移,
@@ -715,13 +325,10 @@ MySQL主要支持百万级别的数据, 因此, 在正式投入使用时,
 我们将桶的状态进行转移, H0中的数据就可以作为慢路径进行处理,
 因为桶中的每条trace数据已经包含了整整1s的数据包.
 
-\begin{center}
-\end{center}
-
 \begin{figure}[htbp!]
-  \centering 
+  \centering
   \includegraphics[width=0.8\textwidth]{../img/hash_backet.png}
-  \caption{hash backet}
+  \caption{hash桶设计}
   \label{fig:hash_backet}
 \end{figure}
 
@@ -731,11 +338,11 @@ MySQL主要支持百万级别的数据, 因此, 在正式投入使用时,
 处理时间过久, 将会被\textbf{while(!is\_slow\_over)\{\}}所阻塞, 这不是我们想要看到
 的结果, 之后可能会增加统计功能, 用以确定和解决程序的瓶颈.
 
+%\begin{lstlisting}[caption={My Caption},captionpos=b]
 \begin{lstlisting}[caption=数据结构,frame=tlrb]{Name}
 hash_backet* H0, H1, H2;    // 三个hash数据桶
 bool is_slow_over = true;   // 标示慢路径是否完成处理
 Mutex lock;                 // 互斥锁, 防止快慢路径同时对数据进行修改
-
 \end{lstlisting}
 
 \noindent\begin{minipage}{.55\textwidth}
@@ -782,17 +389,14 @@ while(!stop) {
 \end{lstlisting}
 \end{minipage}
 
-
-
 \section{数据结构}
-\label{chap:数据结构}
 
 \textbf{GRE数据包}
 
 \begin{figure}[htbp!]
   \centering
   \includegraphics[width=0.6\textwidth]{../img/format_gre.png}
-  \caption{GRE packet}
+  \caption{GRE数据包结构}
   \label{fig:gre_packet}
 \end{figure}
 
@@ -805,10 +409,9 @@ while(!stop) {
 传入任意的分析器中的是一个个单独的数据包, 分析器中, 需要还原整条路径,
 但是一条路径上数据包信息是相同的, 所以保存一份即可.
 这里是还原后采用的trace路径表示形式. 另外对于每一条trace数据,
-还具有一些元数据, 用以表示本trace数据的各种信息.
+还具有一些元数据, 用以表示本路径的各种信息.
 
-\begin{lstlisting}
-
+\begin{lstlisting}[caption=Trace数据结构,frame=tlrb]{Name}
 typedef struct{
     struct in_addr ip_src; /**< 32bits 源IP地址   */
     struct in_addr ip_dst; /**< 32bits 目的IP地址 */
@@ -861,8 +464,457 @@ typedef struct{
 在程序中, 需要经过快路径, 慢路径两个处理过程, 由快路径处理结束后,
 进入慢路径.
 
-\section{数据库设计}
-\label(chap:数据库设计)
+下图\ref{fig:analyzer_process}是具体处理过程. 首先进行
+对GRE数据包的解封操作, 解封后, 具有相同标示的数据包 需要进入相同的线程中.
+
+分析中, 如果某一跳交换机在1s内, 没有收到接下来的报文,
+即认为此次数据包已经结束, 因此, 我们需要增加定时功能.
+相关算法请查看主要算法说明\ref{sec:分析器主要算法说明}中定时器的实现.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.6\textwidth]{../img/analyze_process.png}
+  \caption{分析器处理逻辑}
+  \label{fig:analyzer_process}
+\end{figure}
+
+上述的流程图可能并不直观, 以下图\ref{fig:analyzer_arch}为程序实际的处理流程,
+英文关键字均为程序中确切的类名. 其中, Reader与Processer均可以自行配置个数.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.9\textwidth]{../img/analyzer_structure.png}
+  \caption{分析器架构设计}
+  \label{fig:analyzer_arch}
+\end{figure}
+
+\section{启动及退出流程}
+
+\subsection{程序启动流程}
+\ref{sec:分析器启动过程}
+
+  启动时, 首先初始化\texttt{Watcher}, 继而向控制器发送\texttt{INIT}信息,
+请求出口交换机信息 与最新的统计规则. 收到控制器的回复后,
+启动\texttt{Processer}, 而后启动\texttt{Reader}, 这
+时的\texttt{Reader}开始获取\texttt{GRE}数据包, 并根据内层的五元组(源IP,
+目的IP, 源端口, 目的端口 协议类型)进行hash操作,
+按照不同的结果存入到相应的队列中, 供\texttt{Processer}使用.
+
+  但是如何使控制器得知是哪一台分析器呢? 在控制器处理请求后, 又如何传回给分析器.
+
+  在程序中是这样解决的: 在向控制器发请求时, 分析器必须带上自己的ID作为请求标识.
+在控制器处理结束后, 返回的报文中也会携带有分析器的ID, 所有的分析器获取到广播后,
+对比收到的信息中的分析器ID与自己的ID. 如果ID相同, 则说明是对自己的操作, 否则
+丢弃该报文.
+
+  另外, 对于返回报文中ID为0的情况, 这是一种广播的形式, 所有的分析器必须按照广播
+报文进行操作.
+
+\subsection{程序退出流程}
+
+程序停止时, \texttt{Watcher}首先向控制器发送\texttt{QUIT}信号,
+通知控制器, 当前的分析器准备 停止了, 而后, 控制器做出回应.
+每个控制器下监管许多分析器, 他有权也应当知道所有分析器的 状态.
+
+程序中多次使用了队列进行解耦, 如果队列为空, 那么所有的消费者将会被阻塞.
+程序 收到退出信号时, 一定是先将生产者全部停止, 待生产者全部停止后.
+依次向队列中发送截止数据包, 向消费者表明生产者已经不再继续生产了.
+可以停下来了.
+
+\section{分析器实现中遇到的问题及解决方案}
+
+% 分析器是本次设计的核心, 分析器遇到的问题是最多的, 篇幅很大,
+% 这里只列出问题的名称. 在程序中的问题及解决
+% \ref{chap:程序中的问题及解决}中详细列出.
+%
+% \begin{itemize}
+%   \item 毫秒级时间戳的使用
+%   \item 与控制器的交互问题
+%   \item Counter计数器表格的设计问题
+%   \item 程序中内存泄露问题
+%   \item 定时器与signal
+%   \item 分析器的启动过程
+%   \item 与控制器的交互问题
+%   \item 热重启与容灾问题
+% \end{itemize}
+
+\subsection{毫秒级时间戳的使用}
+
+我们通常所说的时间戳,
+是指1970年01月01日00时00分00秒(北京时间1970年01月01日08时00分00秒)起至现在的总秒数.
+是以秒为计数单位的.
+
+在我们原始的数据结构中, 也采用了原始的32位整数作为时间戳,
+但是用秒的话根本无法满足需求.
+
+\subsubsection{可能的方案}
+
+考虑过之后, 有以下两种方案:
+
+\begin{itemize}
+\item
+  再来32位, 表示毫秒.
+\item
+  将原始的方案中时间戳的含义更改,
+  使其表示从一个特定时间开始经过的总毫秒.
+\end{itemize}
+
+第一种方案, 需要修改原先的数据结构了, 向其中增加4个byte,
+虽然我们目前的程序 不是针对嵌入式的设备, 但是需要克勤克俭用CPU缓存,
+具体的数据结构在后面将会列出. 根据我们的定义情况,
+假如每个对象增加了4个字节, 原始的128byte的CPU缓存就不够存放了,
+会造成性能下降.
+
+第二种方案, 程序级别重新定义时间戳的含义, 假如之后的用户不了解程序设计,
+很有 很有可能会对时间戳进行误用. 而且, 从特定时间开始,
+到底是什么时间开始, 特定时间 开始后, 一个32位的时间戳又能表示多久呢.
+我们都知道原始的32位时间戳只能表示到 2037年,
+我们自定义的时间戳能达到怎样的效果.
+
+首先计算32位的数据能表示多少天, 32位大约能表示20亿的数目.
+
+$$ \frac{2 \times 10^{9} ms }{24 \times 3600 \times 1000} = 23 Days$$
+
+粗略的计算表明, 如果使用ms表示时间戳, 最多也就只能表示23天,
+如果你使用\texttt{unsigned\ int} 那么翻倍也就是46天,
+这样的结果有点太少了, 完全达不到我们的要求.
+
+\subsubsection{最终方案}
+
+使用32位时间戳表示当天偏移的毫秒数, 再加一个字段保存日期.
+但这个字段不放在程序的内存中, 而是放置在数据库中.
+
+采用这个方案的原因有以下两点:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  32位的时间戳已经足够表示1天内偏移的毫秒数.
+\item
+  整个系统的实时性很强, 误差也不会超过10s, 存入数据库时,
+  将数据库当天的日期作为 日志日期写入到字段中, 这样,
+  可以保证我们在搜索时获得正确的时间戳, 也不需要考虑 空间占用问题, 并且,
+  这个新增的日期字段可以作为索引来使用.
+\end{enumerate}
+
+日期字段可以通过MySQL的trigger进行设置.
+
+
+\begin{lstlisting} [caption=Triger设置]{SQL}
+CREATE TRIGGER `fdate_set` BEFORE INSERT ON `tbl_trace_data`
+FOR EACH ROW BEGIN
+  SET NEW.fdate = CAST( DATE_FORMAT(NOW(),'%Y%m%d') AS UNSIGNED);
+END
+\end{lstlisting}
+
+\subsubsection{细节问题}
+
+这样存储会有一个问题: 如果出现了快到第二天0点时存入了数据,
+而设置日期时已经到了第二天 例如: 2018-03-22 23:59:55 时准备存入数据库,
+之后数据库中的fdate被设置为了2018-03-23, 这是一种不匹配.
+
+有这么一种解决方式: 可以通过判断时间戳的偏移, 如果偏移过大, 则认为它是
+第一天的数据, 也就是03-22的数据, 上面只是列了最简单的Trigger设置.
+
+\subsection{热重启与容灾问题}
+\label{sec:热重启与容灾问题}
+
+在考虑到控制器与分析器的交互后, 直接启动分析器的情况已经在
+分析器启动过程\ref{sec:分析器启动过程}中提到这个问题,
+但是作为线上项目, 热重启与容灾也成为了一个问题.
+
+\subsubsection{热重启}
+
+重启过程是一个分析短暂暂停的过程, 即使我们想要使其接受流量来分析,
+我们也要做好分析速率变得很慢的情况.
+
+目前, 我的打算是线上分为三台分析器, 另有两台分析器进行容灾.
+
+进行重启操作时, 采用分批重启的形式. 假如我们需要热重启分析器1,
+首先配置交换机, 将网络流量导入到另外两台分析器中, 重启分析器1完成后,
+再将流量导入 到分析器1,3中, 依次类推, 如果容灾机器空闲,
+可以考虑导入先导入到容灾机器中.
+
+\subsubsection{容灾}
+
+当分析器遇到了故障, 需要检测时, 首先启动容灾服务器, 继而修改交换机配置,
+将故障 分析器的流量全部切换到容灾分析器中, 而后停机检测.
+
+\subsection{定时器与signal}
+
+在当前的程序中, 我不打算再添加一个线程来做定时上传计数器的功能.
+这样的轮询 太过单调了, 而且定时上传功能可能只需要10s, 或是20s才上传一次,
+单独开线程显得 很浪费.
+
+最终, 我决定使用Linux中的定时器功能,
+使用程序定时发送\texttt{SIGALRM}信号, 这样, 我们 将信号处理函数完善即可.
+但是, 这样做会造成一个问题, 信号处理函数只接受一个参数
+我们需要使用全局变量才可以在信号函数中访问.
+
+关于能不能传递其他参数, 我也找了许多的相关材料, 以失败而告终,
+最后只得放弃, 开始着手全局变量的规划.
+
+\subsection{与控制器的交互部分}
+
+与控制器的交互分为两个部分, 发送和接受. 这两个部分均在watcher中编写.
+
+\textbf{发送}: 我们向控制器监听的消息队列中发送消息
+
+使用消息队列主要是因为可能有多个分析器, 队列是一个比较简单的方式.
+
+\textbf{接受}: 从频道中读取, 如果是属于自己的命令信息, 则进行相应操作.
+
+如果控制器采取一对多的连接方式,
+其实是没多少必要的(经常进行交互的操作主要就是 增加删除规则,
+增加删除出口交换机ID), 这样的操作基本是对所有分析器进行的. 使用
+PUBSUB模式可以简化控制器的逻辑.
+
+与控制器的交互部分全部采用\texttt{Redis}解耦,
+其中使用了\texttt{Redis}的\texttt{消息队列}和\texttt{Pubsub} 两种接口.
+两种接口的使用与调试方式如下
+
+\textbf{消息队列}: 由 分析器 =\textgreater{} 控制器
+
+\begin{lstlisting} [caption=分析器推送]{Name}
+> 127.0.0.1:6379> LPUSH foo 1234 # 分析器PUSH
+> (integer) 1
+
+> 127.0.0.1:6379> LPOP foo  # 控制器接受
+> "1234"
+\end{lstlisting}
+
+\textbf{Pubsub}: 由控制器发送广播, 许多分析器监听相同的频道
+
+
+\begin{lstlisting} [caption=控制器下发]{Name}
+> 127.0.0.1:6379> SUBSCRIBE foo        # 首先启动监听foo频道 
+> Reading messages... (press Ctrl-C to quit)
+> 1) "subscribe"
+> 2) "foo"
+> 3) (integer) 1
+> 1) "message"
+> 2) "foo"
+> 3) "12334"
+
+> 127.0.0.1:6379> PUBLISH foo 12334   # 控制器向foo频道中发送
+> (integer) 1
+\end{lstlisting}
+
+
+
+% }}} 分析器实现方案
+
+% {{{ 控制器的设计与实现
+\chapter{控制器的设计与实现}
+
+\section{控制器与分析器的接口设计}
+% \section{分析器, 控制器接口设计}
+\label{sec:分析器, 控制器接口设计}
+
+\subsection{启动过程}
+
+每台分析器启动时, 首先向控制器发送请求. 获取计数器规则, 以及出口交换机ID,
+这里是向控制器监听的队列中发送.
+
+\begin{lstlisting}[caption=分析器初始化请求]{Name}
+{
+  "ACTION": "INIT",
+  "ANALYZER_ID": 124         // 分析器ID, 由分析器的配置文件进行配置
+}
+\end{lstlisting}
+
+控制器收到报文后, 针对当前的分析器ID, 进行返回, 同时带上出口交换机的ID,
+以及计数器信息, 通过控制器进行配置, 可以简化分析器的操作.
+
+\begin{lstlisting}[caption=控制器返回报文]{Name}
+{
+  "ANALYZER_ID": 124,           // ID为0, 表示这是一种广播操作.
+  "MESSAGE": {                  // 报文主体
+    "COMMOND": "INIT",          // 初始化
+    "SWH_ID": [
+        14, 23, 19, 40
+    ],
+    "COUNTER": [                // 计数器的filter
+        {
+            "CNT_ID" : 10,
+            "SRC_IP": "192.118.0.2",
+            "DST_IP": "192.119.0.1",
+            ...
+        }
+    ]
+  }
+}
+\end{lstlisting}
+
+\subsection{更新出口交换机与计数器信息}
+
+由控制器主动进行发送指令包重载过程, 重载会导致分析速率下降,
+在热重启与容灾部分\ref{sec:热重启与容灾问题}提供了一种解决方案.
+
+\begin{lstlisting}[caption=控制器下发指令]{Name}
+{
+  "ANALYZER_ID": 13,        // ID为0, 表示这是一种广播操作.
+  "MESSAGE": {              // 报文主体
+    "COMMOND": "RELOAD",    // 重载过程, 这里认为是热重启
+    "SWH_ID": [
+        14, 23, 19, 40
+    ],
+    "COUNTER": [            // 计数器的filter
+        {
+            "CNT_ID" : 1
+            "SRC_IP": "192.118.0.2",
+            "DST_IP": "192.119.0.1"
+        }
+    ]
+  }
+}
+\end{lstlisting}
+
+增加删除Counter规则, 以及出口交换机ID, 这一操作应该是对每个分析器进行, 以下为
+具体的命令.
+
+
+\begin{table}[]
+    \centering
+    \caption{控制器命令}
+    \label{tbl:message}
+    \begin{tabular}{lllll} \hline
+    COMMAND      & 解释         & 具体报文                         \\ \hline
+    ADD\_RULE    & 增加规则     & "COUNTER": {[}\{"ID":1\} .. {]}  \\
+    DEL\_RULE    & 删除规则     & "COUNTER": {[}1, 2,3{]}          \\
+    ADD\_SWH\_ID & 增加交换机ID & "SWH\_ID" : {[}13, 4, 4{]}       \\
+    DEL\_SWH\_ID & 删除交换机ID & "SWH\_ID" : {[}23,{]}            \\ \hline
+    \end{tabular}
+\end{table}
+
+\begin{lstlisting}[caption=控制器增加删除规则]{Name}
+{
+  "ANALYZER_ID": 0,         // ID为0, 表示这是一种广播操作.
+  "MESSAGE": {              // 报文主体
+    "COMMOND": "ADD_RULE",  // 增加删除规则
+    "SWH_ID": [
+        14, 23, 19, 40
+    ],
+    "COUNTER": [           // 计数器的filter
+        {
+            "CNT_ID" : 1
+            "SRC_IP": "192.118.0.2",
+            "DST_IP": "192.119.0.1"
+        }
+    ]
+  }
+}
+\end{lstlisting}
+
+\section{控制器, 展示页面接口设计}
+
+\subsection{添加删除规则}
+
+\url{https://127.0.0.1:9999/v1/rules}
+
+请求参数
+
+\begin{table}[]
+    \centering
+    \caption{添加删除规则参数}
+    \label{tbl:add_del_rule}
+    \begin{tabular}{lll} \hline
+    Field              & Type   & Description                 \\ \hline
+    act                & String & 只能使用 'ADD|DEL'              \\
+    rule\_id           & Number & 在DEL操作时必须填写                 \\
+    rule\_name         & String & 在ADD操作时必须填写                 \\
+    ip\_srcoptional    & String & Default value: 0.0.0.0      \\
+    ip\_dstoptional    & String & Default value: 0.0.0.0      \\
+    protocoloptional   & Number & 报文中的协议类型Default value: -1   \\
+    switch\_idoptional & Number & 镜像报文的交换机IDDefault value: -1 \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection{请求Trace数据信息}
+
+\url{https://127.0.0.1:9999/v1/tracce_filter}
+
+\begin{table}[]
+    \centering
+    \caption{请求Trace数据}
+    \label{tbl:get_trace}
+    \begin{tabular}{lll} \hline
+    Field             & Type   & Description            \\ \hline
+    start\_time       & String &                        \\
+    end\_time         & String &                        \\
+    ip\_srcoptional   & String & Default value: 0.0.0.0 \\
+    ip\_dstoptional   & String & Default value: 0.0.0.0 \\
+    protocoloptional  & Number & Default value: -1      \\
+    is\_loopoptional  & Number & Default value: -1      \\
+    is\_dropoptional  & Number & Default value: -1      \\
+    is\_probeoptional & Number & Default value: -1      \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection{请求counter数据信息}
+
+\url{https://127.0.0.1:9999/v1/counter_filter}
+
+\begin{table}[]
+    \centering
+    \caption{请求Counter数据}
+    \label{tbl:get_counter}
+    \begin{tabular}{lll}
+    Field       & Type   & Description      \\ \hline
+    start\_time & String &                  \\
+    end\_time   & String &                  \\
+    rule\_id    & Number & Default value: 0 \\ \hline
+    \end{tabular}
+\end{table}
+
+\subsection{请求所有规则}
+
+\url{https://127.0.0.1:9999/v1/rules}
+
+这是一个\texttt{GET}请求, 查询所有的规则, 所有的rule在初始化时就应该被获取到,
+而后通过 \texttt{rule\_id}查找counter数据.
+
+
+\section{控制器的内部实现}
+
+控制器采用\texttt{Python}实现. 具体使用了\texttt{Tornado}框架.
+它向下控制分析器向上为应用程序提供接口.
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.9\textwidth]{../img/controler_arch.png}
+  \caption{控制器构造}
+  \label{fig:contoler_arch}
+\end{figure}
+
+控制器中, 涉及到两个方面:
+一是与存储器的交互, 这里, 我们的存储器使用\texttt{MySQL};
+二是与分析器进行交互, 通过\texttt{Redis}进行解耦.
+
+\textbf{与存储器交互}: 允许用户读取Trace记录, 读取统计信息. 允许用户读写统计规则,
+以及构造探针
+
+\textbf{与分析器交互}: 每个分析器启动时, 需要首先向控制器发送请求, 获得控制器的
+允许后, 才能启动. 如果用户更新了统计规则, 控制器也会立刻下发到所有的的分析器中.
+在分析器准备结束时, 也同样需要请求控制器. 未来的控制器可能还需要添加
+对于每个分析器的管理功能.
+
+\section{有关程序性能的问题}
+
+  对于\texttt{CPython}来说, 由于全局中断锁也就是\texttt{GIL}的存在, \texttt{CPython}
+无法充分的利用多核. 因此, 编写控制器时, 我选择单线程, 也因此选择了\texttt{Tornado}.
+
+但请知悉所有用户均是在一个线程中进行轮转, 如果某个用户请求时间过久,
+将会严重影响其他用户的查询体验.
+% }}} 控制器的设计与实现
+
+% {{{ 存储器与访问页面的设计与实现
+\chapter{存储器与访问页面的设计与实现}
+
+\section{存储器的设计与实现}
+
+\subsection{数据库设计}
+\label{sec:数据库设计}
 
 存储器中的结构: 使用关系型数据库进行存储.
 
@@ -880,7 +932,7 @@ typedef struct{
 
 \begin{table}[]
     \centering
-    \caption{tbl\_traffic\_data}   % \caption{} 改为 \captionof{table}{}
+    \caption{tbl\_traffic\_data}
     \begin{tabular}{llll}   \hline
     Field          & Type          & Comment                   \\ \hline
     id             & int(11)       &                           \\
@@ -897,52 +949,7 @@ typedef struct{
     \label{tbl_traffic_data}
 \end{table}
 
-存储计数器的数据表相对简单, 主要记录分析器ID, 计数值以及产生时间.
-
-\begin{table}[]
-    \centering
-    \caption{tbl\_counter}
-    \label{tbl_counter}
-    \begin{tabular}{lll} \hline
-    Field          & Type          & Comment \\ \hline
-    id             & int(11)       &         \\
-    counter\_name  & varchar(1024) & 计数器名称   \\
-    generate\_time & timestamp     & 数据产生时间  \\
-    analyer\_id    & int(11)       & 分析器ID   \\
-    cnt            & int(11)       & 计数值     \\
-    fdate          & int(11)       & 数据产生日期  \\ \hline
-    \end{tabular}
-\end{table}
-% 主要数据结构及算法 }}}
-
-% {{{ 设计中的一些抉择
-\chapter{设计中的一些抉择}
-\label{chap:设计中的一些抉择}
-
-\section{技术选型}
-
-此次系统设计, 技术选型主要包括分析器, 存储器, 以及控制器,
-上层应用程序的设计.
-
-根据对性能的不同要求, 结合开发进度做以下讨论. 在分析器中,
-需要考虑大量的流量 涌来, 必须充分利用系统资源进行数据的接受和处理,
-使用偏向底层的C/C++语言, 在控制器中, 只涉及简单的数据库查找与用户交互,
-对性能要求不高, 故使用Python, 以实现迅速而 敏捷的开发.
-
-对于本次的系统设计, 分工如下:
-
-\begin{itemize}
-\item
-  分析器采用C/C++完成
-\item
-  存储器可能选择MySQL作为存储
-\item
-  控制器主要通过Python实现, 期间某些静态库的编写使用C/C++完成.
-  控制器的API接口采用HTTP协议交互, 最终的展示页面,
-  功能配置也将在网页上进行操作, 其中, 图表展示打算使用开源的echarts.
-\end{itemize}
-
-\section{路径存储的选择(分析器)}
+\subsection{路径存储的选择}
 
 由于对于某个数据包的整条路径, 我们是需要进行存储的. 但是,
 路径存储到数据库后, 我们不打算提供对于数据路径的检索功能. 这样,
@@ -965,16 +972,60 @@ typedef struct{
 鉴于此, 我放弃了内存占用量较小的\texttt{Protobuf},
 转而使用易于读取理解的\texttt{JSON}.
 
+\subsection{Counter计数器表格的设计}
 
-\section{有关程序性能的问题(控制器)}
+存储计数器的数据表相对简单, 主要记录分析器ID, 计数值以及产生时间.
 
-  对于\texttt{CPython}来说, 由于全局中断锁也就是\texttt{GIL}的存在, \texttt{CPython}
-无法充分的利用多核. 因此, 编写控制器时, 我选择单线程, 也因此选择了\texttt{Tornado}.
+\begin{table}[]
+    \centering
+    \caption{tbl\_counter}
+    \label{tbl_counter}
+    \begin{tabular}{lll} \hline
+    Field          & Type          & Comment \\ \hline
+    id             & int(11)       &         \\
+    counter\_name  & varchar(1024) & 计数器名称   \\
+    generate\_time & timestamp     & 数据产生时间  \\
+    analyer\_id    & int(11)       & 分析器ID   \\
+    cnt            & int(11)       & 计数值     \\
+    fdate          & int(11)       & 数据产生日期  \\ \hline
+    \end{tabular}
+\end{table}
 
-但请知悉所有用户均是在一个线程中进行轮转, 如果某个用户请求时间过久,
-将会严重影响其他用户的查询体验.
+目前的分析器中, 想要定时10s进行发送计数器信息, 所以一天的数据大约有
+$$\frac{24 \times 3600 s}{10s} = 8640 Rows $$
 
-\section{有关预警方式的选择}
+如果我们有3台交换机的话, 10个计数规则的话, 每天将会有250,000条记录,
+每个月大约有7,500,000条.
+
+MySQL主要支持百万级别的数据, 因此, 在正式投入使用时,
+整个程序需要使用分区表(按月分区).
+如果有可能我们将粒度设置为20s是不是可以呢?
+
+我建议数据保存时间最好不要超过1个月, 有了问题需要尽快解决.
+
+
+\section{访问页面设计与实现}
+
+\subsection{访问页面设计}
+
+下图\ref{fig:traffic_data_show}, \ref{fig:counter_data_show}
+分别展示了数据流量的显示 以及 计数器统计结果的显示,,
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.9\textwidth]{../img/traffic_data_show.png}
+  \caption{路径信息}
+  \label{fig:traffic_data_show}
+\end{figure}
+
+\begin{figure}[htbp!]
+  \centering
+  \includegraphics[width=0.9\textwidth]{../img/counter_data_show.png}
+  \caption{计数器数据}
+  \label{fig:counter_data_show}
+\end{figure}
+
+\subsection{有关预警方式选择}
 
   预警也是本程序应有的功能, 为了开发以及未来其他接入功能的开发, 我采用了\texttt{PushBear}
 服务, 用户可以直接扫描二维码关注预警频道. 而后将会收到预警信息. 也可以在任意
@@ -1003,10 +1054,13 @@ typedef struct{
 如图\ref{fig:pushbear}为官网, 右侧\ref{fig:push_example}为推送样例.
 
 %  https://pushbear.ftqq.com/admin/#/
-%  设计中的一些抉择  }}}
+% }}} 存储器与访问页面的设计与实现
 
-%  {{{ 程序部署
-\chapter{程序部署}
+% }}} 实现方案
+
+%  {{{ 程序部署与性能评测
+\chapter{程序部署与性能评测}
+\section{程序部署}
 
   本次的程序设计主要分为三个部分, 分析器, 存储器以及控制器, 展示页面由控制器
 负责加载. 承接上文分析器控制接口设计\ref{sec:分析器, 控制器接口设计}, 分析器, 
@@ -1016,13 +1070,13 @@ typedef struct{
 服务器上. 最主要的原因就是Redis以及MySQL的存在, 就是为了连接分析器与控制器,
 放置在一台服务器上符合它们的作用.
 
-  另外, 分析器可以在多台PC进行部署, 这是由于一条路径上的所有数据包都会根据hash操作
+  也分析器可以在多台PC进行部署, 这是由于一条路径上的所有数据包都会根据hash操作
 分配至同一个分析器中. 可以利用这一特性, 进行横向扩展来提高系统的吞吐量.
 
-  有关详细的部署操作, 在代码的文档中均有记录, 在此不进行赘述.
-% 程序部署 }}}
+  有关详细的部署操作, 在代码的文档\texttt{README}\cite{Niftyflow}中均有记录,
+在此不进行赘述.
 
-\chapter{性能测试情况}
+\section{评测要点与评测环境}
 
   程序中, 实现的功能有下面这些:
 
@@ -1037,18 +1091,17 @@ typedef struct{
 数据库可以保持较好的性能, 而控制器只负责控制分析器与提供接口, 数据量并不大.
 其中性能存在瓶颈部分的主要在于分析器中,
 
-\section{评测环境}
 
-服务器配置如下:
+服务器配置\ref{tbl:server_config}所示.
 
 \begin{table}[]
     \centering
     \caption{服务器配置}
-    \label{server_config}
+    \label{tbl:server_config}
     \begin{tabular}{ll} \hline
     Field    & Type          \\ \hline
-    CPU:     & Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz \\
-    内存:      & 32G                                       \\
+    CPU:     & Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz(28核) \\
+    内存:    & 32G                                       \\
     监听的网卡为lo & 采用tcpreplay指定测试数据以及发送速率. \\ \hline
     \end{tabular}
 \end{table}
@@ -1058,14 +1111,14 @@ typedef struct{
 
 \begin{itemize}
     \item 首先启动分析器程序
-    \item tcpreplay进行大量的数据包发送, 评测时的输入3000000pps(packets per second).
+    \item tcpreplay进行大量的数据包发送, 评测时的输入3,000,000pps(packets per second).
     \item 评测大概进行了5分钟, 而后我将程序关闭并退出.
 \end{itemize}
 
-\section{结果概述}
+\section{评测结果及分析}
 
  下面两张图对应的均为日志记录为\texttt{INFO}的情况. 对于日志记录为\texttt{DEBUG}
-的情况, 生成的日志过于庞大, IO占了很大一部分性能, 大概要比INFO时的性能损失一些.
+的情况, 生成的日志过于庞大, IO占了很大一部分性能, 要比INFO时的性能损失一些.
 
 \begin{figure}[htbp!]
   \centering
@@ -1083,7 +1136,8 @@ typedef struct{
 
 
 通过观察\ref{fig:queue_pic}, 可以看得出, 使用lo进行数据接收时, 队列中的数据量
-根本不会上升.这也就说明了一点, 当前程序的瓶颈是在\texttt{pcap\_open\_live}阶段. 这里我只测试了pacp库, 或许改用'dpdk'能达到更好的效果.
+根本不会上升.这也就说明了一点, 当前程序的瓶颈是在\texttt{pcap\_open\_live}阶段.
+这里我只测试了\texttt{pcap}库, 或许改用\texttt{dpdk}能达到更好的效果.
 如果未来硬件支持, 我会考虑测试的.
 
 通过观察\ref{fig:process_pic}, 所有process线程的处理速度基本是稳定的,
@@ -1091,8 +1145,22 @@ typedef struct{
 也可以看的出, 当前的处理速率大概是88万pps, 也就是平均每个线程有10万pps.
 这里并不是说单个线程的处理只有10万pps, 只能说明, 我们每秒到达的数据包只有这么多.
 
-具体的评测过程以及日志分析脚本请查看\texttt{analyzer/README.md}中的性能评测部分, 
+具体的评测过程以及日志分析脚本请查看
+\texttt{analyzer/README.md}\cite{Niftyflow}中的性能评测部分, 
 我介绍了相对详细的评测过程以及结果分析.
+
+% }}} 程序部署与性能评测
+
+\chapter{总结与展望}
+
+\section{论文总结}
+
+论文总结, 待补充
+
+\section{工作展望}
+
+工作展望, 待补充
+
 
 % \chapter{扩展}
 
