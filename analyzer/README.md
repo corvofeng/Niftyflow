@@ -272,7 +272,7 @@ CPU: Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz
 
 ```bash
 # 评测命令
-sudo tcpreplay -K -p 8000 -l 0 -i lo out.pcap   # 指定参数8000pps
+sudo tcpreplay -K -p 3000000 -l 0 -i lo out.pcap   # 指定参数3000000pps
 sudo ./bin/analyzer | tee  xx.log               # 使用tee同时输出到文件
 
 # 检查日志
