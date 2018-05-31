@@ -18,7 +18,7 @@
 
 在`analyzer/input/reader.cpp`中, 取得数据包并放置在对应的队列中:
 *  `_inner_dpdk_read_and_push`, 取当前线程对应的核配置信息, 不断轮询,
-    当前核对应的多个port中取得数据.
+    从当前核对应的多个port中取得数据.
 
 ## 我所修改的示例程序
 
