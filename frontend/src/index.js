@@ -5,7 +5,6 @@ require('bootstrap/dist/js/bootstrap.bundle.js');   // for bootstrap
 // var trace_page_js = require('./module/trace_data');
 import {trace_data} from "./module/trace_data";
 import {counter_data} from "./module/counter_data";
-import {performance} from "./module/performance";
 
 // require('bootstrap-timepicker/js/bootstrap-timepicker.min.js')
 
@@ -47,11 +46,5 @@ counter_data.bind_div(
   document.getElementById('counter_charts')
 );
 counter_data.init_couter_id();
-
-
-performance.bind_div(
-
-  document.getElementById('performance_chart')
-);
 
 //# counter_data.run_charts();
