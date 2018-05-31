@@ -2,7 +2,8 @@
 #include "conf.h"
 
 /**
- * 初始化每个给定的端口, 这个函数从一开始就很容易出错, 如果启动不成功,
+ * 初始化每个给定的端口, 将端口与pool相绑定
+ *  这个函数从一开始就很容易出错, 如果启动不成功,
  * 十之八九要进行调试, 没什么更好的办法, 多打断点, 多调试吧
  * Initialises a given port using global settings and with the rx buffers
  * coming from the mbuf_pool passed as parameter
