@@ -21,6 +21,38 @@ signal_handler(int signum)
     }
 }
 
+/** 程序启动过程
+ *  +--------------+
+ *  |  Init logger |
+ *  +------+-------+
+ *         |
+ *         v
+ *  +------+-------+
+ *  |  Init conf   |
+ *  +------+-------+
+ *         |
+ *         v
+ *  +------+-------+
+ *  | Watcher Init |
+ *  +------+-------+
+ *         |
+ *         v
+ *  +------+-------+
+ *  | Send  Init   |
+ *  +------+-------+
+ *         |
+ *         v
+ *  +------+-------+
+ *  | Get Command  |
+ *  |From Controler|
+ *  +------+-------+
+ *         |
+ *         v
+ *  +------+-------+
+ *  | Reader Start |
+ *  |    Reading   |
+ *  +------+-------+
+ */
 int main(int argc, char *argv[])
 {
     rte_eal_init(argc, argv);

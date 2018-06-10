@@ -44,12 +44,12 @@ QtCreater打开, 它对CMake支持良好, 尤其是cmake到了3.8之后, 可以�
 
 除了使用`make test`之外, 也可以直接执行`./test/MySQLTest`.
 
+## 程序结构
+
+![程序结构图][8]
 
 ## 有关DPDK的使用
 
-  对于分析器程序来说, 网卡输入的速度, 极有可能成为瓶颈. 如果使用`libpcap`进行抓包,
-整个过程需要Linux网络协议栈的支持, 需要从内核空间进行一次拷贝到用户空间. 而这些
-GRE数据包中的内容, 我们根本不需要Linux系统来关心, 只是想要更快的得到更多的数据包.
 DPDK的使用, 可以帮助我们快速获得数据包. 但是也有一点不好, 需要专用的硬件支持,
 而且DPDK程序的编译也很麻烦.
 
@@ -59,157 +59,7 @@ DPDK的使用, 可以帮助我们快速获得数据包. 但是也有一点不好
 
   DPDK测试时, 请在testpmd成功的情况下, 使用`sudo ./test/DPDKTest`.
 
-  DPDK的环境配置, 请查看整个项目`doc`文件夹中的相关文档.
-
-```bash
-> wget http://dpdk.org/browse/dpdk-stable/snapshot/dpdk-stable-18.02.tar.xz
-> make install T=x86_64-native-linuxapp-gcc -j8
-```
-
-
-## 数据库问题
-
-  分析器中的数据库trace数据连接采用**长连接**的方式, 因为它对写入数据库很频繁,
-短连接会影响性能. 而定时的规则书写采用**短连接**的形式, 10~20s才会写入一次.
-
-**Attention**: 每个写入线程单独持有一个连接对象, 假如所有线程公用一个连接对象,
-可能会造成数据库之间的竞争, 而且文档中也未提及mysql的连接是线程安全的. 我们也
-不能做这样的假设.
-
-
-### 数据表结构
-
-经过强烈的思想斗争, 我决定不使用protobuf, 直接使用json作为trace存储工具.
-
-### Triger 设置
-
-> 建立trigger, 由于Trace数据本身只携带了当日时间戳的偏移.
-> 最终我决定在存入数据库时, 直接用数据库存入当天日期作为fdate.
->
->
-> 如果出现了快到第二天0点时存入了数据, 而设置fdate时成为了第二天
->   例如: 2018-03-22 23:59:55 时准备存入数据库,
->     之后数据库中的fdate被设置为了2018-03-23, 这是一种不匹配,
->
-> 有这么一种解决方式: 可以通过判断time_start的偏移, 如果偏移过大, 则认为它是
-> 第一天的数据, 也就是03-22的数据. 下面只是列了最简单的Trigger设置.
-
-
-```sql
-DELIMITER $$
-CREATE TRIGGER `fdate_set` BEFORE INSERT ON `tbl_trace_data`
-FOR EACH ROW BEGIN
-  SET NEW.fdate = CAST( DATE_FORMAT(NOW(),'%Y%m%d') AS UNSIGNED);
-END$$
-DELIMITER ;
-
-DELIMITER $$
-CREATE TRIGGER `fdate_set_counter` BEFORE INSERT ON  `tbl_counter` 
-FOR EACH
-ROW BEGIN 
-SET NEW.fdate = CAST( DATE_FORMAT( NOW( ) ,  '%Y%m%d' ) AS UNSIGNED ) ;
-END$$
-DELIMITER ;
-
-```
-
-### Counter计数器表格的设计问题
-
-目前的分析器中, 想要定时10s进行发送计数器信息, 所以一天的数据大约有
-$$
-\frac{24 \times 3600 s}{10s} = 8640(条)
-$$
-
-如果我们有3台交换机的话, 10个计数规则的话, 每天将会有250,000条记录,
-每个月大约有7,500,000条.
-
-MySQL主要支持百万级别的数据, 因此, 在正式投入使用时,
-整个程序需要使用分区表(按月分区). 如果有可能我们将粒度设置为20s是不是可以呢?
-
-我建议数据保存时间最好不要超过1个月, 有了问题需要尽快解决. 
-
-
-### 程序的启动过程
-
-  主要逻辑请查看`main.cpp`中的代码.
-
-```
-+--------------+
-|  Init logger |
-+------+-------+
-       |
-       v
-+------+-------+
-|  Init conf   |
-+------+-------+
-       |
-       v
-+------+-------+
-| Watcher Init |
-+------+-------+
-       |
-       v
-+------+-------+
-| Send  Init   |
-+------+-------+
-       |
-       v
-+------+-------+
-| Get Command  |
-|From Controler|
-+------+-------+
-       |
-       v
-+------+-------+
-| Reader Start |
-|    Reading   |
-+------+-------+
-```
-
-
-## 与控制器交互
-
-与控制器的交互分为两个部分, 发送和接受. 这两个部分均在watcher中编写.
-
-**发送**: 我们向控制器监听的消息队列中发送消息
-
-使用消息队列主要是因为可能有多个分析器, 队列是一个比较简单的方式.
-
-
-**接受**: 从频道中读取, 如果是属于自己的命令信息, 则进行相应操作.
-
-如果控制器采取一对多的连接方式, 其实是没多少必要的(经常进行交互的操作主要就是
-增加删除规则, 增加删除出口交换机ID), 这样的操作基本是对所有分析器进行的. 使用
-PubSub可以简化控制器的逻辑.
-
-与控制器的交互部分全部采用`Redis`解耦, 其中使用了`Redis`的`消息队列`和`Pubsub`
-两种接口. 两种接口的使用如下
-
-**消息队列**: 由 分析器 => 控制器
-
-```bash
-> 127.0.0.1:6379> LPUSH foo 1234 # 分析器PUSH
-> (integer) 1
-
-> 127.0.0.1:6379> LPOP foo  # 控制器接受
-> "1234"
-```
-
-**Pubsub**: 由控制器发送广播, 许多分析器监听相同的频道
-
-```bash
-> 127.0.0.1:6379> SUBSCRIBE foo        # 首先启动监听foo频道 
-> Reading messages... (press Ctrl-C to quit)
-> 1) "subscribe"
-> 2) "foo"
-> 3) (integer) 1
-> 1) "message"
-> 2) "foo"
-> 3) "12334"
-
-> 127.0.0.1:6379> PUBLISH foo 12334   # 控制器向foo频道中发送
-> (integer) 1
-```
+  DPDK的环境配置, 请查看[测试环境搭建][10], 使用示例请查看[DPDK相关文档][9], 
 
 ## 定时器与signal
 
@@ -262,9 +112,11 @@ PubSub可以简化控制器的逻辑.
 
 服务器配置如下:
 
-CPU: Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz
-内存: 32G
-监听的网卡为lo, 采用tcpreplay指定测试数据以及发送速率.
+| Type| value|
+| --- | --- |
+| CPU |  Intel(R) Xeon(R) CPU E5-2690 v4 @ 2.60GHz|
+| 内存 | 32G |
+| 监听的网卡为lo | 采用tcpreplay指定测试数据以及发送速率.|
 
 
 
@@ -304,7 +156,6 @@ PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
 14402 root      20   0 1455148  13672   2720 S 993.0  0.0  13:02.91 analyzer
 
 25798 root      20   0 2842400 1.335g  10764 S 711.0  4.3  71:54.03 analyzer
-
 ```
 
 通过观察第一张图片, 可以看得出, 使用lo进行数据接收时, 队列中的数据量根本不会上升.
@@ -338,3 +189,6 @@ PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
 [5]: ../doc/img/每个线程处理情况-faster.png
 [6]: ../doc/img/队列情况-faster-trpile.png
 [7]: ../doc/img/每个线程处理情况-faster-triple.png
+[8]: ../doc/img/analyzer_structure.png
+[9]: ../doc/orig_md/DPDK使用说明.md
+[10]: ../doc/orig_md/测试环境搭建.md

@@ -5,6 +5,9 @@
 如果需要技术支持, 将按照部署的服务器数量和咨询时间收费.
 需要新的功能请单独咨询.
 
+  2018-6-2, 答辩结束, 我将文档补充完善, 未来有任何问题, 欢迎联系我
+`corvofeng#gmail.com`
+
 ## 文件结构
 
 ```
@@ -17,6 +20,9 @@
 
 4 directories, 1 files
 ```
+
+工作流程如下图所示
+![数据流][3]
 
 ## 文档生成
 
@@ -54,3 +60,5 @@
 Copyright © 2016 corvo.
 
 This project is licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php
+
+[3]: ./doc/img/user_flow.png
