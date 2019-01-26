@@ -14,7 +14,7 @@
 .
 ├── doc         # 项目中的文档: 交互接口以及环境配置
 ├── analyzer    # 分析器
-├── controler   # 控制器
+├── controller   # 控制器
 ├── frontend    # 前端页面
 └── README.md
 
@@ -32,7 +32,7 @@
 
 ```
 > npm install apidoc -g
-> apidoc -i ./controler/ -o ./doc/apidoc # 生成的文档保存在doc/apidoc中
+> apidoc -i ./controller/ -o ./doc/apidoc # 生成的文档保存在doc/apidoc中
 ```
 
 ### 使用pandoc生成项目文档

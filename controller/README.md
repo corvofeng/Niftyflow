@@ -41,6 +41,6 @@
 
 [1]: http://www.tornadoweb.org/en/stable/guide/structure.html
 [2]: https://pypi.python.org/pypi/PyMySQL
-[3]: ../doc/img/controler_arch.png
+[3]: ../doc/img/controller_arch.png
 [4]: ../README.md
 [5]: ../doc/orig_md/Analyzer初始化及通信过程.md
