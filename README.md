@@ -1,5 +1,6 @@
 ## Niftyflow
 
+原论文见此: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/08/everflow-sigcomm15.pdf
 
 本程序为商业程序, 如果简单的部署使用, 可以随意.
 如果需要技术支持, 将按照部署的服务器数量和咨询时间收费.
