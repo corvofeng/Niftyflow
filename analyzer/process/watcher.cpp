@@ -285,9 +285,9 @@ void Watcher::init_connect() {
         this->c_redis_pubsub = redis_connection_setup(conf);
         this->c_redis_queue = redis_connection_setup(conf);
 
-        LOG_D(FMT("%d, %d\n", this->c_redis_queue->fd, this->c_redis_pubsub->fd));
         if(!this->c_redis_pubsub && !this->c_redis_queue)
             break;
+        LOG_D(FMT("%d, %d\n", this->c_redis_queue->fd, this->c_redis_pubsub->fd));
         LOG_D("Connect redis ok\n");
         return;
     }while(0);
