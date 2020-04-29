@@ -19,7 +19,7 @@
     "bootstrap": "^4.0.0",
     "echarts": "^4.0.4",
     "ejs-loader": "^0.3.1",
-    "jquery": "^3.3.1",
+    "jquery": "^3.5.0",
     "webpack-cli": "^2.0.13",
     "webpack-dev-server": "^3.1.1"
   }
